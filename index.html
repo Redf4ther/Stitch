@@ -9,9 +9,8 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8ff;font-family:system-ui,sans-serif}
 
-/* KEY SCREEN */
 #keyScreen{position:fixed;inset:0;background:#0a0e16;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:14px;z-index:100}
-#keyScreen h2{font-size:20px;color:#a0c8f0;text-align:center}
+#keyScreen h2{font-size:22px;color:#a0c8f0;text-align:center}
 #keyScreen p{font-size:13px;color:#4a7090;text-align:center;line-height:1.65}
 #keyScreen a{color:#5090d0}
 .key-inp{width:100%;background:#060c14;border:1px solid rgba(40,90,180,.4);border-radius:14px;color:#b0d0f0;font-size:15px;padding:13px 16px}
@@ -19,56 +18,40 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .key-inp::placeholder{color:#1a3050}
 .key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer}
 
-/* MAIN APP */
 #app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0;flex-shrink:0}
-
-/* AVATAR */
 .stage{position:relative;width:170px;height:170px;margin-top:4px;flex-shrink:0}
 .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(30,90,180,.3) 0%,transparent 68%);animation:gI 3s ease-in-out infinite}
 .glow.on{animation:gT .22s ease-in-out infinite}
 .head{position:absolute;inset:0;animation:iB 3.5s ease-in-out infinite}
 .head.talk{animation:tN .33s ease-in-out infinite}
 .head.listen{animation:lT .6s ease-in-out infinite}
-
 @keyframes iB{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-5px) rotate(.3deg)}}
 @keyframes tN{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-3px) rotate(.8deg)}}
 @keyframes lT{0%,100%{transform:rotate(-3deg) scale(1.02)}50%{transform:rotate(3deg) scale(1.04)}}
 @keyframes gI{0%,100%{opacity:.2}50%{opacity:.5}}
-@keyframes gT{0%,100%{opacity:.45}50%{opacity:.9}}
-@keyframes db{0%,100%{opacity:1}50%{opacity:.15}}
+@keyframes gT{0%,100%{opacity:.4}50%{opacity:.85}}
+@keyframes db{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cur{0%,100%{opacity:1}50%{opacity:0}}
-@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}50%{box-shadow:0 0 0 16px rgba(239,68,68,0)}}
-
-/* STATUS */
+@keyframes micP{0%,100%{box-shadow:0 0 0 0 rgba(220,50,50,.5)}50%{box-shadow:0 0 0 16px rgba(220,50,50,0)}}
 .status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1e3050;margin:3px 0;flex-shrink:0}
 .dot{width:6px;height:6px;border-radius:50%;background:#101820;transition:all .3s}
 .dot.y{background:#facc15;box-shadow:0 0 6px #facc15;animation:db .5s infinite}
 .dot.g{background:#4ade80;box-shadow:0 0 6px #4ade80;animation:db 1s infinite}
 .dot.b{background:#60a5fa;box-shadow:0 0 6px #60a5fa;animation:db .4s infinite}
-
-/* CHAT */
 .chat{flex:1;width:100%;max-width:500px;overflow-y:auto;padding:4px 14px;display:flex;flex-direction:column;gap:7px;min-height:0}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#0a1624;border:1px solid rgba(40,90,180,.2);color:#90b8e0}
 .bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
 .cur::after{content:‘▋’;color:#60b0ff;animation:cur .6s infinite}
-
 .err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;flex-shrink:0}
-
-/* BOTTOM CONTROLS */
 .bottom{flex-shrink:0;padding:8px 14px 28px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);width:100%;max-width:500px;display:flex;flex-direction:column;gap:10px;align-items:center}
-
-/* MIC BUTTON */
-.mic-btn{width:68px;height:68px;border-radius:50%;border:none;cursor:pointer;font-size:26px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);transition:background .25s,transform .1s}
-.mic-btn:active{transform:scale(.92)}
-.mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#d03030);box-shadow:0 4px 20px rgba(200,30,30,.4);animation:micPulse 1s ease infinite}
+.mic-btn{width:66px;height:66px;border-radius:50%;border:none;cursor:pointer;font-size:26px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);transition:background .25s}
+.mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP 1s ease infinite}
 .mic-btn:disabled{background:#111a2e;box-shadow:none;opacity:.4;cursor:not-allowed}
 .mic-hint{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#2a4060}
-
-/* TEXT INPUT */
 .irow{display:flex;gap:8px;width:100%}
 .inp{flex:1;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:22px;color:#b0d0f0;font-size:16px;padding:10px 16px}
 .inp:focus{outline:none;border-color:rgba(60,140,240,.55)}
@@ -81,105 +64,54 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 </head>
 <body>
 
-<!-- KEY SCREEN -->
-
 <div id="keyScreen">
   <h2>👋 Стич · Claude</h2>
-  <p>Введи API ключ Anthropic.<br>Получи бесплатно на <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>→ API Keys → Create Key</p>
-  <input class="key-inp" id="keyInp" type="password" placeholder="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"/>
+  <p>Введи API ключ Anthropic.<br>Получи на <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>→ API Keys → Create key</p>
+  <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
   <button class="key-btn" id="keyBtn">Начать общение 🐾</button>
-  <p style="font-size:11px;color:#1a3050">Ключ сохраняется только в твоём браузере</p>
+  <p style="font-size:11px;color:#1a3050">Ключ хранится только в твоём телефоне</p>
 </div>
-
-<!-- MAIN APP -->
 
 <div id="app">
   <div class="title">Стич · Claude</div>
-
-  <!-- Avatar -->
-
   <div class="stage">
     <div class="glow" id="glow"></div>
     <div class="head" id="head">
       <svg viewBox="0 0 300 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <radialGradient id="bg" cx="42%" cy="30%" r="65%">
-            <stop offset="0%" stop-color="#a8dff0"/><stop offset="35%" stop-color="#72b8e0"/>
-            <stop offset="70%" stop-color="#4a8ec8"/><stop offset="100%" stop-color="#2a5a9a"/>
-          </radialGradient>
-          <radialGradient id="eg" cx="40%" cy="25%" r="65%">
-            <stop offset="0%" stop-color="#7ac0d8"/><stop offset="100%" stop-color="#3060a0"/>
-          </radialGradient>
-          <radialGradient id="ng" cx="30%" cy="25%" r="65%">
-            <stop offset="0%" stop-color="#4a68b0"/><stop offset="100%" stop-color="#1a2858"/>
-          </radialGradient>
+          <radialGradient id="bg" cx="42%" cy="30%" r="65%"><stop offset="0%" stop-color="#a8dff0"/><stop offset="35%" stop-color="#72b8e0"/><stop offset="70%" stop-color="#4a8ec8"/><stop offset="100%" stop-color="#2a5a9a"/></radialGradient>
+          <radialGradient id="eg" cx="40%" cy="25%" r="65%"><stop offset="0%" stop-color="#7ac0d8"/><stop offset="100%" stop-color="#3060a0"/></radialGradient>
+          <radialGradient id="ng" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#4a68b0"/><stop offset="100%" stop-color="#1a2858"/></radialGradient>
         </defs>
-        <!-- Ears -->
-        <g transform="rotate(-22,80,95)">
-          <path d="M42 180 Q10 140 18 70 Q28 20 68 8 Q95 0 102 30 Q108 55 95 100 Q85 140 75 175Z" fill="url(#eg)"/>
-          <path d="M55 165 Q30 132 36 75 Q44 38 68 28 Q85 22 90 45 Q94 65 83 100 Q74 130 66 162Z" fill="#c090cc" opacity=".5"/>
-        </g>
-        <g transform="rotate(22,220,95)">
-          <path d="M258 180 Q290 140 282 70 Q272 20 232 8 Q205 0 198 30 Q192 55 205 100 Q215 140 225 175Z" fill="url(#eg)"/>
-          <path d="M245 165 Q270 132 264 75 Q256 38 232 28 Q215 22 210 45 Q206 65 217 100 Q226 130 234 162Z" fill="#c090cc" opacity=".5"/>
-        </g>
-        <!-- Neck -->
+        <g transform="rotate(-22,80,95)"><path d="M42 180 Q10 140 18 70 Q28 20 68 8 Q95 0 102 30 Q108 55 95 100 Q85 140 75 175Z" fill="url(#eg)"/><path d="M55 165 Q30 132 36 75 Q44 38 68 28 Q85 22 90 45 Q94 65 83 100 Q74 130 66 162Z" fill="#c090cc" opacity=".5"/></g>
+        <g transform="rotate(22,220,95)"><path d="M258 180 Q290 140 282 70 Q272 20 232 8 Q205 0 198 30 Q192 55 205 100 Q215 140 225 175Z" fill="url(#eg)"/><path d="M245 165 Q270 132 264 75 Q256 38 232 28 Q215 22 210 45 Q206 65 217 100 Q226 130 234 162Z" fill="#c090cc" opacity=".5"/></g>
         <path d="M110 288 Q122 300 150 302 Q178 300 190 288 Q183 275 150 273 Q117 275 110 288Z" fill="#3a70a8" opacity=".65"/>
-        <!-- Head -->
         <path d="M150 40 C200 38,240 60,255 100 C270 140,265 175,250 200 C240 218,225 232,210 245 C195 258,175 266,150 268 C125 266,105 258,90 245 C75 232,60 218,50 200 C35 175,30 140,45 100 C60 60,100 38,150 40Z" fill="url(#bg)"/>
         <ellipse cx="135" cy="98" rx="62" ry="40" fill="#b8e8f8" opacity=".16"/>
-        <!-- Cheeks -->
-        <ellipse cx="68" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/>
-        <ellipse cx="232" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/>
-        <circle cx="55" cy="198" r="3" fill="#3060a0" opacity=".38"/>
-        <circle cx="68" cy="210" r="3" fill="#3060a0" opacity=".38"/>
-        <circle cx="80" cy="202" r="3" fill="#3060a0" opacity=".38"/>
-        <circle cx="245" cy="198" r="3" fill="#3060a0" opacity=".38"/>
-        <circle cx="232" cy="210" r="3" fill="#3060a0" opacity=".38"/>
-        <circle cx="220" cy="202" r="3" fill="#3060a0" opacity=".38"/>
-        <!-- Nose -->
+        <ellipse cx="68" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/><ellipse cx="232" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/>
+        <circle cx="55" cy="198" r="3" fill="#3060a0" opacity=".38"/><circle cx="68" cy="210" r="3" fill="#3060a0" opacity=".38"/><circle cx="80" cy="202" r="3" fill="#3060a0" opacity=".38"/>
+        <circle cx="245" cy="198" r="3" fill="#3060a0" opacity=".38"/><circle cx="232" cy="210" r="3" fill="#3060a0" opacity=".38"/><circle cx="220" cy="202" r="3" fill="#3060a0" opacity=".38"/>
         <path d="M150 148 C128 148,116 162,118 178 C120 194,132 204,150 205 C168 204,180 194,182 178 C184 162,172 148,150 148Z" fill="url(#ng)"/>
         <ellipse cx="140" cy="160" rx="11" ry="7" fill="#6080c0" opacity=".38"/>
-        <ellipse cx="138" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
-        <ellipse cx="162" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
-        <!-- Eyes -->
-        <ellipse cx="100" cy="148" rx="32" ry="32" fill="white"/>
-        <ellipse cx="102" cy="151" rx="23" ry="23" fill="#080c12"/>
-        <ellipse cx="113" cy="139" rx="10" ry="8" fill="white" opacity=".9"/>
-        <ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
-        <ellipse cx="200" cy="148" rx="32" ry="32" fill="white"/>
-        <ellipse cx="202" cy="151" rx="23" ry="23" fill="#080c12"/>
-        <ellipse cx="213" cy="139" rx="10" ry="8" fill="white" opacity=".9"/>
-        <ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
-        <!-- Bumps -->
-        <ellipse cx="128" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
-        <ellipse cx="172" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
-        <!-- Mouth -->
-        <g id="MC">
-          <path d="M124 234 Q137 244 150 245 Q163 244 176 234" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-        </g>
+        <ellipse cx="138" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/><ellipse cx="162" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
+        <ellipse cx="100" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="102" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="113" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
+        <ellipse cx="200" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="202" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="213" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
+        <ellipse cx="128" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/><ellipse cx="172" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
+        <g id="MC"><path d="M124 234 Q137 244 150 245 Q163 244 176 234" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>
         <g id="MO" style="display:none">
-          <path id="MS" fill="#06101e"/>
-          <path id="MT" fill="white"/>
+          <path id="MS" fill="#06101e"/><path id="MT" fill="white"/>
           <ellipse id="TG" fill="#c03858" opacity=".85"/>
           <path id="ML" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/>
         </g>
       </svg>
     </div>
   </div>
-
   <div class="status"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
-
-  <div class="chat" id="chat">
-    <div class="bbl"><div class="bi">Привет! Я Стич 👽<br>Нажми 🎙️ и говори — отвечу голосом!</div></div>
-  </div>
+  <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич 👽 Нажми 🎙️ и говори!</div></div></div>
   <div class="err" id="err"></div>
-
   <div class="bottom">
-    <!-- Mic button -->
     <button class="mic-btn" id="micBtn">🎙️</button>
     <div class="mic-hint" id="micHint">НАЖМИ И ГОВОРИ</div>
-    <!-- Text fallback -->
     <div class="irow">
       <input class="inp" id="inp" placeholder="Или напечатай вопрос..." autocomplete="off"/>
       <button class="sbtn" id="sb">➤</button>
@@ -188,26 +120,35 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 </div>
 
 <script>
-// ── Elements ──
-function $(id){ return document.getElementById(id) }
-const keyScreen=$('keyScreen'), app=$('app'),
-      keyInp=$('keyInp'), keyBtn=$('keyBtn'),
-      glow=$('glow'), head=$('head'), dot=$('dot'), stxt=$('stxt'),
-      chat=$('chat'), err=$('err'), inp=$('inp'), sb=$('sb'),
-      micBtn=$('micBtn'), micHint=$('micHint'),
-      MC=$('MC'), MO=$('MO'), MS=$('MS'), MT=$('MT'), TG=$('TG'), ML=$('ML');
+function $(id){return document.getElementById(id)}
+const keyScreen=$('keyScreen'),app=$('app'),keyInp=$('keyInp'),keyBtn=$('keyBtn'),
+      glow=$('glow'),head=$('head'),dot=$('dot'),stxt=$('stxt'),
+      chat=$('chat'),err=$('err'),inp=$('inp'),sb=$('sb'),
+      micBtn=$('micBtn'),micHint=$('micHint'),
+      MC=$('MC'),MO=$('MO'),MS=$('MS'),MT=$('MT'),TG=$('TG'),ML=$('ML');
 
-// ── API Key ──
-const API_KEY = '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';
-keyScreen.style.display='none';
-app.style.display='flex';
-if(window.speechSynthesis){
-  speechSynthesis.getVoices();
-  speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
+let API_KEY = localStorage.getItem('stitch_key')||'';
+let state='idle',hist=[],raf=null,mC=0,mT=0,lastB=0,recog=null;
+
+function showApp(){
+  keyScreen.style.display='none';
+  app.style.display='flex';
+  if(window.speechSynthesis){
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
+  }
 }
 
-// ── State ──
-let state='idle', hist=[], raf=null, mC=0, mT=0, lastB=0, recognition=null;
+if(API_KEY) showApp();
+
+keyBtn.addEventListener('click',()=>{
+  const k=keyInp.value.trim();
+  if(!k) return;
+  API_KEY=k;
+  localStorage.setItem('stitch_key',k);
+  showApp();
+});
+keyInp.addEventListener('keydown',e=>{if(e.key==='Enter')keyBtn.click()});
 
 function setState(s){
   state=s;
@@ -215,141 +156,108 @@ function setState(s){
   stxt.textContent={idle:'Готов',listening:'Слушаю...',thinking:'Думаю...',talking:'Говорит...'}[s];
   head.className='head'+(s==='talking'?' talk':s==='listening'?' listen':'');
   glow.className='glow'+(s==='talking'?' on':'');
-  micBtn.disabled = s==='thinking'||s==='talking';
+  micBtn.disabled=s==='thinking'||s==='talking';
   micBtn.className='mic-btn'+(s==='listening'?' listening':'');
-  micBtn.textContent = s==='listening'?'⏹':'🎙️';
-  micHint.textContent = s==='listening'?'ОТПУСТИ...' : s==='thinking'?'ДУМАЮ...' : s==='talking'?'ГОВОРИТ...' : 'НАЖМИ И ГОВОРИ';
-  inp.disabled = s!=='idle';
-  sb.disabled = s!=='idle';
+  micBtn.textContent=s==='listening'?'⏹':'🎙️';
+  micHint.textContent=s==='listening'?'ОТПУСТИ...':s==='thinking'?'ДУМАЮ...':s==='talking'?'ГОВОРИТ...':'НАЖМИ И ГОВОРИ';
+  inp.disabled=s!=='idle';sb.disabled=s!=='idle';
 }
 
-// ── Mouth ──
 function drawMouth(a){
-  if(a<0.06){ MC.style.display=''; MO.style.display='none'; return; }
-  MC.style.display='none'; MO.style.display='';
+  if(a<0.06){MC.style.display='';MO.style.display='none';return}
+  MC.style.display='none';MO.style.display='';
   const cx=150,cy=235,w=54+a*24,h=a*30,L=cx-w/2,R=cx+w/2,bY=cy+h,th=7+a*8;
   MS.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-5} ${R} ${cy} Q${R-5} ${bY} ${cx} ${bY+2} Q${L+5} ${bY} ${L} ${cy}Z`);
   MT.setAttribute('d',`M${cx-15} ${cy} Q${cx-8} ${cy-2} ${cx-3} ${cy-1} L${cx+3} ${cy-1} Q${cx+8} ${cy-2} ${cx+15} ${cy} Q${cx+8} ${cy+th} ${cx} ${cy+th+1} Q${cx-8} ${cy+th} ${cx-15} ${cy}Z`);
-  TG.setAttribute('cx',cx); TG.setAttribute('cy',cy+h*0.6); TG.setAttribute('rx',12+a*5); TG.setAttribute('ry',5+a*7);
+  TG.setAttribute('cx',cx);TG.setAttribute('cy',cy+h*0.6);TG.setAttribute('rx',12+a*5);TG.setAttribute('ry',5+a*7);
   ML.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-7} ${R} ${cy}`);
 }
-function mLoop(t){
-  raf=requestAnimationFrame(mLoop);
-  const age=(t-lastB)/1000;
-  if(age>0.08) mT=Math.max(0,mT-0.05);
-  mC+=(mT-mC)*0.22; drawMouth(mC);
-}
-function beat(){ lastB=performance.now(); mT=0.7+Math.random()*0.3; }
-function startMouth(){ if(!raf) raf=requestAnimationFrame(mLoop); }
-function stopMouth(){ if(raf){cancelAnimationFrame(raf);raf=null;} mC=0;mT=0;drawMouth(0); }
+function mLoop(t){raf=requestAnimationFrame(mLoop);const age=(t-lastB)/1000;if(age>0.08)mT=Math.max(0,mT-0.05);mC+=(mT-mC)*0.22;drawMouth(mC)}
+function beat(){lastB=performance.now();mT=0.7+Math.random()*0.3}
+function startMouth(){if(!raf)raf=requestAnimationFrame(mLoop)}
+function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null}mC=0;mT=0;drawMouth(0)}
 
-// ── Chat ──
 function addMsg(role,text){
-  const w=document.createElement('div'); w.className='bbl'+(role==='u'?' u':'');
-  const b=document.createElement('div'); b.className='bi'; b.textContent=text;
-  w.appendChild(b); chat.appendChild(w); chat.scrollTop=chat.scrollHeight; return b;
+  const w=document.createElement('div');w.className='bbl'+(role==='u'?' u':'');
+  const b=document.createElement('div');b.className='bi';b.textContent=text;
+  w.appendChild(b);chat.appendChild(w);chat.scrollTop=chat.scrollHeight;return b;
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 async function typeText(el,text){
-  el.textContent=''; el.classList.add('cur');
-  for(let i=1;i<=text.length;i++){
-    el.textContent=text.slice(0,i);
-    if(text[i-1]!==' ') beat();
-    await sleep(18);
-  }
+  el.textContent='';el.classList.add('cur');
+  for(let i=1;i<=text.length;i++){el.textContent=text.slice(0,i);if(text[i-1]!==' ')beat();await sleep(18);}
   el.classList.remove('cur');
 }
 
-// ── TTS ──
 function speak(text){
   return new Promise(resolve=>{
     try{
-      if(!window.speechSynthesis){ resolve(); return; }
+      if(!window.speechSynthesis){resolve();return}
       speechSynthesis.cancel();
       const u=new SpeechSynthesisUtterance(text);
-      u.lang='ru-RU'; u.rate=0.92; u.pitch=1.1; u.volume=1;
-      const voices=speechSynthesis.getVoices();
-      const ru=voices.find(v=>v.lang.startsWith('ru'))||voices[0];
-      if(ru) u.voice=ru;
-      u.onend=resolve; u.onerror=resolve;
+      u.lang='ru-RU';u.rate=0.92;u.pitch=1.1;
+      const v=speechSynthesis.getVoices().find(x=>x.lang.startsWith('ru'))||speechSynthesis.getVoices()[0];
+      if(v)u.voice=v;
+      u.onend=resolve;u.onerror=resolve;
       speechSynthesis.speak(u);
-    }catch(e){ resolve(); }
+    }catch(e){resolve()}
   });
 }
 
-// ── Claude API ──
 async function askClaude(msg){
   err.textContent='';
-  addMsg('u', msg);
+  addMsg('u',msg);
   setState('thinking');
-  hist.push({role:'user', content:msg});
+  hist.push({role:'user',content:msg});
   try{
     const r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
         'anthropic-version':'2023-06-01',
-        'x-api-key': API_KEY,
-        'anthropic-dangerous-direct-browser-access': 'true',
+        'x-api-key':API_KEY,
+        'anthropic-dangerous-direct-browser-access':'true'
       },
       body:JSON.stringify({
         model:'claude-haiku-4-5-20251001',
         max_tokens:300,
         system:'Ты ИИ-ассистент в образе Стича (эксперимент 626) из Lilo & Stitch. Отвечай коротко (1-2 предложения), весело. Иногда добавляй Ага!, Бум!, Стич знает!. Отвечай на языке пользователя.',
-        messages:hist,
-      }),
+        messages:hist
+      })
     });
     const data=await r.json();
-    if(data.error) throw new Error(data.error.message);
+    if(data.error)throw new Error(data.error.message);
     const text=data.content[0].text;
     hist.push({role:'assistant',content:text});
     setState('talking');
     const el=addMsg('a','');
     startMouth();
-    await Promise.all([typeText(el,text), speak(text)]);
-    mT=0; await sleep(300); stopMouth();
+    await Promise.all([typeText(el,text),speak(text)]);
+    mT=0;await sleep(300);stopMouth();
     setState('idle');
   }catch(e){
-    stopMouth(); err.textContent='Ошибка: '+e.message; setState('idle');
+    stopMouth();err.textContent='Ошибка: '+e.message;setState('idle');
   }
   inp.focus();
 }
 
-// ── Voice recognition ──
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-
 micBtn.addEventListener('click',()=>{
-  if(state==='listening'){ recognition&&recognition.stop(); return; }
-  if(state!=='idle') return;
-  if(!SR){ err.textContent='Браузер не поддерживает распознавание речи'; return; }
-  err.textContent='';
-  setState('listening');
-  recognition=new SR();
-  recognition.lang='ru-RU';
-  recognition.interimResults=false;
-  recognition.onresult=e=>{
-    const text=e.results[0][0].transcript.trim();
-    if(text) askClaude(text);
-    else setState('idle');
-  };
-  recognition.onerror=e=>{
-    if(e.error==='not-allowed') err.textContent='Разреши доступ к микрофону в настройках Safari';
-    else if(e.error!=='no-speech') err.textContent='Ошибка: '+e.error;
-    setState('idle');
-  };
-  recognition.onend=()=>{ if(state==='listening') setState('idle'); };
-  recognition.start();
+  if(state==='listening'){recog&&recog.stop();return}
+  if(state!=='idle')return;
+  if(!SR){err.textContent='Используй Safari для микрофона';return}
+  err.textContent='';setState('listening');
+  recog=new SR();recog.lang='ru-RU';recog.interimResults=false;
+  recog.onresult=e=>{const t=e.results[0][0].transcript.trim();if(t)askClaude(t);else setState('idle')};
+  recog.onerror=e=>{setState('idle');if(e.error==='not-allowed')err.textContent='Разреши микрофон в настройках Safari'};
+  recog.onend=()=>{if(state==='listening')setState('idle')};
+  recog.start();
 });
 
-// ── Text input ──
-async function send(){
-  const msg=inp.value.trim();
-  if(!msg||state!=='idle') return;
-  inp.value=''; await askClaude(msg);
-}
+async function send(){const msg=inp.value.trim();if(!msg||state!=='idle')return;inp.value='';await askClaude(msg)}
 sb.addEventListener('click',send);
-inp.addEventListener('keydown',e=>{ if(e.key==='Enter') send(); });
+inp.addEventListener('keydown',e=>{if(e.key==='Enter')send()});
 </script>
 
 </body>
