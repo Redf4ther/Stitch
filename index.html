@@ -269,14 +269,18 @@ async function askClaude(msg){
 // ── Mic — hold to talk ──
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 
+let listenStart=0;
+
 function startListening(){
   if(state!=='idle')return;
   if(!SR){err.textContent='Используй Safari';return}
   err.textContent='';
   setState('listening');
+  listenStart=Date.now();
   recog=new SR();
   recog.lang='ru-RU';
   recog.interimResults=false;
+  recog.continuous=true;
   recog.onresult=e=>{
     const t=Array.from(e.results).map(r=>r[0].transcript).join('').trim();
     recog=null;
@@ -294,13 +298,16 @@ function startListening(){
 }
 
 function stopListening(){
-  if(state==='listening'){
+  if(state!=='listening') return;
+  const elapsed=Date.now()-listenStart;
+  const delay=Math.max(0, 800-elapsed); // минимум 800мс записи
+  setTimeout(()=>{
     if(recog){
       try{recog.stop()}catch(e){}
     } else {
       setState('idle');
     }
-  }
+  }, delay);
 }
 
 micBtn.addEventListener('touchstart',e=>{
