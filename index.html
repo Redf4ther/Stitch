@@ -203,16 +203,21 @@ async function typeText(el,text){
   el.classList.remove('cur');
 }
 
-// Pre-create audio element on page load (iOS requires this)
+// Pre-create audio element
 const audioEl = document.createElement('audio');
 audioEl.playsInline = true;
+audioEl.setAttribute('playsinline', '');
+audioEl.setAttribute('webkit-playsinline', '');
 document.body.appendChild(audioEl);
 
-// Unlock audio on first touch
-document.addEventListener('touchstart', ()=>{
-  audioEl.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAA==';
+// Unlock audio context on first mic press
+let audioUnlocked = false;
+function unlockAudio(){
+  if(audioUnlocked) return;
+  audioUnlocked = true;
+  audioEl.src = 'data:audio/mpeg;base64,/+MYxAAAAANIAAAAAExBTUUzLjk4LjIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
   audioEl.play().catch(()=>{});
-}, {once:true});
+}
 
 async function speakOAI(text){
   if(!OAI_KEY) return;
@@ -222,17 +227,17 @@ async function speakOAI(text){
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+OAI_KEY},
       body:JSON.stringify({model:'tts-1',input:text,voice:'onyx',speed:0.95})
     });
-    if(!r.ok) return;
+    if(!r.ok){ console.log('TTS error',r.status); return; }
     const blob=await r.blob();
     const url=URL.createObjectURL(blob);
+    audioEl.src=url;
+    try{ await audioEl.play(); }catch(e){ console.log('play error',e); }
     await new Promise(resolve=>{
       audioEl.onended=()=>{URL.revokeObjectURL(url);resolve()};
       audioEl.onerror=()=>{URL.revokeObjectURL(url);resolve()};
       setTimeout(resolve, 15000);
-      audioEl.src=url;
-      audioEl.play().catch(resolve);
     });
-  }catch(e){}
+  }catch(e){ console.log('speakOAI error',e); }
 }
 
 async function askClaude(msg){
@@ -315,7 +320,11 @@ function stopListening(){
   }, delay);
 }
 
-micBtn.addEventListener('touchstart', e=>{e.preventDefault();startListening();},{passive:false});
+micBtn.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  unlockAudio(); // unlock audio FIRST before anything else
+  startListening();
+},{passive:false});
 micBtn.addEventListener('touchend',   e=>{e.preventDefault();stopListening();},{passive:false});
 micBtn.addEventListener('touchcancel',()=>stopListening());
 
