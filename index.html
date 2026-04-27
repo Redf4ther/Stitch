@@ -274,38 +274,47 @@ function startListening(){
   if(!SR){err.textContent='Используй Safari';return}
   err.textContent='';
   setState('listening');
-  // Small delay so iOS can initialize microphone properly
-  setTimeout(()=>{
-    recog=new SR();
-    recog.lang='ru-RU';
-    recog.interimResults=false;
-    recog.onresult=e=>{
-      const t=Array.from(e.results).map(r=>r[0].transcript).join('').trim();
-      if(t) askClaude(t);
-      else setState('idle');
-    };
-    recog.onerror=e=>{
-      setState('idle');
-      if(e.error==='not-allowed') err.textContent='Разреши микрофон в Safari → Настройки';
-      else err.textContent='Ошибка: '+e.error;
-    };
-    recog.onend=()=>{if(state==='listening')setState('idle')};
-    recog.start();
-  }, 150);
+  recog=new SR();
+  recog.lang='ru-RU';
+  recog.interimResults=false;
+  recog.onresult=e=>{
+    const t=Array.from(e.results).map(r=>r[0].transcript).join('').trim();
+    recog=null;
+    if(t) askClaude(t);
+    else setState('idle');
+  };
+  recog.onerror=e=>{
+    recog=null;
+    setState('idle');
+    if(e.error==='not-allowed') err.textContent='Разреши микрофон в Safari → Настройки';
+    else if(e.error!=='aborted') err.textContent='Ошибка: '+e.error;
+  };
+  recog.onend=()=>{recog=null;if(state==='listening')setState('idle')};
+  recog.start();
 }
 
 function stopListening(){
-  if(state==='listening'&&recog){
-    try{recog.stop()}catch(e){}
+  if(state==='listening'){
+    if(recog){
+      try{recog.stop()}catch(e){}
+    } else {
+      setState('idle');
+    }
   }
 }
 
-micBtn.addEventListener('touchstart',e=>{e.preventDefault();startListening()},{passive:false});
-micBtn.addEventListener('touchend',  e=>{e.preventDefault();stopListening()},{passive:false});
-micBtn.addEventListener('touchcancel',e=>{stopListening()});
-micBtn.addEventListener('click', e=>{
-  if(state==='listening') stopListening();
-  else startListening();
+micBtn.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  startListening();
+},{passive:false});
+
+micBtn.addEventListener('touchend',e=>{
+  e.preventDefault();
+  stopListening();
+},{passive:false});
+
+micBtn.addEventListener('touchcancel',e=>{
+  stopListening();
 });
 
 // ── Text input ──
