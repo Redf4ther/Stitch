@@ -190,17 +190,6 @@ async function typeText(el,text){
   el.classList.remove('cur');
 }
 
-// Unlock audio on first user tap (Safari requirement)
-let audioUnlocked = false;
-function unlockAudio(){
-  if(audioUnlocked) return;
-  audioUnlocked = true;
-  const u = new SpeechSynthesisUtterance('');
-  window.speechSynthesis.speak(u);
-}
-document.addEventListener('touchstart', unlockAudio, {once:true});
-document.addEventListener('click', unlockAudio, {once:true});
-
 function speak(text){
   return new Promise(resolve=>{
     try{
@@ -211,9 +200,14 @@ function speak(text){
       const voices=speechSynthesis.getVoices();
       const v=voices.find(x=>x.lang==='ru-RU')||voices.find(x=>x.lang.startsWith('ru'))||voices[0];
       if(v)u.voice=v;
-      u.onend=resolve;u.onerror=resolve;
-      // Small delay for Safari
-      setTimeout(()=>speechSynthesis.speak(u), 100);
+      let done=false;
+      function finish(){if(!done){done=true;resolve();}}
+      u.onend=finish;
+      u.onerror=finish;
+      // iOS fallback: resolve after estimated time so UI never gets stuck
+      const ms=Math.max(2000, text.length*80);
+      setTimeout(finish, ms);
+      setTimeout(()=>speechSynthesis.speak(u),100);
     }catch(e){resolve()}
   });
 }
@@ -256,27 +250,41 @@ async function askClaude(msg){
   }
 }
 
+// Prevent text selection on long press
+micBtn.style.userSelect='none';
+micBtn.style.webkitUserSelect='none';
+
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 
-micBtn.addEventListener('pointerdown', e=>{
+micBtn.addEventListener('touchstart', e=>{
   e.preventDefault();
   if(state!=='idle')return;
   if(!SR){err.textContent='Используй Safari для микрофона';return}
   err.textContent='';setState('listening');
-  recog=new SR();recog.lang='ru-RU';recog.interimResults=false;
-  recog.onresult=e=>{const t=e.results[0][0].transcript.trim();if(t)askClaude(t);else setState('idle')};
-  recog.onerror=e=>{setState('idle');if(e.error==='not-allowed')err.textContent='Разреши микрофон в настройках Safari'};
-  recog.onend=()=>{if(state==='listening')setState('idle')};
+  recog=new SR();
+  recog.lang='ru-RU';
+  recog.interimResults=false;
+  recog.continuous=false;
+  recog.onresult=e=>{
+    const t=e.results[0][0].transcript.trim();
+    if(t) askClaude(t);
+    else setState('idle');
+  };
+  recog.onerror=e=>{
+    setState('idle');
+    if(e.error==='not-allowed') err.textContent='Разреши микрофон в настройках Safari';
+  };
+  recog.onend=()=>{ if(state==='listening') setState('idle'); };
   recog.start();
-});
+},{passive:false});
 
-micBtn.addEventListener('pointerup', e=>{
+micBtn.addEventListener('touchend', e=>{
   e.preventDefault();
-  if(state==='listening'){recog&&recog.stop();}
-});
+  if(state==='listening' && recog){ recog.stop(); }
+},{passive:false});
 
-micBtn.addEventListener('pointerleave', e=>{
-  if(state==='listening'){recog&&recog.stop();}
+micBtn.addEventListener('touchcancel', e=>{
+  if(state==='listening' && recog){ recog.stop(); }
 });
 
 async function send(){const msg=inp.value.trim();if(!msg||state!=='idle')return;inp.value='';await askClaude(msg)}
