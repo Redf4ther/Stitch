@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -53,7 +54,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .bbl.u{justify-content:flex-end}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#0a1624;border:1px solid rgba(40,90,180,.2);color:#90b8e0}
 .bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
-.cur::after{content:'▋';color:#60b0ff;animation:cur .6s infinite}
+.cur::after{content:‘▋’;color:#60b0ff;animation:cur .6s infinite}
 
 .err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;flex-shrink:0}
 
@@ -76,23 +77,27 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .sbtn:disabled{background:#111a2e;opacity:.35;cursor:not-allowed}
 </style>
+
 </head>
 <body>
 
 <!-- KEY SCREEN -->
+
 <div id="keyScreen">
   <h2>👋 Стич · Claude</h2>
   <p>Введи API ключ Anthropic.<br>Получи бесплатно на <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>→ API Keys → Create Key</p>
-  <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
+  <input class="key-inp" id="keyInp" type="password" placeholder="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"/>
   <button class="key-btn" id="keyBtn">Начать общение 🐾</button>
   <p style="font-size:11px;color:#1a3050">Ключ сохраняется только в твоём браузере</p>
 </div>
 
 <!-- MAIN APP -->
+
 <div id="app">
   <div class="title">Стич · Claude</div>
 
   <!-- Avatar -->
+
   <div class="stage">
     <div class="glow" id="glow"></div>
     <div class="head" id="head">
@@ -193,25 +198,14 @@ const keyScreen=$('keyScreen'), app=$('app'),
       MC=$('MC'), MO=$('MO'), MS=$('MS'), MT=$('MT'), TG=$('TG'), ML=$('ML');
 
 // ── API Key ──
-let API_KEY = localStorage.getItem('stitch_api_key') || '';
-if(API_KEY){ showApp(); }
+const API_KEY = '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';
 
-keyBtn.addEventListener('click', ()=>{
-  const k = keyInp.value.trim();
-  if(!k){ err.textContent='Введи ключ'; return; }
-  API_KEY = k;
-  localStorage.setItem('stitch_api_key', k);
-  showApp();
-});
-keyInp.addEventListener('keydown', e=>{ if(e.key==='Enter') keyBtn.click(); });
-
-function showApp(){
-  keyScreen.style.display='none';
-  app.style.display='flex';
-  if(window.speechSynthesis){
-    speechSynthesis.getVoices();
-    speechSynthesis.onvoiceschanged = ()=>speechSynthesis.getVoices();
-  }
+// Show app directly
+keyScreen.style.display='none';
+app.style.display='flex';
+if(window.speechSynthesis){
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = ()=>speechSynthesis.getVoices();
 }
 
 // ── State ──
@@ -299,9 +293,10 @@ async function askClaude(msg){
         'Content-Type':'application/json',
         'anthropic-version':'2023-06-01',
         'x-api-key': API_KEY,
+        'anthropic-dangerous-direct-browser-access': 'true',
       },
       body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001',
+        model:'claude-3-haiku-20240307',
         max_tokens:300,
         system:'Ты ИИ-ассистент в образе Стича (эксперимент 626) из Lilo & Stitch. Отвечай коротко (1-2 предложения), весело. Иногда добавляй Ага!, Бум!, Стич знает!. Отвечай на языке пользователя.',
         messages:hist,
@@ -358,5 +353,6 @@ async function send(){
 sb.addEventListener('click',send);
 inp.addEventListener('keydown',e=>{ if(e.key==='Enter') send(); });
 </script>
+
 </body>
 </html>
