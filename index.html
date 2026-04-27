@@ -190,17 +190,30 @@ async function typeText(el,text){
   el.classList.remove('cur');
 }
 
+// Unlock audio on first user tap (Safari requirement)
+let audioUnlocked = false;
+function unlockAudio(){
+  if(audioUnlocked) return;
+  audioUnlocked = true;
+  const u = new SpeechSynthesisUtterance('');
+  window.speechSynthesis.speak(u);
+}
+document.addEventListener('touchstart', unlockAudio, {once:true});
+document.addEventListener('click', unlockAudio, {once:true});
+
 function speak(text){
   return new Promise(resolve=>{
     try{
       if(!window.speechSynthesis){resolve();return}
       speechSynthesis.cancel();
       const u=new SpeechSynthesisUtterance(text);
-      u.lang='ru-RU';u.rate=0.92;u.pitch=1.1;
-      const v=speechSynthesis.getVoices().find(x=>x.lang.startsWith('ru'))||speechSynthesis.getVoices()[0];
+      u.lang='ru-RU';u.rate=0.92;u.pitch=1.1;u.volume=1;
+      const voices=speechSynthesis.getVoices();
+      const v=voices.find(x=>x.lang==='ru-RU')||voices.find(x=>x.lang.startsWith('ru'))||voices[0];
       if(v)u.voice=v;
       u.onend=resolve;u.onerror=resolve;
-      speechSynthesis.speak(u);
+      // Small delay for Safari
+      setTimeout(()=>speechSynthesis.speak(u), 100);
     }catch(e){resolve()}
   });
 }
@@ -236,15 +249,17 @@ async function askClaude(msg){
     await Promise.all([typeText(el,text),speak(text)]);
     mT=0;await sleep(300);stopMouth();
     setState('idle');
+    inp.focus();
   }catch(e){
     stopMouth();err.textContent='Ошибка: '+e.message;setState('idle');
+    inp.focus();
   }
-  inp.focus();
 }
 
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-micBtn.addEventListener('click',()=>{
-  if(state==='listening'){recog&&recog.stop();return}
+
+micBtn.addEventListener('pointerdown', e=>{
+  e.preventDefault();
   if(state!=='idle')return;
   if(!SR){err.textContent='Используй Safari для микрофона';return}
   err.textContent='';setState('listening');
@@ -253,6 +268,15 @@ micBtn.addEventListener('click',()=>{
   recog.onerror=e=>{setState('idle');if(e.error==='not-allowed')err.textContent='Разреши микрофон в настройках Safari'};
   recog.onend=()=>{if(state==='listening')setState('idle')};
   recog.start();
+});
+
+micBtn.addEventListener('pointerup', e=>{
+  e.preventDefault();
+  if(state==='listening'){recog&&recog.stop();}
+});
+
+micBtn.addEventListener('pointerleave', e=>{
+  if(state==='listening'){recog&&recog.stop();}
 });
 
 async function send(){const msg=inp.value.trim();if(!msg||state!=='idle')return;inp.value='';await askClaude(msg)}
