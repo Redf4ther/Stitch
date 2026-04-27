@@ -139,12 +139,8 @@ function showApp(){
   app.style.display = 'flex';
 }
 
-// If keys exist — show app immediately
+// If keys exist — show app immediately, no key screen
 if(API_KEY){ showApp(); }
-
-// Pre-fill saved keys in inputs
-if(API_KEY) keyInp.value = API_KEY;
-if(OAI_KEY) oaiInp.value = OAI_KEY;
 
 keyBtn.addEventListener('click', ()=>{
   const k = keyInp.value.trim();
@@ -220,24 +216,28 @@ function unlockAudio(){
 }
 
 async function speakOAI(text){
-  if(!OAI_KEY) return;
+  if(!OAI_KEY){ err.textContent='OpenAI ключ не введён'; return; }
   try{
     const r=await fetch('https://api.openai.com/v1/audio/speech',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+OAI_KEY},
       body:JSON.stringify({model:'tts-1',input:text,voice:'onyx',speed:0.95})
     });
-    if(!r.ok){ console.log('TTS error',r.status); return; }
+    if(!r.ok){ 
+      const e=await r.json().catch(()=>({}));
+      err.textContent='TTS ошибка: '+(e?.error?.message||r.status); 
+      return; 
+    }
     const blob=await r.blob();
     const url=URL.createObjectURL(blob);
     audioEl.src=url;
-    try{ await audioEl.play(); }catch(e){ console.log('play error',e); }
+    try{ await audioEl.play(); }catch(e){ err.textContent='Аудио заблокировано iOS: '+e.message; }
     await new Promise(resolve=>{
       audioEl.onended=()=>{URL.revokeObjectURL(url);resolve()};
       audioEl.onerror=()=>{URL.revokeObjectURL(url);resolve()};
       setTimeout(resolve, 15000);
     });
-  }catch(e){ console.log('speakOAI error',e); }
+  }catch(e){ err.textContent='speakOAI: '+e.message; }
 }
 
 async function askClaude(msg){
