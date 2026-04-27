@@ -203,6 +203,17 @@ async function typeText(el,text){
   el.classList.remove('cur');
 }
 
+// Pre-create audio element on page load (iOS requires this)
+const audioEl = document.createElement('audio');
+audioEl.playsInline = true;
+document.body.appendChild(audioEl);
+
+// Unlock audio on first touch
+document.addEventListener('touchstart', ()=>{
+  audioEl.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAA==';
+  audioEl.play().catch(()=>{});
+}, {once:true});
+
 async function speakOAI(text){
   if(!OAI_KEY) return;
   try{
@@ -215,11 +226,11 @@ async function speakOAI(text){
     const blob=await r.blob();
     const url=URL.createObjectURL(blob);
     await new Promise(resolve=>{
-      const audio=new Audio(url);
-      audio.onended=()=>{URL.revokeObjectURL(url);resolve()};
-      audio.onerror=()=>{URL.revokeObjectURL(url);resolve()};
+      audioEl.onended=()=>{URL.revokeObjectURL(url);resolve()};
+      audioEl.onerror=()=>{URL.revokeObjectURL(url);resolve()};
       setTimeout(resolve, 15000);
-      audio.play().catch(resolve);
+      audioEl.src=url;
+      audioEl.play().catch(resolve);
     });
   }catch(e){}
 }
