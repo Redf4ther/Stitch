@@ -6,59 +6,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Стич · Claude</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8ff;font-family:system-ui,sans-serif}
 
 #keyScreen{position:fixed;inset:0;background:#0a0e16;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:14px;z-index:100}
 #keyScreen h2{font-size:22px;color:#a0c8f0;text-align:center}
 #keyScreen p{font-size:13px;color:#4a7090;text-align:center;line-height:1.65}
-#keyScreen a{color:#5090d0}
-.key-inp{width:100%;background:#060c14;border:1px solid rgba(40,90,180,.4);border-radius:14px;color:#b0d0f0;font-size:15px;padding:13px 16px}
+.key-inp{width:100%;background:#060c14;border:1px solid rgba(40,90,180,.4);border-radius:14px;color:#b0d0f0;font-size:15px;padding:13px 16px;-webkit-user-select:text;user-select:text}
 .key-inp:focus{outline:none;border-color:rgba(60,140,240,.6)}
 .key-inp::placeholder{color:#1a3050}
 .key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer}
 
 #app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0;flex-shrink:0}
+
 .stage{position:relative;width:170px;height:170px;margin-top:4px;flex-shrink:0}
 .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(30,90,180,.3) 0%,transparent 68%);animation:gI 3s ease-in-out infinite}
 .glow.on{animation:gT .22s ease-in-out infinite}
 .head{position:absolute;inset:0;animation:iB 3.5s ease-in-out infinite}
 .head.talk{animation:tN .33s ease-in-out infinite}
 .head.listen{animation:lT .6s ease-in-out infinite}
+
 @keyframes iB{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-5px) rotate(.3deg)}}
 @keyframes tN{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-3px) rotate(.8deg)}}
-@keyframes lT{0%,100%{transform:rotate(-3deg) scale(1.02)}50%{transform:rotate(3deg) scale(1.04)}}
+@keyframes lT{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
 @keyframes gI{0%,100%{opacity:.2}50%{opacity:.5}}
 @keyframes gT{0%,100%{opacity:.4}50%{opacity:.85}}
 @keyframes db{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cur{0%,100%{opacity:1}50%{opacity:0}}
-@keyframes micP{0%,100%{box-shadow:0 0 0 0 rgba(220,50,50,.5)}50%{box-shadow:0 0 0 16px rgba(220,50,50,0)}}
+@keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
+
 .status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1e3050;margin:3px 0;flex-shrink:0}
 .dot{width:6px;height:6px;border-radius:50%;background:#101820;transition:all .3s}
 .dot.y{background:#facc15;box-shadow:0 0 6px #facc15;animation:db .5s infinite}
 .dot.g{background:#4ade80;box-shadow:0 0 6px #4ade80;animation:db 1s infinite}
 .dot.b{background:#60a5fa;box-shadow:0 0 6px #60a5fa;animation:db .4s infinite}
+
 .chat{flex:1;width:100%;max-width:500px;overflow-y:auto;padding:4px 14px;display:flex;flex-direction:column;gap:7px;min-height:0}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#0a1624;border:1px solid rgba(40,90,180,.2);color:#90b8e0}
 .bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
 .cur::after{content:‘▋’;color:#60b0ff;animation:cur .6s infinite}
+
 .err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;flex-shrink:0}
+
 .bottom{flex-shrink:0;padding:8px 14px 28px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);width:100%;max-width:500px;display:flex;flex-direction:column;gap:10px;align-items:center}
-.mic-btn{width:66px;height:66px;border-radius:50%;border:none;cursor:pointer;font-size:26px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);transition:background .25s}
-.mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP 1s ease infinite}
-.mic-btn:disabled{background:#111a2e;box-shadow:none;opacity:.4;cursor:not-allowed}
+
+.mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;transition:background .2s;touch-action:none}
+.mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
+.mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
 .mic-hint{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#2a4060}
+
 .irow{display:flex;gap:8px;width:100%}
-.inp{flex:1;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:22px;color:#b0d0f0;font-size:16px;padding:10px 16px}
+.inp{flex:1;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:22px;color:#b0d0f0;font-size:16px;padding:10px 16px;-webkit-user-select:text;user-select:text}
 .inp:focus{outline:none;border-color:rgba(60,140,240,.55)}
 .inp:disabled{opacity:.4}
 .inp::placeholder{color:#1a3050}
 .sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.sbtn:disabled{background:#111a2e;opacity:.35;cursor:not-allowed}
+.sbtn:disabled{background:#111a2e;opacity:.35}
 </style>
 
 </head>
@@ -66,7 +73,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="keyScreen">
   <h2>👋 Стич · Claude</h2>
-  <p>Введи API ключ Anthropic.<br>Получи на <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>→ API Keys → Create key</p>
+  <p>Введи API ключ Anthropic.<br>console.anthropic.com → API Keys → Create key</p>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
   <button class="key-btn" id="keyBtn">Начать общение 🐾</button>
   <p style="font-size:11px;color:#1a3050">Ключ хранится только в твоём телефоне</p>
@@ -106,12 +113,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
       </svg>
     </div>
   </div>
+
   <div class="status"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
-  <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич 👽 Нажми 🎙️ и говори!</div></div></div>
+  <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич 👽 Держи 🎙️ и говори!</div></div></div>
   <div class="err" id="err"></div>
+
   <div class="bottom">
     <button class="mic-btn" id="micBtn">🎙️</button>
-    <div class="mic-hint" id="micHint">НАЖМИ И ГОВОРИ</div>
+    <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
     <div class="irow">
       <input class="inp" id="inp" placeholder="Или напечатай вопрос..." autocomplete="off"/>
       <button class="sbtn" id="sb">➤</button>
@@ -127,7 +136,7 @@ const keyScreen=$('keyScreen'),app=$('app'),keyInp=$('keyInp'),keyBtn=$('keyBtn'
       micBtn=$('micBtn'),micHint=$('micHint'),
       MC=$('MC'),MO=$('MO'),MS=$('MS'),MT=$('MT'),TG=$('TG'),ML=$('ML');
 
-let API_KEY = localStorage.getItem('stitch_key')||'';
+let API_KEY=localStorage.getItem('stitch_key')||'';
 let state='idle',hist=[],raf=null,mC=0,mT=0,lastB=0,recog=null;
 
 function showApp(){
@@ -138,7 +147,6 @@ function showApp(){
     speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
   }
 }
-
 if(API_KEY) showApp();
 
 keyBtn.addEventListener('click',()=>{
@@ -150,19 +158,23 @@ keyBtn.addEventListener('click',()=>{
 });
 keyInp.addEventListener('keydown',e=>{if(e.key==='Enter')keyBtn.click()});
 
+// ── State ──
 function setState(s){
   state=s;
   dot.className='dot'+(s==='thinking'?' y':s==='talking'?' g':s==='listening'?' b':'');
   stxt.textContent={idle:'Готов',listening:'Слушаю...',thinking:'Думаю...',talking:'Говорит...'}[s];
   head.className='head'+(s==='talking'?' talk':s==='listening'?' listen':'');
   glow.className='glow'+(s==='talking'?' on':'');
-  micBtn.disabled=s==='thinking'||s==='talking';
-  micBtn.className='mic-btn'+(s==='listening'?' listening':'');
+  // Mic button
+  const busy = s==='thinking'||s==='talking';
+  micBtn.className='mic-btn'+(s==='listening'?' listening':busy?' disabled':'');
   micBtn.textContent=s==='listening'?'⏹':'🎙️';
-  micHint.textContent=s==='listening'?'ОТПУСТИ...':s==='thinking'?'ДУМАЮ...':s==='talking'?'ГОВОРИТ...':'НАЖМИ И ГОВОРИ';
-  inp.disabled=s!=='idle';sb.disabled=s!=='idle';
+  micHint.textContent=s==='listening'?'ОТПУСТИ...':busy?'...':'ДЕРЖИ И ГОВОРИ';
+  inp.disabled=busy;
+  sb.disabled=busy;
 }
 
+// ── Mouth ──
 function drawMouth(a){
   if(a<0.06){MC.style.display='';MO.style.display='none';return}
   MC.style.display='none';MO.style.display='';
@@ -177,6 +189,7 @@ function beat(){lastB=performance.now();mT=0.7+Math.random()*0.3}
 function startMouth(){if(!raf)raf=requestAnimationFrame(mLoop)}
 function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null}mC=0;mT=0;drawMouth(0)}
 
+// ── Chat ──
 function addMsg(role,text){
   const w=document.createElement('div');w.className='bbl'+(role==='u'?' u':'');
   const b=document.createElement('div');b.className='bi';b.textContent=text;
@@ -186,32 +199,15 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 async function typeText(el,text){
   el.textContent='';el.classList.add('cur');
-  for(let i=1;i<=text.length;i++){el.textContent=text.slice(0,i);if(text[i-1]!==' ')beat();await sleep(18);}
+  for(let i=1;i<=text.length;i++){
+    el.textContent=text.slice(0,i);
+    if(text[i-1]!==' ')beat();
+    await sleep(18);
+  }
   el.classList.remove('cur');
 }
 
-function speak(text){
-  return new Promise(resolve=>{
-    try{
-      if(!window.speechSynthesis){resolve();return}
-      speechSynthesis.cancel();
-      const u=new SpeechSynthesisUtterance(text);
-      u.lang='ru-RU';u.rate=0.92;u.pitch=1.1;u.volume=1;
-      const voices=speechSynthesis.getVoices();
-      const v=voices.find(x=>x.lang==='ru-RU')||voices.find(x=>x.lang.startsWith('ru'))||voices[0];
-      if(v)u.voice=v;
-      let done=false;
-      function finish(){if(!done){done=true;resolve();}}
-      u.onend=finish;
-      u.onerror=finish;
-      // iOS fallback: resolve after estimated time so UI never gets stuck
-      const ms=Math.max(2000, text.length*80);
-      setTimeout(finish, ms);
-      setTimeout(()=>speechSynthesis.speak(u),100);
-    }catch(e){resolve()}
-  });
-}
-
+// ── Claude API ──
 async function askClaude(msg){
   err.textContent='';
   addMsg('u',msg);
@@ -237,57 +233,80 @@ async function askClaude(msg){
     if(data.error)throw new Error(data.error.message);
     const text=data.content[0].text;
     hist.push({role:'assistant',content:text});
+
     setState('talking');
     const el=addMsg('a','');
     startMouth();
-    await Promise.all([typeText(el,text),speak(text)]);
-    mT=0;await sleep(300);stopMouth();
+
+    // Type text (drives mouth animation)
+    await typeText(el,text);
+
+    // Try TTS — but don't block on it, always resolve quickly
+    try{
+      if(window.speechSynthesis){
+        speechSynthesis.cancel();
+        const u=new SpeechSynthesisUtterance(text);
+        u.lang='ru-RU';u.rate=0.9;u.pitch=1.1;
+        const vv=speechSynthesis.getVoices();
+        const v=vv.find(x=>x.lang==='ru-RU')||vv.find(x=>x.lang.startsWith('ru'))||vv[0];
+        if(v)u.voice=v;
+        speechSynthesis.speak(u);
+      }
+    }catch(e){}
+
+    // Always stop talking after typing is done + small delay
+    await sleep(500);
+    stopMouth();
     setState('idle');
-    inp.focus();
+
   }catch(e){
-    stopMouth();err.textContent='Ошибка: '+e.message;setState('idle');
-    inp.focus();
+    stopMouth();
+    err.textContent='Ошибка: '+e.message;
+    setState('idle');
   }
 }
 
-// Prevent text selection on long press
-micBtn.style.userSelect='none';
-micBtn.style.webkitUserSelect='none';
-
+// ── Mic — hold to talk ──
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 
-micBtn.addEventListener('touchstart', e=>{
-  e.preventDefault();
+function startListening(){
   if(state!=='idle')return;
-  if(!SR){err.textContent='Используй Safari для микрофона';return}
-  err.textContent='';setState('listening');
+  if(!SR){err.textContent='Используй Safari';return}
+  err.textContent='';
+  setState('listening');
   recog=new SR();
   recog.lang='ru-RU';
   recog.interimResults=false;
-  recog.continuous=false;
   recog.onresult=e=>{
-    const t=e.results[0][0].transcript.trim();
+    const t=Array.from(e.results).map(r=>r[0].transcript).join('').trim();
     if(t) askClaude(t);
     else setState('idle');
   };
   recog.onerror=e=>{
     setState('idle');
-    if(e.error==='not-allowed') err.textContent='Разреши микрофон в настройках Safari';
+    if(e.error==='not-allowed') err.textContent='Разреши микрофон в Safari → Настройки';
   };
-  recog.onend=()=>{ if(state==='listening') setState('idle'); };
+  recog.onend=()=>{if(state==='listening')setState('idle')};
   recog.start();
-},{passive:false});
+}
 
-micBtn.addEventListener('touchend', e=>{
-  e.preventDefault();
-  if(state==='listening' && recog){ recog.stop(); }
-},{passive:false});
+function stopListening(){
+  if(state==='listening'&&recog){
+    try{recog.stop()}catch(e){}
+  }
+}
 
-micBtn.addEventListener('touchcancel', e=>{
-  if(state==='listening' && recog){ recog.stop(); }
-});
+micBtn.addEventListener('touchstart',e=>{e.preventDefault();startListening()},{passive:false});
+micBtn.addEventListener('touchend',  e=>{e.preventDefault();stopListening()},{passive:false});
+micBtn.addEventListener('touchcancel',e=>{stopListening()});
 
-async function send(){const msg=inp.value.trim();if(!msg||state!=='idle')return;inp.value='';await askClaude(msg)}
+// ── Text input ──
+async function send(){
+  const msg=inp.value.trim();
+  if(!msg||state!=='idle')return;
+  inp.value='';
+  await askClaude(msg);
+}
 sb.addEventListener('click',send);
 inp.addEventListener('keydown',e=>{if(e.key==='Enter')send()});
 </script>
