@@ -274,20 +274,24 @@ function startListening(){
   if(!SR){err.textContent='Используй Safari';return}
   err.textContent='';
   setState('listening');
-  recog=new SR();
-  recog.lang='ru-RU';
-  recog.interimResults=false;
-  recog.onresult=e=>{
-    const t=Array.from(e.results).map(r=>r[0].transcript).join('').trim();
-    if(t) askClaude(t);
-    else setState('idle');
-  };
-  recog.onerror=e=>{
-    setState('idle');
-    if(e.error==='not-allowed') err.textContent='Разреши микрофон в Safari → Настройки';
-  };
-  recog.onend=()=>{if(state==='listening')setState('idle')};
-  recog.start();
+  // Small delay so iOS can initialize microphone properly
+  setTimeout(()=>{
+    recog=new SR();
+    recog.lang='ru-RU';
+    recog.interimResults=false;
+    recog.onresult=e=>{
+      const t=Array.from(e.results).map(r=>r[0].transcript).join('').trim();
+      if(t) askClaude(t);
+      else setState('idle');
+    };
+    recog.onerror=e=>{
+      setState('idle');
+      if(e.error==='not-allowed') err.textContent='Разреши микрофон в Safari → Настройки';
+      else err.textContent='Ошибка: '+e.error;
+    };
+    recog.onend=()=>{if(state==='listening')setState('idle')};
+    recog.start();
+  }, 150);
 }
 
 function stopListening(){
@@ -299,6 +303,10 @@ function stopListening(){
 micBtn.addEventListener('touchstart',e=>{e.preventDefault();startListening()},{passive:false});
 micBtn.addEventListener('touchend',  e=>{e.preventDefault();stopListening()},{passive:false});
 micBtn.addEventListener('touchcancel',e=>{stopListening()});
+micBtn.addEventListener('click', e=>{
+  if(state==='listening') stopListening();
+  else startListening();
+});
 
 // ── Text input ──
 async function send(){
