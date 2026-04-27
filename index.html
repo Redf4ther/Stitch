@@ -73,10 +73,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="keyScreen">
   <h2>👋 Стич · Claude</h2>
-  <p>Введи API ключ Anthropic.<br>console.anthropic.com → API Keys → Create key</p>
-  <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
+  <p>Введи API ключи. Сохранятся в телефоне.</p>
+  <p style="font-size:12px;color:#3a6090;margin-top:-4px">Anthropic — для текста, OpenAI — для голоса</p>
+  <input class="key-inp" id="keyInp" type="password" placeholder="Anthropic: sk-ant-api03-..."/>
+  <input class="key-inp" id="oaiInp" type="password" placeholder="OpenAI: sk-proj-... (для голоса)"/>
   <button class="key-btn" id="keyBtn">Начать общение 🐾</button>
-  <p style="font-size:11px;color:#1a3050">Ключ хранится только в твоём телефоне</p>
+  <p style="font-size:11px;color:#1a3050">Ключи хранятся только в твоём телефоне</p>
 </div>
 
 <div id="app">
@@ -137,7 +139,7 @@ const keyScreen=$('keyScreen'),app=$('app'),keyInp=$('keyInp'),keyBtn=$('keyBtn'
       MC=$('MC'),MO=$('MO'),MS=$('MS'),MT=$('MT'),TG=$('TG'),ML=$('ML');
 
 let API_KEY=localStorage.getItem('stitch_key')||'';
-let state='idle',hist=[],raf=null,mC=0,mT=0,lastB=0,recog=null;
+let OAI_KEY=localStorage.getItem('stitch_oai')||'';
 
 function showApp(){
   keyScreen.style.display='none';
@@ -151,9 +153,11 @@ if(API_KEY) showApp();
 
 keyBtn.addEventListener('click',()=>{
   const k=keyInp.value.trim();
+  const o=document.getElementById('oaiInp').value.trim();
   if(!k) return;
   API_KEY=k;
   localStorage.setItem('stitch_key',k);
+  if(o){ OAI_KEY=o; localStorage.setItem('stitch_oai',o); }
   showApp();
 });
 keyInp.addEventListener('keydown',e=>{if(e.key==='Enter')keyBtn.click()});
@@ -241,18 +245,40 @@ async function askClaude(msg){
     // Type text (drives mouth animation)
     await typeText(el,text);
 
-    // Try TTS — but don't block on it, always resolve quickly
-    try{
-      if(window.speechSynthesis){
-        speechSynthesis.cancel();
-        const u=new SpeechSynthesisUtterance(text);
-        u.lang='ru-RU';u.rate=0.9;u.pitch=1.1;
-        const vv=speechSynthesis.getVoices();
-        const v=vv.find(x=>x.lang==='ru-RU')||vv.find(x=>x.lang.startsWith('ru'))||vv[0];
-        if(v)u.voice=v;
-        speechSynthesis.speak(u);
-      }
-    }catch(e){}
+    // OpenAI TTS voice
+    if(OAI_KEY){
+      try{
+        const tr=await fetch('https://api.openai.com/v1/audio/speech',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+OAI_KEY},
+          body:JSON.stringify({model:'tts-1',input:text,voice:'onyx',speed:0.95})
+        });
+        if(tr.ok){
+          const blob=await tr.blob();
+          const url=URL.createObjectURL(blob);
+          const audio=new Audio(url);
+          audio.play().catch(()=>{});
+          await new Promise(resolve=>{
+            audio.onended=()=>{URL.revokeObjectURL(url);resolve()};
+            audio.onerror=()=>{URL.revokeObjectURL(url);resolve()};
+            setTimeout(resolve,10000); // fallback
+          });
+        }
+      }catch(e){}
+    } else {
+      // Fallback browser TTS
+      try{
+        if(window.speechSynthesis){
+          speechSynthesis.cancel();
+          const u=new SpeechSynthesisUtterance(text);
+          u.lang='ru-RU';u.rate=0.9;u.pitch=1.1;
+          const vv=speechSynthesis.getVoices();
+          const v=vv.find(x=>x.lang==='ru-RU')||vv.find(x=>x.lang.startsWith('ru'))||vv[0];
+          if(v)u.voice=v;
+          speechSynthesis.speak(u);
+        }
+      }catch(e){}
+    }
 
     // Always stop talking after typing is done + small delay
     await sleep(500);
