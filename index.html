@@ -226,7 +226,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 async function typeText(el,text){
   el.textContent='';el.classList.add('cur');
-  const charDelay=text.length*65/text.length; // sync with speech rate 1.2
+  const charDelay=65;
   for(let i=1;i<=text.length;i++){
     el.textContent=text.slice(0,i);
     chat.scrollTop=chat.scrollHeight;
