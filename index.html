@@ -75,7 +75,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <div id="app">
   <button class="mute-btn" id="muteBtn">🔊</button>
   <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v18</span></div>
+    <div class="title">Стич · Claude <span class="build">v19</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -261,9 +261,9 @@ async function askClaude(msg){
       await sleep(55);
     }
     el.classList.remove('cur');
-    await speechPromise;
-    stopMouth();
+    stopMouth(); // mouth stops when text finishes
     setState('idle');
+    await speechPromise; // voice may still be going
 
   }catch(e){
     stopMouth();err.textContent='Ошибка: '+e.message;setState('idle');
@@ -273,11 +273,7 @@ async function askClaude(msg){
 // ── Mic ──
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 function unlockSpeech(){
-  if(window.speechSynthesis){
-    const u=new SpeechSynthesisUtterance(' ');
-    u.volume=0;u.rate=2;
-    window.speechSynthesis.speak(u);
-  }
+  if(window.speechSynthesis) window.speechSynthesis.getVoices();
 }
 function startListening(){
   if(state!=='idle')return;
