@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 </head>
 <body>
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:12px;opacity:.5;font-weight:400">v26</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:12px;opacity:.5;font-weight:400">v27</span></h2>
   <p>Введи API ключ один раз — сохранится в телефоне</p>
   <div class="key-lbl">Anthropic API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
@@ -72,7 +72,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 </div>
 <div id="app">
   <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v26</span></div>
+    <div class="title">Стич · Claude <span class="build">v27</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -136,10 +136,8 @@ if(muted&&window.speechSynthesis)window.speechSynthesis.cancel();
 function showApp(){keyScreen.style.display=‘none’;app.style.display=‘flex’;}
 if(API_KEY)showApp();
 function doEnter(){
-const k=keyInp.value.trim()||API_KEY;
-if(!k){ return; }
-API_KEY=k;
-localStorage.setItem(‘sk’,k);
+const k=keyInp.value.trim()||localStorage.getItem(‘sk’)||’’;
+if(k){ API_KEY=k; localStorage.setItem(‘sk’,k); }
 document.getElementById(‘keyScreen’).style.display=‘none’;
 document.getElementById(‘app’).style.display=‘flex’;
 }
