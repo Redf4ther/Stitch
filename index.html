@@ -75,7 +75,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <div id="app">
   <button class="mute-btn" id="muteBtn">🔊</button>
   <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v7</span></div>
+    <div class="title">Стич · Claude <span class="build">v8</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -253,29 +253,34 @@ async function askClaude(msg){
       window.speechSynthesis.speak(u);
     }
 
-    // Sync: measure when speech actually starts, type until it ends
-    const speechStarted=new Promise(resolve=>{
-      // onstart fires when speech begins playing
-      if(window.speechSynthesis&&window.speechSynthesis.speaking) resolve(Date.now());
-      else setTimeout(()=>resolve(Date.now()),100);
+    // Wait for speech to actually start, then type exactly until it ends
+    await new Promise(r=>setTimeout(r,80)); // small delay for speech to begin
+    const t0=Date.now();
+    let speechEndTime=null;
+    speechPromise.then(()=>{ speechEndTime=Date.now(); });
+
+    // Use rAF loop to update text based on % of speech elapsed
+    await new Promise(resolve=>{
+      function frame(){
+        const now=Date.now();
+        const elapsed=now-t0;
+        // Estimate total duration = chars * 62ms at rate 1.2
+        const total=text.length*62;
+        // How far through the text we should be
+        const progress=Math.min(1,elapsed/total);
+        const charIdx=Math.floor(progress*text.length);
+        el.textContent=text.slice(0,Math.max(1,charIdx));
+        chat.scrollTop=chat.scrollHeight;
+        if(speechEndTime!==null||progress>=1){
+          el.textContent=text;
+          chat.scrollTop=chat.scrollHeight;
+          resolve();
+        } else {
+          requestAnimationFrame(frame);
+        }
+      }
+      requestAnimationFrame(frame);
     });
-    const t0=await speechStarted;
-    // Type text proportionally over speech duration
-    // We update char position based on elapsed/total time ratio
-    let done=false;
-    speechPromise.then(()=>done=true);
-    const estTotal=text.length*62; // 62ms/char at rate 1.2
-    for(let i=1;i<=text.length;i++){
-      el.textContent=text.slice(0,i);
-      chat.scrollTop=chat.scrollHeight;
-      el.scrollIntoView({block:'end'});
-      if(done) break;
-      const elapsed=Date.now()-t0;
-      const target=(i/text.length)*estTotal;
-      const delay=Math.max(15,target-elapsed);
-      await sleep(delay);
-    }
-    el.textContent=text;
     el.classList.remove('cur');
     chat.scrollTop=chat.scrollHeight;
     await speechPromise;
