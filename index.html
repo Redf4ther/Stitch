@@ -243,7 +243,8 @@ async function askClaude(msg) {
     setState('talking');
     var el = addMsg('a', '');
     el.classList.add('cur');
-    // 1. Start voice immediately (independent)
+    // Stop keepalive then speak immediately
+    stopKeepAlive();
     if (window.speechSynthesis) {
       var u = new SpeechSynthesisUtterance(text);
       u.lang='ru-RU'; u.rate=1.2; u.pitch=1.8; u.volume=1;
@@ -252,16 +253,14 @@ async function askClaude(msg) {
       if (ru) u.voice = ru;
       window.speechSynthesis.speak(u);
     }
-    // 2. Start mouth animation
+    // Mouth tied to text, fixed 55ms per char
     startMouth();
-    // 3. Type text at fixed 55ms per char
     for (var i=1; i<=text.length; i++) {
       el.textContent = text.slice(0,i);
       el.scrollIntoView({block:'end',behavior:'instant'});
       await sleep(55);
     }
     el.classList.remove('cur');
-    // 4. Stop mouth when text finishes
     stopMouth();
     setState('idle');
   } catch(e) {
@@ -271,6 +270,22 @@ async function askClaude(msg) {
   }
 }
 
+var keepAliveTimer = null;
+function startKeepAlive() {
+  if (keepAliveTimer) return;
+  function ping() {
+    if (!keepAliveTimer) return;
+    if (window.speechSynthesis && !window.speechSynthesis.speaking) {
+      var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
+      window.speechSynthesis.speak(u);
+    }
+    keepAliveTimer = setTimeout(ping, 700);
+  }
+  keepAliveTimer = setTimeout(ping, 700);
+}
+function stopKeepAlive() {
+  if (keepAliveTimer) { clearTimeout(keepAliveTimer); keepAliveTimer=null; }
+}
 var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 function startListening() {
@@ -299,6 +314,7 @@ micBtn.addEventListener('touchstart', function(e) {
     var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
     window.speechSynthesis.speak(u);
   }
+  startKeepAlive();
   startListening();
 }, {passive:false});
 
@@ -311,6 +327,7 @@ sb.onclick = function() {
     var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
     window.speechSynthesis.speak(u);
   }
+  startKeepAlive();
   inp.value=''; askClaude(msg);
 };
 
