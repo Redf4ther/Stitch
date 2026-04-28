@@ -177,7 +177,9 @@ function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null}mC=0;mT=0;drawMo
 function addMsg(role,text){
   const w=document.createElement('div');w.className='bbl'+(role==='u'?' u':'');
   const b=document.createElement('div');b.className='bi';b.textContent=text;
-  w.appendChild(b);chat.appendChild(w);chat.scrollTop=chat.scrollHeight;return b;
+  w.appendChild(b);chat.appendChild(w);
+  setTimeout(()=>chat.scrollTop=chat.scrollHeight, 50);
+  return b;
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
@@ -186,6 +188,7 @@ async function typeText(el,text){
   for(let i=1;i<=text.length;i++){
     el.textContent=text.slice(0,i);
     if(text[i-1]!==' ')beat();
+    chat.scrollTop=chat.scrollHeight;
     await sleep(18);
   }
   el.classList.remove('cur');
