@@ -59,13 +59,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .inp::placeholder{color:#1a3050}
 .sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .sbtn:disabled{background:#111a2e;opacity:.35}
-.mute-btn{position:absolute;top:10px;right:12px;background:rgba(20,40,80,.7);border:1px solid rgba(60,120,240,.3);border-radius:50%;width:34px;height:34px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff}
+
 </style>
 </head>
 <body>
-<button class="mute-btn" id="muteBtn" style="display:none">🔊</button>
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:12px;opacity:.5;font-weight:400">v33</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:12px;opacity:.5;font-weight:400">v36</span></h2>
   <p>Введи API ключ один раз — сохранится в телефоне</p>
   <div class="key-lbl">Anthropic API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
@@ -73,7 +72,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 </div>
 <div id="app">
   <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v33</span></div>
+    <div class="title">Стич · Claude <span class="build">v36</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -115,7 +114,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
     </div>
   </div>
 </div>
-<script>
+<script type="module">
 // Wait for DOM
 window.addEventListener('load', function(){
   var keyScreen=document.getElementById('keyScreen');
@@ -128,8 +127,6 @@ var k=(keyInp?keyInp.value.trim():’’)||localStorage.getItem(‘sk’)||’�
 if(k){ localStorage.setItem(‘sk’,k); }
 keyScreen.style.display=‘none’;
 app.style.display=‘flex’;
-var mb=document.getElementById(‘muteBtn’);
-if(mb)mb.style.display=‘flex’;
 initApp();
 }
 
@@ -140,8 +137,6 @@ if(keyInp) keyInp.onkeydown=function(e){if(e.key===‘Enter’)enter();};
 if(localStorage.getItem(‘sk’)){
 keyScreen.style.display=‘none’;
 app.style.display=‘flex’;
-var mb=document.getElementById(‘muteBtn’);
-if(mb)mb.style.display=‘flex’;
 initApp();
 }
 });
@@ -153,19 +148,12 @@ dot=document.getElementById(‘dot’),stxt=document.getElementById(‘stxt’),
 chat=document.getElementById(‘chat’),err=document.getElementById(‘err’),
 inp=document.getElementById(‘inp’),sb=document.getElementById(‘sb’),
 micBtn=document.getElementById(‘micBtn’),micHint=document.getElementById(‘micHint’),
-muteBtn=document.getElementById(‘muteBtn’),
 MC=document.getElementById(‘MC’),MO=document.getElementById(‘MO’),
 MS=document.getElementById(‘MS’),MT=document.getElementById(‘MT’),
 TG=document.getElementById(‘TG’),TOP=document.getElementById(‘TOP’),BOT=document.getElementById(‘BOT’);
 
 var state=‘idle’,hist=[],raf=null,mC=0,lastFlip=0,isOpen=false,posIdx=0,shapeIdx=0;
-var recog=null,listenStart=0,muted=false;
-
-if(muteBtn) muteBtn.onclick=function(){
-muted=!muted;
-muteBtn.textContent=muted?‘🔇’:‘🔊’;
-if(muted&&window.speechSynthesis)window.speechSynthesis.cancel();
-};
+var recog=null,listenStart=0;
 
 var shapes=[‘normal’,‘normal’,‘wide’,‘normal’,‘tube’,‘normal’,‘wide’,‘tube’,‘normal’];
 var openPos=[0.3,0.5,0.7,0.9,0.4,0.75,0.55];
@@ -248,7 +236,7 @@ startMouth();
 
 ```
   var speechDone=false;
-  if(!muted&&window.speechSynthesis){
+  if(window.speechSynthesis){
     var u=new SpeechSynthesisUtterance(text);
     u.lang='ru-RU';u.rate=1.2;u.pitch=1.8;u.volume=1;
     var voices=window.speechSynthesis.getVoices();
@@ -257,7 +245,7 @@ startMouth();
     u.onend=function(){speechDone=true;};
     u.onerror=function(){speechDone=true;};
     window.speechSynthesis.speak(u);
-  } else { speechDone=true; }
+  }
 
   for(var i=1;i<=text.length;i++){
     el.textContent=text.slice(0,i);
