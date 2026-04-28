@@ -33,19 +33,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 @keyframes gT{0%,100%{opacity:.4}50%{opacity:.85}}
 @keyframes db{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-@keyframes cur{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
 .status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1e3050;margin:2px 0}
 .dot{width:6px;height:6px;border-radius:50%;background:#101820;transition:all .3s}
 .dot.y{background:#facc15;box-shadow:0 0 6px #facc15;animation:db .5s infinite}
 .dot.g{background:#4ade80;box-shadow:0 0 6px #4ade80;animation:db 1s infinite}
 .dot.b{background:#60a5fa;box-shadow:0 0 6px #60a5fa;animation:db .4s infinite}
-.chat{position:fixed;left:0;right:0;top:215px;bottom:160px;overflow-y:auto;padding:4px 14px 10px;display:flex;flex-direction:column;gap:7px;scroll-behavior:smooth}
+.chat{position:fixed;left:0;right:0;top:215px;bottom:165px;overflow-y:auto;padding:4px 14px 16px;display:flex;flex-direction:column;gap:7px}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#0a1624;border:1px solid rgba(40,90,180,.2);color:#90b8e0}
 .bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
-.cur::after{content:'▋';color:#60b0ff;animation:cur .6s infinite}
+.cur::after{content:'▋';color:#60b0ff;animation:cur .4s steps(1) infinite}
 .err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center}
 .bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:20}
 .mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;transition:background .2s;touch-action:none}
@@ -75,7 +75,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <div id="app">
   <button class="mute-btn" id="muteBtn">🔊</button>
   <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v13</span></div>
+    <div class="title">Стич · Claude <span class="build">v14</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
