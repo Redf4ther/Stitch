@@ -74,68 +74,38 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
   <div class="stage">
     <div class="glow" id="glow"></div>
     <div class="head" id="head">
-      <svg viewBox="0 0 300 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <svg id="stitchSvg" viewBox="0 0 300 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <radialGradient id="bg" cx="42%" cy="30%" r="65%">
-            <stop offset="0%" stop-color="#a8dff0"/><stop offset="35%" stop-color="#72b8e0"/>
-            <stop offset="70%" stop-color="#4a8ec8"/><stop offset="100%" stop-color="#2a5a9a"/>
-          </radialGradient>
-          <radialGradient id="eg" cx="40%" cy="25%" r="65%">
-            <stop offset="0%" stop-color="#7ac0d8"/><stop offset="100%" stop-color="#3060a0"/>
-          </radialGradient>
-          <radialGradient id="ng" cx="30%" cy="25%" r="65%">
-            <stop offset="0%" stop-color="#4a68b0"/><stop offset="100%" stop-color="#1a2858"/>
-          </radialGradient>
+          <radialGradient id="bg" cx="42%" cy="30%" r="65%"><stop offset="0%" stop-color="#a8dff0"/><stop offset="35%" stop-color="#72b8e0"/><stop offset="70%" stop-color="#4a8ec8"/><stop offset="100%" stop-color="#2a5a9a"/></radialGradient>
+          <radialGradient id="eg" cx="40%" cy="25%" r="65%"><stop offset="0%" stop-color="#7ac0d8"/><stop offset="100%" stop-color="#3060a0"/></radialGradient>
+          <radialGradient id="ng" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#4a68b0"/><stop offset="100%" stop-color="#1a2858"/></radialGradient>
         </defs>
-        <!-- Ears -->
-        <g transform="rotate(-22,80,95)">
-          <path d="M42 180 Q10 140 18 70 Q28 20 68 8 Q95 0 102 30 Q108 55 95 100 Q85 140 75 175Z" fill="url(#eg)"/>
-          <path d="M55 165 Q30 132 36 75 Q44 38 68 28 Q85 22 90 45 Q94 65 83 100 Q74 130 66 162Z" fill="#c090cc" opacity=".5"/>
-        </g>
-        <g transform="rotate(22,220,95)">
-          <path d="M258 180 Q290 140 282 70 Q272 20 232 8 Q205 0 198 30 Q192 55 205 100 Q215 140 225 175Z" fill="url(#eg)"/>
-          <path d="M245 165 Q270 132 264 75 Q256 38 232 28 Q215 22 210 45 Q206 65 217 100 Q226 130 234 162Z" fill="#c090cc" opacity=".5"/>
-        </g>
-        <!-- Neck -->
+        <g transform="rotate(-22,80,95)"><path d="M42 180 Q10 140 18 70 Q28 20 68 8 Q95 0 102 30 Q108 55 95 100 Q85 140 75 175Z" fill="url(#eg)"/><path d="M55 165 Q30 132 36 75 Q44 38 68 28 Q85 22 90 45 Q94 65 83 100 Q74 130 66 162Z" fill="#c090cc" opacity=".5"/></g>
+        <g transform="rotate(22,220,95)"><path d="M258 180 Q290 140 282 70 Q272 20 232 8 Q205 0 198 30 Q192 55 205 100 Q215 140 225 175Z" fill="url(#eg)"/><path d="M245 165 Q270 132 264 75 Q256 38 232 28 Q215 22 210 45 Q206 65 217 100 Q226 130 234 162Z" fill="#c090cc" opacity=".5"/></g>
         <path d="M110 288 Q122 300 150 302 Q178 300 190 288 Q183 275 150 273 Q117 275 110 288Z" fill="#3a70a8" opacity=".65"/>
-        <!-- Head -->
         <path d="M150 40 C200 38,240 60,255 100 C270 140,265 175,250 200 C240 218,225 232,210 245 C195 258,175 266,150 268 C125 266,105 258,90 245 C75 232,60 218,50 200 C35 175,30 140,45 100 C60 60,100 38,150 40Z" fill="url(#bg)"/>
         <ellipse cx="135" cy="98" rx="62" ry="40" fill="#b8e8f8" opacity=".16"/>
-        <!-- Cheeks -->
-        <ellipse cx="68" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/>
-        <ellipse cx="232" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/>
-        <circle cx="55" cy="198" r="3" fill="#3060a0" opacity=".38"/>
-        <circle cx="68" cy="210" r="3" fill="#3060a0" opacity=".38"/>
-        <circle cx="80" cy="202" r="3" fill="#3060a0" opacity=".38"/>
-        <circle cx="245" cy="198" r="3" fill="#3060a0" opacity=".38"/>
-        <circle cx="232" cy="210" r="3" fill="#3060a0" opacity=".38"/>
-        <circle cx="220" cy="202" r="3" fill="#3060a0" opacity=".38"/>
-        <!-- Nose -->
+        <ellipse cx="68" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/><ellipse cx="232" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/>
+        <circle cx="55" cy="198" r="3" fill="#3060a0" opacity=".38"/><circle cx="68" cy="210" r="3" fill="#3060a0" opacity=".38"/><circle cx="80" cy="202" r="3" fill="#3060a0" opacity=".38"/>
+        <circle cx="245" cy="198" r="3" fill="#3060a0" opacity=".38"/><circle cx="232" cy="210" r="3" fill="#3060a0" opacity=".38"/><circle cx="220" cy="202" r="3" fill="#3060a0" opacity=".38"/>
         <path d="M150 148 C128 148,116 162,118 178 C120 194,132 204,150 205 C168 204,180 194,182 178 C184 162,172 148,150 148Z" fill="url(#ng)"/>
         <ellipse cx="140" cy="160" rx="11" ry="7" fill="#6080c0" opacity=".38"/>
-        <ellipse cx="138" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
-        <ellipse cx="162" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
-        <!-- Eyes -->
-        <ellipse cx="100" cy="148" rx="32" ry="32" fill="white"/>
-        <ellipse cx="102" cy="151" rx="23" ry="23" fill="#080c12"/>
-        <ellipse cx="113" cy="139" rx="10" ry="8" fill="white" opacity=".9"/>
-        <ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
-        <ellipse cx="200" cy="148" rx="32" ry="32" fill="white"/>
-        <ellipse cx="202" cy="151" rx="23" ry="23" fill="#080c12"/>
-        <ellipse cx="213" cy="139" rx="10" ry="8" fill="white" opacity=".9"/>
-        <ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
-        <!-- Bumps -->
-        <ellipse cx="128" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
-        <ellipse cx="172" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
+        <ellipse cx="138" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/><ellipse cx="162" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
+        <ellipse cx="100" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="102" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="113" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
+        <ellipse cx="200" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="202" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="213" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
+        <ellipse cx="128" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/><ellipse cx="172" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
         <!-- Mouth -->
         <g id="MC">
-          <path d="M124 234 Q137 244 150 245 Q163 244 176 234" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M126 232 Q138 244 150 245 Q162 244 174 232" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <circle cx="122" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/>
+          <circle cx="178" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/>
         </g>
         <g id="MO" style="display:none">
           <path id="MS" fill="#06101e"/>
           <path id="MT" fill="white"/>
           <ellipse id="TG" fill="#c03858" opacity=".85"/>
-          <path id="ML" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path id="TOP" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path id="BOT" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/>
         </g>
       </svg>
     </div>
@@ -159,10 +129,12 @@ const keyScreen=$('keyScreen'),app=$('app'),keyInp=$('keyInp'),keyBtn=$('keyBtn'
       glow=$('glow'),head=$('head'),dot=$('dot'),stxt=$('stxt'),
       chat=$('chat'),err=$('err'),inp=$('inp'),sb=$('sb'),
       micBtn=$('micBtn'),micHint=$('micHint'),
-      MC=$('MC'),MO=$('MO'),MS=$('MS'),MT=$('MT'),TG=$('TG'),ML=$('ML');
+      MC=$('MC'),MO=$('MO'),MS=$('MS'),MT=$('MT'),TG=$('TG'),
+      TOP=$('TOP'),BOT=$('BOT');
 
 let API_KEY=localStorage.getItem('sk')||'';
-let state='idle',hist=[],raf=null,mC=0,mT=0,lastB=0,recog=null,listenStart=0;
+let state='idle',hist=[],raf=null,mC=0,lastFlip=0,isOpen=false,posIdx=0,shapeIdx=0;
+let recog=null,listenStart=0;
 
 function showApp(){keyScreen.style.display='none';app.style.display='flex';}
 if(API_KEY) showApp();
@@ -172,101 +144,63 @@ keyBtn.addEventListener('click',()=>{
 });
 keyInp.addEventListener('keydown',e=>{if(e.key==='Enter')keyBtn.click()});
 
-// ── Simlish audio engine ──
-let audioCtx=null;
-function getAudioCtx(){
-  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==='suspended') audioCtx.resume();
-  return audioCtx;
-}
+// ── Mouth ──
+const shapes=['normal','normal','wide','normal','tube','normal','wide','tube','normal'];
+const openPos=[0.3,0.5,0.7,0.9,0.4,0.75,0.55];
 
-// Play one simlish "syllable" — short vowel-like tone with wobble
-function playSyllable(freq, duration, volume=0.18){
-  try{
-    const ctx=getAudioCtx();
-    const osc=ctx.createOscillator();
-    const gain=ctx.createGain();
-    const filter=ctx.createBiquadFilter();
-
-    // Warm tone like voice formant
-    osc.type='sine';
-    filter.type='bandpass';
-    filter.frequency.value=freq;
-    filter.Q.value=3;
-
-    // Pitch wobble — makes it sound organic
-    osc.frequency.setValueAtTime(freq*0.92, ctx.currentTime);
-    osc.frequency.linearRampToValueAtTime(freq*1.05, ctx.currentTime+duration*0.3);
-    osc.frequency.linearRampToValueAtTime(freq*0.97, ctx.currentTime+duration*0.7);
-    osc.frequency.linearRampToValueAtTime(freq*0.88, ctx.currentTime+duration);
-
-    // Envelope: attack, sustain, release
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(volume, ctx.currentTime+duration*0.15);
-    gain.gain.setValueAtTime(volume*0.8, ctx.currentTime+duration*0.6);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime+duration);
-
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime+duration);
-  }catch(e){}
-}
-
-// Simlish syllable patterns — vowel frequencies like in The Sims
-const vowelFreqs=[280,320,260,350,310,290,340,270,380,300];
-const consonantFreqs=[180,200,160,220,190,170,210,185];
-
-let simlishTimer=null;
-let syllableIndex=0;
-
-function startSimlish(){
-  if(simlishTimer) return;
-  syllableIndex=0;
-  function playNext(){
-    if(!simlishTimer) return;
-    // Alternate: consonant (short) + vowel (longer) — like real speech
-    const isVowel=syllableIndex%2===1;
-    const freqs=isVowel?vowelFreqs:consonantFreqs;
-    const freq=freqs[Math.floor(Math.random()*freqs.length)];
-    const dur=isVowel?(0.08+Math.random()*0.07):(0.04+Math.random()*0.04);
-    const vol=isVowel?0.15:0.08;
-    playSyllable(freq, dur, vol);
-    syllableIndex++;
-    // Vary timing — sometimes faster, sometimes a tiny pause
-    const nextDelay=isVowel?(60+Math.random()*60):(30+Math.random()*40);
-    simlishTimer=setTimeout(playNext, nextDelay);
-  }
-  simlishTimer=setTimeout(playNext,0);
-}
-
-function stopSimlish(){
-  if(simlishTimer){clearTimeout(simlishTimer);simlishTimer=null;}
-}
-
-// ── Mouth animation ──
-function drawMouth(a){
-  if(a<0.06){MC.style.display='';MO.style.display='none';return}
+function drawMouth(a,shape){
+  if(a<0.04){MC.style.display='';MO.style.display='none';return;}
   MC.style.display='none';MO.style.display='';
-  const cx=150,cy=235,w=54+a*24,h=a*30,L=cx-w/2,R=cx+w/2,bY=cy+h,th=7+a*8;
-  MS.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-5} ${R} ${cy} Q${R-5} ${bY} ${cx} ${bY+2} Q${L+5} ${bY} ${L} ${cy}Z`);
-  MT.setAttribute('d',`M${cx-15} ${cy} Q${cx-8} ${cy-2} ${cx-3} ${cy-1} L${cx+3} ${cy-1} Q${cx+8} ${cy-2} ${cx+15} ${cy} Q${cx+8} ${cy+th} ${cx} ${cy+th+1} Q${cx-8} ${cy+th} ${cx-15} ${cy}Z`);
-  TG.setAttribute('cx',cx);TG.setAttribute('cy',cy+h*0.6);TG.setAttribute('rx',12+a*5);TG.setAttribute('ry',5+a*7);
-  ML.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-7} ${R} ${cy}`);
+  const cx=150,cy=235;
+  let w,h;
+  if(shape==='tube'){w=18+a*10;h=a*40;}
+  else if(shape==='wide'){w=52+a*16;h=a*14;}
+  else{w=42+a*16;h=a*26;}
+  const L=cx-w/2,R=cx+w/2,bY=cy+h,th=shape==='tube'?3+a*5:5+a*8;
+  MS.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-6} ${R} ${cy} Q${R-4} ${bY} ${cx} ${bY+2} Q${L+4} ${bY} ${L} ${cy}Z`);
+  if(a>0.5){MT.setAttribute('d',`M${cx-14} ${cy} Q${cx-8} ${cy-2} ${cx-2} ${cy-1} L${cx+2} ${cy-1} Q${cx+8} ${cy-2} ${cx+14} ${cy} Q${cx+7} ${cy+th} ${cx} ${cy+th+1} Q${cx-7} ${cy+th} ${cx-14} ${cy}Z`);MT.style.display='';}
+  else{MT.style.display='none';}
+  if(a>0.35){TG.setAttribute('cx',cx);TG.setAttribute('cy',cy+h*0.65);TG.setAttribute('rx',10+a*4);TG.setAttribute('ry',4+a*5);TG.style.display='';}
+  else{TG.style.display='none';}
+  TOP.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-8} ${R} ${cy}`);
+  BOT.setAttribute('d',`M${L} ${cy} Q${L+6} ${bY+2} ${cx} ${bY+3} Q${R-6} ${bY+2} ${R} ${cy}`);
 }
+
+let currentShape='normal';
 function mLoop(t){
   raf=requestAnimationFrame(mLoop);
-  const age=(t-lastB)/1000;
-  if(age>0.08) mT=Math.max(0,mT-0.05);
-  mC+=(mT-mC)*0.22;
-  drawMouth(mC);
+  const interval=60+Math.random()*40;
+  if(t-lastFlip>interval){
+    isOpen=!isOpen;lastFlip=t;
+    if(isOpen){
+      posIdx=(posIdx+1)%openPos.length;
+      shapeIdx=(shapeIdx+1)%shapes.length;
+      currentShape=shapes[shapeIdx];
+      mC=openPos[posIdx];
+    }else{mC=0;}
+    drawMouth(mC,currentShape);
+  }
 }
-function beat(){lastB=performance.now();mT=0.7+Math.random()*0.3;}
 function startMouth(){if(!raf)raf=requestAnimationFrame(mLoop);}
-function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null;}mC=0;mT=0;drawMouth(0);}
+function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null;}mC=0;drawMouth(0,'normal');}
 
-// ── UI ──
+// ── Voice ──
+function speak(text){
+  return new Promise(resolve=>{
+    if(!window.speechSynthesis){resolve();return;}
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='ru-RU';u.rate=1.2;u.pitch=1.8;u.volume=1;
+    const voices=window.speechSynthesis.getVoices();
+    const ru=voices.find(v=>v.lang==='ru-RU')||voices.find(v=>v.lang.startsWith('ru'))||voices[0];
+    if(ru)u.voice=ru;
+    u.onend=resolve;u.onerror=resolve;
+    setTimeout(resolve,text.length*120+2000);
+    window.speechSynthesis.speak(u);
+  });
+}
+
+// ── State ──
 function setState(s){
   state=s;
   dot.className='dot'+(s==='thinking'?' y':s==='talking'?' g':s==='listening'?' b':'');
@@ -280,6 +214,7 @@ function setState(s){
   inp.disabled=busy;sb.disabled=busy;
 }
 
+// ── Chat ──
 function addMsg(role,text){
   const w=document.createElement('div');w.className='bbl'+(role==='u'?' u':'');
   const b=document.createElement('div');b.className='bi';b.textContent=text;
@@ -291,11 +226,11 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 async function typeText(el,text){
   el.textContent='';el.classList.add('cur');
+  const charDelay=text.length*65/text.length; // sync with speech rate 1.2
   for(let i=1;i<=text.length;i++){
     el.textContent=text.slice(0,i);
-    if(text[i-1]!==' ') beat();
     chat.scrollTop=chat.scrollHeight;
-    await sleep(18);
+    await sleep(charDelay);
   }
   el.classList.remove('cur');
 }
@@ -323,21 +258,17 @@ async function askClaude(msg){
       })
     });
     const data=await r.json();
-    if(data.error) throw new Error(data.error.message);
+    if(data.error)throw new Error(data.error.message);
     const text=data.content[0].text;
     hist.push({role:'assistant',content:text});
     setState('talking');
     const el=addMsg('a','');
     startMouth();
-    startSimlish(); // 🎵 Simlish starts!
-    await typeText(el,text);
-    stopSimlish();  // 🎵 Simlish stops!
+    await Promise.all([typeText(el,text), speak(text)]);
     stopMouth();
     setState('idle');
   }catch(e){
-    stopMouth();stopSimlish();
-    err.textContent='Ошибка: '+e.message;
-    setState('idle');
+    stopMouth();err.textContent='Ошибка: '+e.message;setState('idle');
   }
 }
 
@@ -345,23 +276,15 @@ async function askClaude(msg){
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 function startListening(){
   if(state!=='idle')return;
-  if(!SR){err.textContent='Используй Safari';return}
-  // Unlock audio context on user gesture
-  getAudioCtx();
-  err.textContent='';setState('listening');
-  listenStart=Date.now();
-  recog=new SR();
-  recog.lang='ru-RU';recog.interimResults=false;recog.continuous=true;
+  if(!SR){err.textContent='Используй Safari';return;}
+  err.textContent='';setState('listening');listenStart=Date.now();
+  recog=new SR();recog.lang='ru-RU';recog.interimResults=false;recog.continuous=true;
   recog.onresult=e=>{
     const t=Array.from(e.results).map(r=>r[0].transcript).join('').trim();
     recog=null;if(t)askClaude(t);else setState('idle');
   };
-  recog.onerror=e=>{
-    recog=null;setState('idle');
-    if(e.error==='not-allowed')err.textContent='Разреши микрофон в Safari';
-    else if(e.error!=='aborted')err.textContent='Ошибка: '+e.error;
-  };
-  recog.onend=()=>{recog=null;if(state==='listening')setState('idle')};
+  recog.onerror=e=>{recog=null;setState('idle');if(e.error==='not-allowed')err.textContent='Разреши микрофон в Safari';};
+  recog.onend=()=>{recog=null;if(state==='listening')setState('idle');};
   recog.start();
 }
 function stopListening(){
@@ -370,19 +293,16 @@ function stopListening(){
   setTimeout(()=>{if(recog)try{recog.stop()}catch(e){}},delay);
 }
 micBtn.addEventListener('touchstart',e=>{e.preventDefault();startListening();},{passive:false});
-micBtn.addEventListener('touchend',  e=>{e.preventDefault();stopListening();},{passive:false});
+micBtn.addEventListener('touchend',e=>{e.preventDefault();stopListening();},{passive:false});
 micBtn.addEventListener('touchcancel',()=>stopListening());
 
 // ── Text input ──
 async function send(){
-  const msg=inp.value.trim();
-  if(!msg||state!=='idle')return;
-  // Unlock audio on button press
-  getAudioCtx();
+  const msg=inp.value.trim();if(!msg||state!=='idle')return;
   inp.value='';await askClaude(msg);
 }
 sb.addEventListener('click',send);
-inp.addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+inp.addEventListener('keydown',e=>{if(e.key==='Enter')send();});
 </script>
 
 </body>
