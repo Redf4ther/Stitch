@@ -44,6 +44,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#0a1624;border:1px solid rgba(40,90,180,.2);color:#90b8e0}
 .bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
 .cur::after{content:'▋';color:#60b0ff;animation:cur .6s infinite}
+.cur::after{content:'▋';color:#60b0ff;animation:cur .6s infinite}
 .err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;flex-shrink:0}
 .bottom{flex-shrink:0;padding:8px 14px 28px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);width:100%;max-width:500px;display:flex;flex-direction:column;gap:10px;align-items:center}
 .mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;transition:background .2s;touch-action:none}
@@ -184,7 +185,16 @@ function mLoop(t){
 function startMouth(){if(!raf)raf=requestAnimationFrame(mLoop);}
 function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null;}mC=0;drawMouth(0,'normal');}
 
-// ── Voice ──
+// Unlock speechSynthesis on first touch (Safari requirement)
+document.addEventListener('touchstart',()=>{
+  if(window.speechSynthesis){
+    window.speechSynthesis.getVoices();
+    const u=new SpeechSynthesisUtterance('');
+    window.speechSynthesis.speak(u);
+    window.speechSynthesis.cancel();
+  }
+},{once:true});
+
 function speak(text){
   return new Promise(resolve=>{
     if(!window.speechSynthesis){resolve();return;}
@@ -264,7 +274,11 @@ async function askClaude(msg){
     setState('talking');
     const el=addMsg('a','');
     startMouth();
-    await Promise.all([typeText(el,text), speak(text)]);
+    // Speak and type in parallel
+    speak(text);
+    await typeText(el,text);
+    // Wait a bit for speech to finish
+    await sleep(1000);
     stopMouth();
     setState('idle');
   }catch(e){
@@ -277,6 +291,13 @@ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 function startListening(){
   if(state!=='idle')return;
   if(!SR){err.textContent='Используй Safari';return;}
+  // Unlock speechSynthesis RIGHT NOW on user gesture
+  if(window.speechSynthesis){
+    window.speechSynthesis.cancel();
+    const dummy=new SpeechSynthesisUtterance(' ');
+    dummy.volume=0;
+    window.speechSynthesis.speak(dummy);
+  }
   err.textContent='';setState('listening');listenStart=Date.now();
   recog=new SR();recog.lang='ru-RU';recog.interimResults=false;recog.continuous=true;
   recog.onresult=e=>{
@@ -292,13 +313,30 @@ function stopListening(){
   const delay=Math.max(0,600-(Date.now()-listenStart));
   setTimeout(()=>{if(recog)try{recog.stop()}catch(e){}},delay);
 }
-micBtn.addEventListener('touchstart',e=>{e.preventDefault();startListening();},{passive:false});
+micBtn.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  // Unlock speechSynthesis immediately on touch — before any async
+  if(window.speechSynthesis){
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(' ');
+    u.volume=0;u.rate=2;
+    window.speechSynthesis.speak(u);
+  }
+  startListening();
+},{passive:false});
 micBtn.addEventListener('touchend',e=>{e.preventDefault();stopListening();},{passive:false});
 micBtn.addEventListener('touchcancel',()=>stopListening());
 
 // ── Text input ──
 async function send(){
   const msg=inp.value.trim();if(!msg||state!=='idle')return;
+  // Unlock speechSynthesis on user gesture
+  if(window.speechSynthesis){
+    window.speechSynthesis.cancel();
+    const dummy=new SpeechSynthesisUtterance(' ');
+    dummy.volume=0;
+    window.speechSynthesis.speak(dummy);
+  }
   inp.value='';await askClaude(msg);
 }
 sb.addEventListener('click',send);
