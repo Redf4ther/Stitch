@@ -3,7 +3,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content">
 <title>Стич · Claude</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
@@ -16,9 +16,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .key-inp:focus{outline:none;border-color:rgba(60,140,240,.6)}
 .key-inp::placeholder{color:#1a3050;font-size:13px}
 .key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer;margin-top:4px}
-#app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
+#app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow:hidden}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0;flex-shrink:0}
-.stage{position:relative;width:185px;height:185px;margin-top:4px;flex-shrink:0}
+.stage{position:relative;width:160px;height:160px;margin-top:4px;flex-shrink:0}
 .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(30,90,180,.3) 0%,transparent 68%);animation:gI 3s ease-in-out infinite}
 .glow.on{animation:gT .22s ease-in-out infinite}
 .head{position:absolute;inset:0;animation:iB 3.5s ease-in-out infinite}
@@ -185,15 +185,24 @@ function mLoop(t){
 function startMouth(){if(!raf)raf=requestAnimationFrame(mLoop);}
 function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null;}mC=0;drawMouth(0,'normal');}
 
-// Unlock speechSynthesis on first touch (Safari requirement)
-document.addEventListener('touchstart',()=>{
-  if(window.speechSynthesis){
-    window.speechSynthesis.getVoices();
-    const u=new SpeechSynthesisUtterance('');
-    window.speechSynthesis.speak(u);
-    window.speechSynthesis.cancel();
+// Keep speechSynthesis alive during API call
+let keepAliveTimer=null;
+function startKeepAlive(){
+  if(keepAliveTimer) return;
+  function ping(){
+    if(!keepAliveTimer) return;
+    if(window.speechSynthesis && !window.speechSynthesis.speaking){
+      const u=new SpeechSynthesisUtterance(' ');
+      u.volume=0; u.rate=2;
+      window.speechSynthesis.speak(u);
+    }
+    keepAliveTimer=setTimeout(ping, 800);
   }
-},{once:true});
+  keepAliveTimer=setTimeout(ping, 800);
+}
+function stopKeepAlive(){
+  if(keepAliveTimer){clearTimeout(keepAliveTimer);keepAliveTimer=null;}
+}
 
 function speak(text){
   return new Promise(resolve=>{
@@ -274,7 +283,7 @@ async function askClaude(msg){
     setState('talking');
     const el=addMsg('a','');
     startMouth();
-    // Speak and type in parallel
+    stopKeepAlive(); // stop pinging, now real speech takes over
     speak(text);
     await typeText(el,text);
     // Wait a bit for speech to finish
@@ -315,13 +324,13 @@ function stopListening(){
 }
 micBtn.addEventListener('touchstart',e=>{
   e.preventDefault();
-  // Unlock speechSynthesis immediately on touch — before any async
+  // Unlock AND keep alive during API wait
   if(window.speechSynthesis){
-    window.speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(' ');
-    u.volume=0;u.rate=2;
+    u.volume=0; u.rate=2;
     window.speechSynthesis.speak(u);
   }
+  startKeepAlive();
   startListening();
 },{passive:false});
 micBtn.addEventListener('touchend',e=>{e.preventDefault();stopListening();},{passive:false});
