@@ -75,7 +75,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <div id="app">
   <button class="mute-btn" id="muteBtn">🔊</button>
   <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v2</span></div>
+    <div class="title">Стич · Claude <span class="build">v3</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -240,7 +240,8 @@ async function askClaude(msg){
     // Start speech immediately (no await before this point from user gesture)
     let speechPromise=Promise.resolve();
     if(!muted&&window.speechSynthesis){
-      const u=new SpeechSynthesisUtterance(text);
+      const ttsText=text.replace(/\p{Emoji}/gu,'').trim();
+      const u=new SpeechSynthesisUtterance(ttsText);
       u.lang='ru-RU';u.rate=1.2;u.pitch=1.8;u.volume=1;
       const voices=window.speechSynthesis.getVoices();
       const ru=voices.find(v=>v.lang==='ru-RU')||voices.find(v=>v.lang.startsWith('ru'))||voices[0];
@@ -252,18 +253,21 @@ async function askClaude(msg){
       window.speechSynthesis.speak(u);
     }
 
-    // Type text synced to speech speed (70ms/char ≈ rate 1.2)
+    // Type text — stop when speech ends
+    let speechOver=false;
+    speechPromise.then(()=>{ speechOver=true; });
     for(let i=1;i<=text.length;i++){
+      if(speechOver||muted) break;
       el.textContent=text.slice(0,i);
       chat.scrollTop=chat.scrollHeight;
       await sleep(70);
     }
+    el.textContent=text;
     el.classList.remove('cur');
-
-    // Stop mouth when text done, wait for voice to finish
+    chat.scrollTop=chat.scrollHeight;
+    await speechPromise;
     stopMouth();
     setState('idle');
-    await speechPromise;
 
   }catch(e){
     stopMouth();err.textContent='Ошибка: '+e.message;setState('idle');
