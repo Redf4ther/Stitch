@@ -17,9 +17,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .key-inp::placeholder{color:#1a3050;font-size:13px}
 .key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer;margin-top:4px}
 #app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow:hidden}
-.title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0;flex-shrink:0}
-.stage{position:relative;width:160px;height:160px;margin-top:4px;flex-shrink:0}
 .top-fixed{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:#0a0e16;z-index:20;padding-bottom:4px}
+.title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0}
+.stage{position:relative;width:160px;height:160px;margin-top:2px}
 .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(30,90,180,.3) 0%,transparent 68%);animation:gI 3s ease-in-out infinite}
 .glow.on{animation:gT .22s ease-in-out infinite}
 .head{position:absolute;inset:0;animation:iB 3.5s ease-in-out infinite}
@@ -34,21 +34,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cur{0%,100%{opacity:1}50%{opacity:0}}
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
-.status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1e3050;margin:3px 0;flex-shrink:0}
+.status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1e3050;margin:2px 0}
 .dot{width:6px;height:6px;border-radius:50%;background:#101820;transition:all .3s}
 .dot.y{background:#facc15;box-shadow:0 0 6px #facc15;animation:db .5s infinite}
 .dot.g{background:#4ade80;box-shadow:0 0 6px #4ade80;animation:db 1s infinite}
 .dot.b{background:#60a5fa;box-shadow:0 0 6px #60a5fa;animation:db .4s infinite}
-.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:20}
-.chat{position:fixed;left:0;right:0;top:210px;bottom:160px;overflow-y:auto;padding:4px 14px;display:flex;flex-direction:column;gap:7px}
+.chat{position:fixed;left:0;right:0;top:215px;bottom:155px;overflow-y:auto;padding:4px 14px;display:flex;flex-direction:column;gap:7px}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#0a1624;border:1px solid rgba(40,90,180,.2);color:#90b8e0}
 .bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
 .cur::after{content:'▋';color:#60b0ff;animation:cur .6s infinite}
-.cur::after{content:'▋';color:#60b0ff;animation:cur .6s infinite}
-.err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;flex-shrink:0}
-
+.err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center}
+.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:20}
 .mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;transition:background .2s;touch-action:none}
 .mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
 .mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
@@ -61,7 +59,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .sbtn:disabled{background:#111a2e;opacity:.35}
 </style>
-
 </head>
 <body>
 
@@ -75,47 +72,46 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top-fixed">
-  <div class="title">Стич · Claude</div>
-  <div class="stage">
-    <div class="glow" id="glow"></div>
-    <div class="head" id="head">
-      <svg id="stitchSvg" viewBox="0 0 300 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <radialGradient id="bg" cx="42%" cy="30%" r="65%"><stop offset="0%" stop-color="#a8dff0"/><stop offset="35%" stop-color="#72b8e0"/><stop offset="70%" stop-color="#4a8ec8"/><stop offset="100%" stop-color="#2a5a9a"/></radialGradient>
-          <radialGradient id="eg" cx="40%" cy="25%" r="65%"><stop offset="0%" stop-color="#7ac0d8"/><stop offset="100%" stop-color="#3060a0"/></radialGradient>
-          <radialGradient id="ng" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#4a68b0"/><stop offset="100%" stop-color="#1a2858"/></radialGradient>
-        </defs>
-        <g transform="rotate(-22,80,95)"><path d="M42 180 Q10 140 18 70 Q28 20 68 8 Q95 0 102 30 Q108 55 95 100 Q85 140 75 175Z" fill="url(#eg)"/><path d="M55 165 Q30 132 36 75 Q44 38 68 28 Q85 22 90 45 Q94 65 83 100 Q74 130 66 162Z" fill="#c090cc" opacity=".5"/></g>
-        <g transform="rotate(22,220,95)"><path d="M258 180 Q290 140 282 70 Q272 20 232 8 Q205 0 198 30 Q192 55 205 100 Q215 140 225 175Z" fill="url(#eg)"/><path d="M245 165 Q270 132 264 75 Q256 38 232 28 Q215 22 210 45 Q206 65 217 100 Q226 130 234 162Z" fill="#c090cc" opacity=".5"/></g>
-        <path d="M110 288 Q122 300 150 302 Q178 300 190 288 Q183 275 150 273 Q117 275 110 288Z" fill="#3a70a8" opacity=".65"/>
-        <path d="M150 40 C200 38,240 60,255 100 C270 140,265 175,250 200 C240 218,225 232,210 245 C195 258,175 266,150 268 C125 266,105 258,90 245 C75 232,60 218,50 200 C35 175,30 140,45 100 C60 60,100 38,150 40Z" fill="url(#bg)"/>
-        <ellipse cx="135" cy="98" rx="62" ry="40" fill="#b8e8f8" opacity=".16"/>
-        <ellipse cx="68" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/><ellipse cx="232" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/>
-        <circle cx="55" cy="198" r="3" fill="#3060a0" opacity=".38"/><circle cx="68" cy="210" r="3" fill="#3060a0" opacity=".38"/><circle cx="80" cy="202" r="3" fill="#3060a0" opacity=".38"/>
-        <circle cx="245" cy="198" r="3" fill="#3060a0" opacity=".38"/><circle cx="232" cy="210" r="3" fill="#3060a0" opacity=".38"/><circle cx="220" cy="202" r="3" fill="#3060a0" opacity=".38"/>
-        <path d="M150 148 C128 148,116 162,118 178 C120 194,132 204,150 205 C168 204,180 194,182 178 C184 162,172 148,150 148Z" fill="url(#ng)"/>
-        <ellipse cx="140" cy="160" rx="11" ry="7" fill="#6080c0" opacity=".38"/>
-        <ellipse cx="138" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/><ellipse cx="162" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
-        <ellipse cx="100" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="102" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="113" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
-        <ellipse cx="200" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="202" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="213" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
-        <ellipse cx="128" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/><ellipse cx="172" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
-        <!-- Mouth -->
-        <g id="MC">
-          <path d="M126 232 Q138 244 150 245 Q162 244 174 232" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <circle cx="122" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/>
-          <circle cx="178" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/>
-        </g>
-        <g id="MO" style="display:none">
-          <path id="MS" fill="#06101e"/>
-          <path id="MT" fill="white"/>
-          <ellipse id="TG" fill="#c03858" opacity=".85"/>
-          <path id="TOP" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <path id="BOT" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/>
-        </g>
-      </svg>
+    <div class="title">Стич · Claude</div>
+    <div class="stage">
+      <div class="glow" id="glow"></div>
+      <div class="head" id="head">
+        <svg viewBox="0 0 300 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="bg" cx="42%" cy="30%" r="65%"><stop offset="0%" stop-color="#a8dff0"/><stop offset="35%" stop-color="#72b8e0"/><stop offset="70%" stop-color="#4a8ec8"/><stop offset="100%" stop-color="#2a5a9a"/></radialGradient>
+            <radialGradient id="eg" cx="40%" cy="25%" r="65%"><stop offset="0%" stop-color="#7ac0d8"/><stop offset="100%" stop-color="#3060a0"/></radialGradient>
+            <radialGradient id="ng" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#4a68b0"/><stop offset="100%" stop-color="#1a2858"/></radialGradient>
+          </defs>
+          <g transform="rotate(-22,80,95)"><path d="M42 180 Q10 140 18 70 Q28 20 68 8 Q95 0 102 30 Q108 55 95 100 Q85 140 75 175Z" fill="url(#eg)"/><path d="M55 165 Q30 132 36 75 Q44 38 68 28 Q85 22 90 45 Q94 65 83 100 Q74 130 66 162Z" fill="#c090cc" opacity=".5"/></g>
+          <g transform="rotate(22,220,95)"><path d="M258 180 Q290 140 282 70 Q272 20 232 8 Q205 0 198 30 Q192 55 205 100 Q215 140 225 175Z" fill="url(#eg)"/><path d="M245 165 Q270 132 264 75 Q256 38 232 28 Q215 22 210 45 Q206 65 217 100 Q226 130 234 162Z" fill="#c090cc" opacity=".5"/></g>
+          <path d="M110 288 Q122 300 150 302 Q178 300 190 288 Q183 275 150 273 Q117 275 110 288Z" fill="#3a70a8" opacity=".65"/>
+          <path d="M150 40 C200 38,240 60,255 100 C270 140,265 175,250 200 C240 218,225 232,210 245 C195 258,175 266,150 268 C125 266,105 258,90 245 C75 232,60 218,50 200 C35 175,30 140,45 100 C60 60,100 38,150 40Z" fill="url(#bg)"/>
+          <ellipse cx="135" cy="98" rx="62" ry="40" fill="#b8e8f8" opacity=".16"/>
+          <ellipse cx="68" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/><ellipse cx="232" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/>
+          <circle cx="55" cy="198" r="3" fill="#3060a0" opacity=".38"/><circle cx="68" cy="210" r="3" fill="#3060a0" opacity=".38"/><circle cx="80" cy="202" r="3" fill="#3060a0" opacity=".38"/>
+          <circle cx="245" cy="198" r="3" fill="#3060a0" opacity=".38"/><circle cx="232" cy="210" r="3" fill="#3060a0" opacity=".38"/><circle cx="220" cy="202" r="3" fill="#3060a0" opacity=".38"/>
+          <path d="M150 148 C128 148,116 162,118 178 C120 194,132 204,150 205 C168 204,180 194,182 178 C184 162,172 148,150 148Z" fill="url(#ng)"/>
+          <ellipse cx="140" cy="160" rx="11" ry="7" fill="#6080c0" opacity=".38"/>
+          <ellipse cx="138" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/><ellipse cx="162" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
+          <ellipse cx="100" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="102" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="113" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
+          <ellipse cx="200" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="202" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="213" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
+          <ellipse cx="128" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/><ellipse cx="172" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
+          <g id="MC">
+            <path d="M126 232 Q138 244 150 245 Q162 244 174 232" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <circle cx="122" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/>
+            <circle cx="178" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/>
+          </g>
+          <g id="MO" style="display:none">
+            <path id="MS" fill="#06101e"/>
+            <path id="MT" fill="white"/>
+            <ellipse id="TG" fill="#c03858" opacity=".85"/>
+            <path id="TOP" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path id="BOT" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
     </div>
-  </div>
-  <div class="status"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
+    <div class="status"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
   </div>
   <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич 👽 Держи 🎙️ и говори!</div></div></div>
   <div class="err" id="err"></div>
@@ -135,14 +131,14 @@ const keyScreen=$('keyScreen'),app=$('app'),keyInp=$('keyInp'),keyBtn=$('keyBtn'
       glow=$('glow'),head=$('head'),dot=$('dot'),stxt=$('stxt'),
       chat=$('chat'),err=$('err'),inp=$('inp'),sb=$('sb'),
       micBtn=$('micBtn'),micHint=$('micHint'),
-      MC=$('MC'),MO=$('MO'),MS=$('MS'),MT=$('MT'),TG=$('TG'),
-      TOP=$('TOP'),BOT=$('BOT');
+      MC=$('MC'),MO=$('MO'),MS=$('MS'),MT=$('MT'),TG=$('TG'),TOP=$('TOP'),BOT=$('BOT');
 
 let API_KEY=localStorage.getItem('sk')||'';
 let state='idle',hist=[],raf=null,mC=0,lastFlip=0,isOpen=false,posIdx=0,shapeIdx=0;
-let recog=null,listenStart=0;
+let recog=null,listenStart=0,keepAliveTimer=null;
 
 function showApp(){keyScreen.style.display='none';app.style.display='flex';}
+if(API_KEY) showApp();
 keyBtn.addEventListener('click',()=>{
   const k=keyInp.value.trim();if(!k)return;
   API_KEY=k;localStorage.setItem('sk',k);showApp();
@@ -152,6 +148,7 @@ keyInp.addEventListener('keydown',e=>{if(e.key==='Enter')keyBtn.click()});
 // ── Mouth ──
 const shapes=['normal','normal','wide','normal','tube','normal','wide','tube','normal'];
 const openPos=[0.3,0.5,0.7,0.9,0.4,0.75,0.55];
+let currentShape='normal';
 
 function drawMouth(a,shape){
   if(a<0.04){MC.style.display='';MO.style.display='none';return;}
@@ -170,58 +167,33 @@ function drawMouth(a,shape){
   TOP.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-8} ${R} ${cy}`);
   BOT.setAttribute('d',`M${L} ${cy} Q${L+6} ${bY+2} ${cx} ${bY+3} Q${R-6} ${bY+2} ${R} ${cy}`);
 }
-
-let currentShape='normal';
 function mLoop(t){
   raf=requestAnimationFrame(mLoop);
   const interval=60+Math.random()*40;
   if(t-lastFlip>interval){
     isOpen=!isOpen;lastFlip=t;
-    if(isOpen){
-      posIdx=(posIdx+1)%openPos.length;
-      shapeIdx=(shapeIdx+1)%shapes.length;
-      currentShape=shapes[shapeIdx];
-      mC=openPos[posIdx];
-    }else{mC=0;}
+    if(isOpen){posIdx=(posIdx+1)%openPos.length;shapeIdx=(shapeIdx+1)%shapes.length;currentShape=shapes[shapeIdx];mC=openPos[posIdx];}
+    else{mC=0;}
     drawMouth(mC,currentShape);
   }
 }
 function startMouth(){if(!raf)raf=requestAnimationFrame(mLoop);}
 function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null;}mC=0;drawMouth(0,'normal');}
 
-// Keep speechSynthesis alive during API call
-let keepAliveTimer=null;
+// ── Keep speech alive during API wait ──
 function startKeepAlive(){
-  if(keepAliveTimer) return;
+  if(keepAliveTimer)return;
   function ping(){
-    if(!keepAliveTimer) return;
-    if(window.speechSynthesis && !window.speechSynthesis.speaking){
-      const u=new SpeechSynthesisUtterance(' ');
-      u.volume=0; u.rate=2;
+    if(!keepAliveTimer)return;
+    if(window.speechSynthesis&&!window.speechSynthesis.speaking){
+      const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;
       window.speechSynthesis.speak(u);
     }
-    keepAliveTimer=setTimeout(ping, 800);
+    keepAliveTimer=setTimeout(ping,700);
   }
-  keepAliveTimer=setTimeout(ping, 800);
+  keepAliveTimer=setTimeout(ping,700);
 }
-function stopKeepAlive(){
-  if(keepAliveTimer){clearTimeout(keepAliveTimer);keepAliveTimer=null;}
-}
-
-function speak(text){
-  return new Promise(resolve=>{
-    if(!window.speechSynthesis){resolve();return;}
-    window.speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    u.lang='ru-RU';u.rate=1.2;u.pitch=1.8;u.volume=1;
-    const voices=window.speechSynthesis.getVoices();
-    const ru=voices.find(v=>v.lang==='ru-RU')||voices.find(v=>v.lang.startsWith('ru'))||voices[0];
-    if(ru)u.voice=ru;
-    u.onend=resolve;u.onerror=resolve;
-    setTimeout(resolve,text.length*120+2000);
-    window.speechSynthesis.speak(u);
-  });
-}
+function stopKeepAlive(){if(keepAliveTimer){clearTimeout(keepAliveTimer);keepAliveTimer=null;}}
 
 // ── State ──
 function setState(s){
@@ -247,17 +219,6 @@ function addMsg(role,text){
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-async function typeText(el,text){
-  el.textContent='';el.classList.add('cur');
-  // ~80ms per char = natural speech speed
-  for(let i=1;i<=text.length;i++){
-    el.textContent=text.slice(0,i);
-    chat.scrollTop=chat.scrollHeight;
-    await sleep(80);
-  }
-  el.classList.remove('cur');
-}
-
 // ── Claude API ──
 async function askClaude(msg){
   err.textContent='';
@@ -267,52 +228,52 @@ async function askClaude(msg){
   try{
     const r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'anthropic-version':'2023-06-01',
-        'x-api-key':API_KEY,
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001',
-        max_tokens:300,
+      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','x-api-key':API_KEY,'anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,
         system:'Ты ИИ-ассистент в образе Стича (эксперимент 626) из Lilo & Stitch. Отвечай коротко (1-2 предложения), весело. Иногда добавляй Ага!, Бум!, Стич знает!. Отвечай на языке пользователя.',
-        messages:hist
-      })
+        messages:hist})
     });
     const data=await r.json();
     if(data.error)throw new Error(data.error.message);
     const text=data.content[0].text;
     hist.push({role:'assistant',content:text});
     setState('talking');
+
     const el=addMsg('a','');
-    startMouth();
-    stopKeepAlive();
-    window.speechSynthesis && window.speechSynthesis.cancel();
-    await sleep(80);
-
-    // Estimate speech duration: rate 1.2 ≈ 70ms per char
-    const speechMs = text.length * 70;
-    const charDelay = speechMs / text.length; // same as 70ms
-
-    // Start voice
-    speak(text);
-
-    // Type text at same speed as speech
     el.classList.add('cur');
+    startMouth();
+
+    // Stop keepalive and start real speech immediately (no await before this!)
+    stopKeepAlive();
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='ru-RU';u.rate=1.2;u.pitch=1.8;u.volume=1;
+    const voices=window.speechSynthesis.getVoices();
+    const ru=voices.find(v=>v.lang==='ru-RU')||voices.find(v=>v.lang.startsWith('ru'))||voices[0];
+    if(ru)u.voice=ru;
+    let speechDone=false;
+    const speechPromise=new Promise(resolve=>{
+      u.onend=()=>{speechDone=true;resolve();};
+      u.onerror=()=>{speechDone=true;resolve();};
+      setTimeout(()=>{speechDone=true;resolve();},text.length*120+3000);
+    });
+    window.speechSynthesis.speak(u);
+
+    // Type text synced to speech (70ms per char ≈ rate 1.2)
+    const charDelay=70;
     for(let i=1;i<=text.length;i++){
       el.textContent=text.slice(0,i);
       chat.scrollTop=chat.scrollHeight;
       await sleep(charDelay);
     }
-    el.classList.remove('cur');
 
-    // Wait for voice to finish (a bit extra)
-    await sleep(600);
+    // Wait for speech to finish
+    await speechPromise;
+    el.classList.remove('cur');
     stopMouth();
     setState('idle');
   }catch(e){
-    stopMouth();err.textContent='Ошибка: '+e.message;setState('idle');
+    stopMouth();stopKeepAlive();err.textContent='Ошибка: '+e.message;setState('idle');
   }
 }
 
@@ -321,13 +282,6 @@ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 function startListening(){
   if(state!=='idle')return;
   if(!SR){err.textContent='Используй Safari';return;}
-  // Unlock speechSynthesis RIGHT NOW on user gesture
-  if(window.speechSynthesis){
-    window.speechSynthesis.cancel();
-    const dummy=new SpeechSynthesisUtterance(' ');
-    dummy.volume=0;
-    window.speechSynthesis.speak(dummy);
-  }
   err.textContent='';setState('listening');listenStart=Date.now();
   recog=new SR();recog.lang='ru-RU';recog.interimResults=false;recog.continuous=true;
   recog.onresult=e=>{
@@ -343,30 +297,25 @@ function stopListening(){
   const delay=Math.max(0,600-(Date.now()-listenStart));
   setTimeout(()=>{if(recog)try{recog.stop()}catch(e){}},delay);
 }
+
 micBtn.addEventListener('touchstart',e=>{
   e.preventDefault();
-  // Unlock AND keep alive during API wait
-  if(window.speechSynthesis){
-    const u=new SpeechSynthesisUtterance(' ');
-    u.volume=0; u.rate=2;
-    window.speechSynthesis.speak(u);
-  }
+  // Unlock speechSynthesis NOW on user gesture + keepalive
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;
+  window.speechSynthesis.speak(u);
   startKeepAlive();
   startListening();
 },{passive:false});
 micBtn.addEventListener('touchend',e=>{e.preventDefault();stopListening();},{passive:false});
 micBtn.addEventListener('touchcancel',()=>stopListening());
 
-// ── Text input ──
 async function send(){
   const msg=inp.value.trim();if(!msg||state!=='idle')return;
-  // Unlock speechSynthesis on user gesture
-  if(window.speechSynthesis){
-    window.speechSynthesis.cancel();
-    const dummy=new SpeechSynthesisUtterance(' ');
-    dummy.volume=0;
-    window.speechSynthesis.speak(dummy);
-  }
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;
+  window.speechSynthesis.speak(u);
+  startKeepAlive();
   inp.value='';await askClaude(msg);
 }
 sb.addEventListener('click',send);
