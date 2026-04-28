@@ -3,7 +3,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Стич · Claude</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
@@ -19,6 +19,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 #app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow:hidden}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0;flex-shrink:0}
 .stage{position:relative;width:160px;height:160px;margin-top:4px;flex-shrink:0}
+.top-fixed{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:#0a0e16;z-index:20;padding-bottom:4px}
 .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(30,90,180,.3) 0%,transparent 68%);animation:gI 3s ease-in-out infinite}
 .glow.on{animation:gT .22s ease-in-out infinite}
 .head{position:absolute;inset:0;animation:iB 3.5s ease-in-out infinite}
@@ -38,7 +39,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .dot.y{background:#facc15;box-shadow:0 0 6px #facc15;animation:db .5s infinite}
 .dot.g{background:#4ade80;box-shadow:0 0 6px #4ade80;animation:db 1s infinite}
 .dot.b{background:#60a5fa;box-shadow:0 0 6px #60a5fa;animation:db .4s infinite}
-.chat{flex:1;width:100%;max-width:500px;overflow-y:auto;padding:4px 14px;display:flex;flex-direction:column;gap:7px;min-height:0}
+.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:20}
+.chat{position:fixed;left:0;right:0;top:210px;bottom:160px;overflow-y:auto;padding:4px 14px;display:flex;flex-direction:column;gap:7px}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#0a1624;border:1px solid rgba(40,90,180,.2);color:#90b8e0}
@@ -46,7 +48,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .cur::after{content:'▋';color:#60b0ff;animation:cur .6s infinite}
 .cur::after{content:'▋';color:#60b0ff;animation:cur .6s infinite}
 .err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;flex-shrink:0}
-.bottom{flex-shrink:0;padding:8px 14px 28px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);width:100%;max-width:500px;display:flex;flex-direction:column;gap:10px;align-items:center}
+
 .mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;transition:background .2s;touch-action:none}
 .mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
 .mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
@@ -59,6 +61,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .sbtn:disabled{background:#111a2e;opacity:.35}
 </style>
+
 </head>
 <body>
 
@@ -71,6 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 </div>
 
 <div id="app">
+  <div class="top-fixed">
   <div class="title">Стич · Claude</div>
   <div class="stage">
     <div class="glow" id="glow"></div>
@@ -112,6 +116,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
     </div>
   </div>
   <div class="status"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
+  </div>
   <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич 👽 Держи 🎙️ и говори!</div></div></div>
   <div class="err" id="err"></div>
   <div class="bottom">
@@ -138,7 +143,6 @@ let state='idle',hist=[],raf=null,mC=0,lastFlip=0,isOpen=false,posIdx=0,shapeIdx
 let recog=null,listenStart=0;
 
 function showApp(){keyScreen.style.display='none';app.style.display='flex';}
-if(API_KEY) showApp();
 keyBtn.addEventListener('click',()=>{
   const k=keyInp.value.trim();if(!k)return;
   API_KEY=k;localStorage.setItem('sk',k);showApp();
@@ -245,11 +249,11 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 async function typeText(el,text){
   el.textContent='';el.classList.add('cur');
-  const charDelay=65;
+  // ~80ms per char = natural speech speed
   for(let i=1;i<=text.length;i++){
     el.textContent=text.slice(0,i);
     chat.scrollTop=chat.scrollHeight;
-    await sleep(charDelay);
+    await sleep(80);
   }
   el.classList.remove('cur');
 }
