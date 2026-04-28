@@ -19,6 +19,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 #app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow:hidden}
 .top-fixed{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:#0a0e16;z-index:20;padding-bottom:4px}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0}
+.build{font-size:8px;opacity:.4;letter-spacing:1px;margin-left:4px}
 .stage{position:relative;width:160px;height:160px;margin-top:2px}
 .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(30,90,180,.3) 0%,transparent 68%);animation:gI 3s ease-in-out infinite}
 .glow.on{animation:gT .22s ease-in-out infinite}
@@ -57,6 +58,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .inp:disabled{opacity:.4}
 .inp::placeholder{color:#1a3050}
 .sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.sbtn:disabled{background:#111a2e;opacity:.35}
 .mute-btn{position:fixed;top:10px;right:12px;z-index:30;background:rgba(20,40,80,.7);border:1px solid rgba(60,120,240,.3);border-radius:50%;width:34px;height:34px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff}
 </style>
 </head>
@@ -73,7 +75,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <div id="app">
   <button class="mute-btn" id="muteBtn">🔊</button>
   <div class="top-fixed">
-    <div class="title">Стич · Claude</div>
+    <div class="title">Стич · Claude <span class="build">v2</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -131,23 +133,22 @@ function $(id){return document.getElementById(id)}
 const keyScreen=$('keyScreen'),app=$('app'),keyInp=$('keyInp'),keyBtn=$('keyBtn'),
       glow=$('glow'),head=$('head'),dot=$('dot'),stxt=$('stxt'),
       chat=$('chat'),err=$('err'),inp=$('inp'),sb=$('sb'),
-      micBtn=$('micBtn'),micHint=$('micHint'),
+      micBtn=$('micBtn'),micHint=$('micHint'),muteBtn=$('muteBtn'),
       MC=$('MC'),MO=$('MO'),MS=$('MS'),MT=$('MT'),TG=$('TG'),TOP=$('TOP'),BOT=$('BOT');
 
 let API_KEY=localStorage.getItem('sk')||'';
 let state='idle',hist=[],raf=null,mC=0,lastFlip=0,isOpen=false,posIdx=0,shapeIdx=0;
-let recog=null,listenStart=0,keepAliveTimer=null;
-let muted=false;
+let recog=null,listenStart=0,muted=false;
 
-const muteBtn=$('muteBtn');
+// Mute button
 muteBtn.addEventListener('click',()=>{
   muted=!muted;
   muteBtn.textContent=muted?'🔇':'🔊';
-  if(muted) window.speechSynthesis.cancel();
+  if(muted)window.speechSynthesis&&window.speechSynthesis.cancel();
 });
 
 function showApp(){keyScreen.style.display='none';app.style.display='flex';}
-if(API_KEY) showApp();
+if(API_KEY)showApp();
 keyBtn.addEventListener('click',()=>{
   const k=keyInp.value.trim();if(!k)return;
   API_KEY=k;localStorage.setItem('sk',k);showApp();
@@ -162,8 +163,7 @@ let currentShape='normal';
 function drawMouth(a,shape){
   if(a<0.04){MC.style.display='';MO.style.display='none';return;}
   MC.style.display='none';MO.style.display='';
-  const cx=150,cy=235;
-  let w,h;
+  const cx=150,cy=235;let w,h;
   if(shape==='tube'){w=18+a*10;h=a*40;}
   else if(shape==='wide'){w=52+a*16;h=a*14;}
   else{w=42+a*16;h=a*26;}
@@ -188,21 +188,6 @@ function mLoop(t){
 }
 function startMouth(){if(!raf)raf=requestAnimationFrame(mLoop);}
 function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null;}mC=0;drawMouth(0,'normal');}
-
-// ── Keep speech alive during API wait ──
-function startKeepAlive(){
-  if(keepAliveTimer)return;
-  function ping(){
-    if(!keepAliveTimer)return;
-    if(window.speechSynthesis&&!window.speechSynthesis.speaking){
-      const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;
-      window.speechSynthesis.speak(u);
-    }
-    keepAliveTimer=setTimeout(ping,700);
-  }
-  keepAliveTimer=setTimeout(ping,700);
-}
-function stopKeepAlive(){if(keepAliveTimer){clearTimeout(keepAliveTimer);keepAliveTimer=null;}}
 
 // ── State ──
 function setState(s){
@@ -247,14 +232,14 @@ async function askClaude(msg){
     const text=data.content[0].text;
     hist.push({role:'assistant',content:text});
     setState('talking');
+
     const el=addMsg('a','');
     el.classList.add('cur');
     startMouth();
-    stopKeepAlive();
 
-    // Start speech if not muted
+    // Start speech immediately (no await before this point from user gesture)
     let speechPromise=Promise.resolve();
-    if(!muted){
+    if(!muted&&window.speechSynthesis){
       const u=new SpeechSynthesisUtterance(text);
       u.lang='ru-RU';u.rate=1.2;u.pitch=1.8;u.volume=1;
       const voices=window.speechSynthesis.getVoices();
@@ -267,24 +252,33 @@ async function askClaude(msg){
       window.speechSynthesis.speak(u);
     }
 
-    // Type text at 70ms per char — mouth moves while typing
+    // Type text synced to speech speed (70ms/char ≈ rate 1.2)
     for(let i=1;i<=text.length;i++){
       el.textContent=text.slice(0,i);
       chat.scrollTop=chat.scrollHeight;
       await sleep(70);
     }
     el.classList.remove('cur');
-    // Stop mouth when text finishes, wait for speech if still going
+
+    // Stop mouth when text done, wait for voice to finish
     stopMouth();
-    await speechPromise;
     setState('idle');
+    await speechPromise;
+
   }catch(e){
-    stopMouth();stopKeepAlive();err.textContent='Ошибка: '+e.message;setState('idle');
+    stopMouth();err.textContent='Ошибка: '+e.message;setState('idle');
   }
 }
 
 // ── Mic ──
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function unlockSpeech(){
+  if(window.speechSynthesis){
+    const u=new SpeechSynthesisUtterance(' ');
+    u.volume=0;u.rate=2;
+    window.speechSynthesis.speak(u);
+  }
+}
 function startListening(){
   if(state!=='idle')return;
   if(!SR){err.textContent='Используй Safari';return;}
@@ -306,11 +300,7 @@ function stopListening(){
 
 micBtn.addEventListener('touchstart',e=>{
   e.preventDefault();
-  // Unlock speechSynthesis NOW on user gesture + keepalive
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;
-  window.speechSynthesis.speak(u);
-  startKeepAlive();
+  unlockSpeech();
   startListening();
 },{passive:false});
 micBtn.addEventListener('touchend',e=>{e.preventDefault();stopListening();},{passive:false});
@@ -318,10 +308,7 @@ micBtn.addEventListener('touchcancel',()=>stopListening());
 
 async function send(){
   const msg=inp.value.trim();if(!msg||state!=='idle')return;
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;
-  window.speechSynthesis.speak(u);
-  startKeepAlive();
+  unlockSpeech();
   inp.value='';await askClaude(msg);
 }
 sb.addEventListener('click',send);
