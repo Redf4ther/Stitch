@@ -15,7 +15,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .key-inp{width:100%;background:#060c14;border:1px solid rgba(40,90,180,.4);border-radius:14px;color:#b0d0f0;font-size:15px;padding:12px 16px;-webkit-user-select:text;user-select:text}
 .key-inp:focus{outline:none;border-color:rgba(60,140,240,.6)}
 .key-inp::placeholder{color:#1a3050;font-size:13px}
-.key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer;margin-top:4px}
+.key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer;margin-top:4px;-webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,255,255,.1)}
 #app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow-y:auto}
 .top-fixed{position:relative;display:flex;flex-direction:column;align-items:center;background:#0a0e16;padding-bottom:4px;width:100%}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0}
@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 </head>
 <body>
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:12px;opacity:.5;font-weight:400">v24</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:12px;opacity:.5;font-weight:400">v26</span></h2>
   <p>Введи API ключ один раз — сохранится в телефоне</p>
   <div class="key-lbl">Anthropic API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
@@ -72,7 +72,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 </div>
 <div id="app">
   <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v24</span></div>
+    <div class="title">Стич · Claude <span class="build">v26</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -135,26 +135,16 @@ if(muted&&window.speechSynthesis)window.speechSynthesis.cancel();
 
 function showApp(){keyScreen.style.display=‘none’;app.style.display=‘flex’;}
 if(API_KEY)showApp();
-keyBtn.addEventListener(‘click’,()=>{
+function doEnter(){
 const k=keyInp.value.trim()||API_KEY;
 if(!k){ return; }
 API_KEY=k;
 localStorage.setItem(‘sk’,k);
-keyScreen.style.display=‘none’;
-app.style.display=‘flex’;
-});
-
-// Also try on touchend for iOS
-keyBtn.addEventListener(‘touchend’,e=>{
-e.preventDefault();
-const k=keyInp.value.trim()||API_KEY;
-if(!k){ return; }
-API_KEY=k;
-localStorage.setItem(‘sk’,k);
-keyScreen.style.display=‘none’;
-app.style.display=‘flex’;
-});
-keyInp.addEventListener(‘keydown’,e=>{if(e.key===‘Enter’)keyBtn.click()});
+document.getElementById(‘keyScreen’).style.display=‘none’;
+document.getElementById(‘app’).style.display=‘flex’;
+}
+keyBtn.onclick=doEnter;
+keyInp.addEventListener(‘keydown’,e=>{if(e.key===‘Enter’)doEnter();});
 
 // ── Mouth ──
 const shapes=[‘normal’,‘normal’,‘wide’,‘normal’,‘tube’,‘normal’,‘wide’,‘tube’,‘normal’];
