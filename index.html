@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v38</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v39</span></h2>
   <p>Введи API ключ один раз — сохранится в телефоне</p>
   <div class="key-lbl">Anthropic API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
@@ -73,7 +73,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v38</span></div>
+    <div class="title">Стич · Claude <span class="build">v39</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -243,8 +243,8 @@ async function askClaude(msg) {
     setState('talking');
     var el = addMsg('a', '');
     el.classList.add('cur');
-    // Stop keepalive then speak immediately
-    stopKeepAlive();
+    startMouth();
+    // Start voice
     if (window.speechSynthesis) {
       var u = new SpeechSynthesisUtterance(text);
       u.lang='ru-RU'; u.rate=1.2; u.pitch=1.8; u.volume=1;
@@ -253,8 +253,7 @@ async function askClaude(msg) {
       if (ru) u.voice = ru;
       window.speechSynthesis.speak(u);
     }
-    // Mouth tied to text, fixed 55ms per char
-    startMouth();
+    // Type text
     for (var i=1; i<=text.length; i++) {
       el.textContent = text.slice(0,i);
       el.scrollIntoView({block:'end',behavior:'instant'});
@@ -270,22 +269,16 @@ async function askClaude(msg) {
   }
 }
 
-var keepAliveTimer = null;
-function startKeepAlive() {
-  if (keepAliveTimer) return;
-  function ping() {
-    if (!keepAliveTimer) return;
-    if (window.speechSynthesis && !window.speechSynthesis.speaking) {
-      var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
-      window.speechSynthesis.speak(u);
-    }
-    keepAliveTimer = setTimeout(ping, 700);
+// Unlock speechSynthesis on first touch anywhere
+document.addEventListener('touchstart', function() {
+  if (window.speechSynthesis) {
+    var u = new SpeechSynthesisUtterance(' ');
+    u.volume=0; u.rate=2;
+    window.speechSynthesis.speak(u);
+    window.speechSynthesis.cancel();
   }
-  keepAliveTimer = setTimeout(ping, 700);
-}
-function stopKeepAlive() {
-  if (keepAliveTimer) { clearTimeout(keepAliveTimer); keepAliveTimer=null; }
-}
+}, {once: true});
+
 var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 function startListening() {
@@ -314,7 +307,6 @@ micBtn.addEventListener('touchstart', function(e) {
     var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
     window.speechSynthesis.speak(u);
   }
-  startKeepAlive();
   startListening();
 }, {passive:false});
 
@@ -327,7 +319,6 @@ sb.onclick = function() {
     var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
     window.speechSynthesis.speak(u);
   }
-  startKeepAlive();
   inp.value=''; askClaude(msg);
 };
 
