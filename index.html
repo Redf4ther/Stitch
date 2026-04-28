@@ -59,7 +59,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .inp::placeholder{color:#1a3050}
 .sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .sbtn:disabled{background:#111a2e;opacity:.35}
-.mute-btn{position:fixed;top:10px;right:12px;z-index:30;background:rgba(20,40,80,.7);border:1px solid rgba(60,120,240,.3);border-radius:50%;width:34px;height:34px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff}
+.mute-btn{position:absolute;top:10px;right:12px;background:rgba(20,40,80,.7);border:1px solid rgba(60,120,240,.3);border-radius:50%;width:34px;height:34px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff}
 </style>
 </head>
 <body>
@@ -71,9 +71,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
   <button class="key-btn" id="keyBtn">Начать общение 🐾</button>
 </div>
 <div id="app">
-  <button class="mute-btn" id="muteBtn">🔊</button>
   <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v20</span></div>
+    <div class="title">Стич · Claude <span class="build">v21</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -103,6 +102,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
       </div>
     </div>
     <div class="status"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
+    <button class="mute-btn" id="muteBtn">🔊</button>
   </div>
   <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич 👽 Держи 🎙️ и говори!</div></div></div>
   <div class="err" id="err"></div>
