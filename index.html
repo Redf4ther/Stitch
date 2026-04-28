@@ -6,9 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Стич · Claude</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8ff;font-family:system-ui,sans-serif}
-#keyScreen{position:fixed;inset:0;background:#0a0e16;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:12px;z-index:999}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8ff;font-family:system-ui,sans-serif;-webkit-user-select:none;user-select:none}
+#keyScreen{position:fixed;inset:0;background:#0a0e16;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:12px;z-index:999;-webkit-user-select:auto;user-select:auto}
 #keyScreen h2{font-size:22px;color:#a0c8f0;text-align:center}
 #keyScreen p{font-size:13px;color:#4a7090;text-align:center;line-height:1.6}
 .key-lbl{font-size:11px;color:#3a6090;align-self:flex-start;letter-spacing:1px;text-transform:uppercase}
@@ -16,7 +16,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .key-inp:focus{outline:none;border-color:rgba(60,140,240,.6)}
 .key-inp::placeholder{color:#1a3050;font-size:13px}
 .key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer;margin-top:4px;-webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,255,255,.1)}
-#app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow-y:auto}
+#app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow-y:auto}#app.visible{display:flex!important}
 .top-fixed{position:relative;display:flex;flex-direction:column;align-items:center;background:#0a0e16;padding-bottom:4px;width:100%}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0}
 .build{font-size:10px;opacity:.6;letter-spacing:2px;margin-left:4px;font-weight:700}
@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 </head>
 <body>
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:12px;opacity:.5;font-weight:400">v27</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:12px;opacity:.5;font-weight:400">v29</span></h2>
   <p>Введи API ключ один раз — сохранится в телефоне</p>
   <div class="key-lbl">Anthropic API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
@@ -72,7 +72,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 </div>
 <div id="app">
   <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v27</span></div>
+    <div class="title">Стич · Claude <span class="build">v29</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -138,8 +138,10 @@ if(API_KEY)showApp();
 function doEnter(){
 const k=keyInp.value.trim()||localStorage.getItem(‘sk’)||’’;
 if(k){ API_KEY=k; localStorage.setItem(‘sk’,k); }
-document.getElementById(‘keyScreen’).style.display=‘none’;
-document.getElementById(‘app’).style.display=‘flex’;
+const ks=document.getElementById(‘keyScreen’);
+const ap=document.getElementById(‘app’);
+ks.style.cssText=‘display:none!important’;
+ap.style.cssText=‘display:flex!important;position:fixed;inset:0;flex-direction:column;align-items:center;overflow-y:auto’;
 }
 keyBtn.onclick=doEnter;
 keyInp.addEventListener(‘keydown’,e=>{if(e.key===‘Enter’)doEnter();});
