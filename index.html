@@ -63,7 +63,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 </style>
 </head>
 <body>
-
 <div id="keyScreen">
   <h2>👋 Стич · Claude</h2>
   <p>Введи API ключ один раз — сохранится в телефоне</p>
@@ -71,11 +70,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
   <button class="key-btn" id="keyBtn">Начать общение 🐾</button>
 </div>
-
 <div id="app">
   <button class="mute-btn" id="muteBtn">🔊</button>
   <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v19</span></div>
+    <div class="title">Стич · Claude <span class="build">v20</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -99,18 +97,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
           <ellipse cx="100" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="102" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="113" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
           <ellipse cx="200" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="202" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="213" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
           <ellipse cx="128" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/><ellipse cx="172" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
-          <g id="MC">
-            <path d="M126 232 Q138 244 150 245 Q162 244 174 232" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <circle cx="122" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/>
-            <circle cx="178" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/>
-          </g>
-          <g id="MO" style="display:none">
-            <path id="MS" fill="#06101e"/>
-            <path id="MT" fill="white"/>
-            <ellipse id="TG" fill="#c03858" opacity=".85"/>
-            <path id="TOP" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <path id="BOT" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/>
-          </g>
+          <g id="MC"><path d="M126 232 Q138 244 150 245 Q162 244 174 232" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="122" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/><circle cx="178" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/></g>
+          <g id="MO" style="display:none"><path id="MS" fill="#06101e"/><path id="MT" fill="white"/><ellipse id="TG" fill="#c03858" opacity=".85"/><path id="TOP" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/><path id="BOT" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/></g>
         </svg>
       </div>
     </div>
@@ -127,7 +115,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
     </div>
   </div>
 </div>
-
 <script>
 function $(id){return document.getElementById(id)}
 const keyScreen=$('keyScreen'),app=$('app'),keyInp=$('keyInp'),keyBtn=$('keyBtn'),
@@ -136,179 +123,194 @@ const keyScreen=$('keyScreen'),app=$('app'),keyInp=$('keyInp'),keyBtn=$('keyBtn'
       micBtn=$('micBtn'),micHint=$('micHint'),muteBtn=$('muteBtn'),
       MC=$('MC'),MO=$('MO'),MS=$('MS'),MT=$('MT'),TG=$('TG'),TOP=$('TOP'),BOT=$('BOT');
 
-let API_KEY=localStorage.getItem('sk')||'';
-let state='idle',hist=[],raf=null,mC=0,lastFlip=0,isOpen=false,posIdx=0,shapeIdx=0;
+let API_KEY=localStorage.getItem(‘sk’)||’’;
+let state=‘idle’,hist=[],raf=null,mC=0,lastFlip=0,isOpen=false,posIdx=0,shapeIdx=0;
 let recog=null,listenStart=0,muted=false;
 
-// Mute button
-muteBtn.addEventListener('click',()=>{
-  muted=!muted;
-  muteBtn.textContent=muted?'🔇':'🔊';
-  if(muted)window.speechSynthesis&&window.speechSynthesis.cancel();
+muteBtn.addEventListener(‘click’,()=>{
+muted=!muted;
+muteBtn.textContent=muted?‘🔇’:‘🔊’;
+if(muted&&window.speechSynthesis)window.speechSynthesis.cancel();
 });
 
-function showApp(){keyScreen.style.display='none';app.style.display='flex';}
+function showApp(){keyScreen.style.display=‘none’;app.style.display=‘flex’;}
 if(API_KEY)showApp();
-keyBtn.addEventListener('click',()=>{
-  const k=keyInp.value.trim();if(!k)return;
-  API_KEY=k;localStorage.setItem('sk',k);showApp();
+keyBtn.addEventListener(‘click’,()=>{
+const k=keyInp.value.trim();if(!k)return;
+API_KEY=k;localStorage.setItem(‘sk’,k);showApp();
 });
-keyInp.addEventListener('keydown',e=>{if(e.key==='Enter')keyBtn.click()});
+keyInp.addEventListener(‘keydown’,e=>{if(e.key===‘Enter’)keyBtn.click()});
 
 // ── Mouth ──
-const shapes=['normal','normal','wide','normal','tube','normal','wide','tube','normal'];
+const shapes=[‘normal’,‘normal’,‘wide’,‘normal’,‘tube’,‘normal’,‘wide’,‘tube’,‘normal’];
 const openPos=[0.3,0.5,0.7,0.9,0.4,0.75,0.55];
-let currentShape='normal';
-
+let currentShape=‘normal’;
 function drawMouth(a,shape){
-  if(a<0.04){MC.style.display='';MO.style.display='none';return;}
-  MC.style.display='none';MO.style.display='';
-  const cx=150,cy=235;let w,h;
-  if(shape==='tube'){w=18+a*10;h=a*40;}
-  else if(shape==='wide'){w=52+a*16;h=a*14;}
-  else{w=42+a*16;h=a*26;}
-  const L=cx-w/2,R=cx+w/2,bY=cy+h,th=shape==='tube'?3+a*5:5+a*8;
-  MS.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-6} ${R} ${cy} Q${R-4} ${bY} ${cx} ${bY+2} Q${L+4} ${bY} ${L} ${cy}Z`);
-  if(a>0.5){MT.setAttribute('d',`M${cx-14} ${cy} Q${cx-8} ${cy-2} ${cx-2} ${cy-1} L${cx+2} ${cy-1} Q${cx+8} ${cy-2} ${cx+14} ${cy} Q${cx+7} ${cy+th} ${cx} ${cy+th+1} Q${cx-7} ${cy+th} ${cx-14} ${cy}Z`);MT.style.display='';}
-  else{MT.style.display='none';}
-  if(a>0.35){TG.setAttribute('cx',cx);TG.setAttribute('cy',cy+h*0.65);TG.setAttribute('rx',10+a*4);TG.setAttribute('ry',4+a*5);TG.style.display='';}
-  else{TG.style.display='none';}
-  TOP.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-8} ${R} ${cy}`);
-  BOT.setAttribute('d',`M${L} ${cy} Q${L+6} ${bY+2} ${cx} ${bY+3} Q${R-6} ${bY+2} ${R} ${cy}`);
+if(a<0.04){MC.style.display=’’;MO.style.display=‘none’;return;}
+MC.style.display=‘none’;MO.style.display=’’;
+const cx=150,cy=235;let w,h;
+if(shape===‘tube’){w=18+a*10;h=a*40;}
+else if(shape===‘wide’){w=52+a*16;h=a*14;}
+else{w=42+a*16;h=a*26;}
+const L=cx-w/2,R=cx+w/2,bY=cy+h,th=shape===‘tube’?3+a*5:5+a*8;
+MS.setAttribute(‘d’,`M${L} ${cy} Q${cx} ${cy-6} ${R} ${cy} Q${R-4} ${bY} ${cx} ${bY+2} Q${L+4} ${bY} ${L} ${cy}Z`);
+if(a>0.5){MT.setAttribute(‘d’,`M${cx-14} ${cy} Q${cx-8} ${cy-2} ${cx-2} ${cy-1} L${cx+2} ${cy-1} Q${cx+8} ${cy-2} ${cx+14} ${cy} Q${cx+7} ${cy+th} ${cx} ${cy+th+1} Q${cx-7} ${cy+th} ${cx-14} ${cy}Z`);MT.style.display=’’;}
+else{MT.style.display=‘none’;}
+if(a>0.35){TG.setAttribute(‘cx’,cx);TG.setAttribute(‘cy’,cy+h*0.65);TG.setAttribute(‘rx’,10+a*4);TG.setAttribute(‘ry’,4+a*5);TG.style.display=’’;}
+else{TG.style.display=‘none’;}
+TOP.setAttribute(‘d’,`M${L} ${cy} Q${cx} ${cy-8} ${R} ${cy}`);
+BOT.setAttribute(‘d’,`M${L} ${cy} Q${L+6} ${bY+2} ${cx} ${bY+3} Q${R-6} ${bY+2} ${R} ${cy}`);
 }
 function mLoop(t){
-  raf=requestAnimationFrame(mLoop);
-  const interval=60+Math.random()*40;
-  if(t-lastFlip>interval){
-    isOpen=!isOpen;lastFlip=t;
-    if(isOpen){posIdx=(posIdx+1)%openPos.length;shapeIdx=(shapeIdx+1)%shapes.length;currentShape=shapes[shapeIdx];mC=openPos[posIdx];}
-    else{mC=0;}
-    drawMouth(mC,currentShape);
-  }
+raf=requestAnimationFrame(mLoop);
+const interval=60+Math.random()*40;
+if(t-lastFlip>interval){
+isOpen=!isOpen;lastFlip=t;
+if(isOpen){posIdx=(posIdx+1)%openPos.length;shapeIdx=(shapeIdx+1)%shapes.length;currentShape=shapes[shapeIdx];mC=openPos[posIdx];}
+else{mC=0;}
+drawMouth(mC,currentShape);
+}
 }
 function startMouth(){if(!raf)raf=requestAnimationFrame(mLoop);}
-function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null;}mC=0;drawMouth(0,'normal');}
+function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null;}mC=0;drawMouth(0,‘normal’);}
 
 // ── State ──
 function setState(s){
-  state=s;
-  dot.className='dot'+(s==='thinking'?' y':s==='talking'?' g':s==='listening'?' b':'');
-  stxt.textContent={idle:'Готов',listening:'Слушаю...',thinking:'Думаю...',talking:'Говорит...'}[s];
-  head.className='head'+(s==='talking'?' talk':s==='listening'?' listen':'');
-  glow.className='glow'+(s==='talking'?' on':'');
-  const busy=s==='thinking'||s==='talking';
-  micBtn.className='mic-btn'+(s==='listening'?' listening':busy?' disabled':'');
-  micBtn.textContent=s==='listening'?'⏹':'🎙️';
-  micHint.textContent=s==='listening'?'ОТПУСТИ...':busy?'...':'ДЕРЖИ И ГОВОРИ';
-  inp.disabled=busy;sb.disabled=busy;
+state=s;
+dot.className=‘dot’+(s===‘thinking’?’ y’:s===‘talking’?’ g’:s===‘listening’?’ b’:’’);
+stxt.textContent={idle:‘Готов’,listening:‘Слушаю…’,thinking:‘Думаю…’,talking:‘Говорит…’}[s];
+head.className=‘head’+(s===‘talking’?’ talk’:s===‘listening’?’ listen’:’’);
+glow.className=‘glow’+(s===‘talking’?’ on’:’’);
+const busy=s===‘thinking’||s===‘talking’;
+micBtn.className=‘mic-btn’+(s===‘listening’?’ listening’:busy?’ disabled’:’’);
+micBtn.textContent=s===‘listening’?‘⏹’:‘🎙️’;
+micHint.textContent=s===‘listening’?‘ОТПУСТИ…’:busy?’…’:‘ДЕРЖИ И ГОВОРИ’;
+inp.disabled=busy;sb.disabled=busy;
 }
 
 // ── Chat ──
 function addMsg(role,text){
-  const w=document.createElement('div');w.className='bbl'+(role==='u'?' u':'');
-  const b=document.createElement('div');b.className='bi';b.textContent=text;
-  w.appendChild(b);chat.appendChild(w);
-  chat.scrollTop=chat.scrollHeight;
-  setTimeout(()=>chat.scrollTop=chat.scrollHeight,100);
-  return b;
+const w=document.createElement(‘div’);w.className=‘bbl’+(role===‘u’?’ u’:’’);
+const b=document.createElement(‘div’);b.className=‘bi’;b.textContent=text;
+w.appendChild(b);chat.appendChild(w);
+chat.scrollTop=chat.scrollHeight;
+return b;
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 // ── Claude API ──
 async function askClaude(msg){
-  err.textContent='';
-  addMsg('u',msg);
-  setState('thinking');
-  hist.push({role:'user',content:msg});
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','x-api-key':API_KEY,'anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,
-        system:'Ты ИИ-ассистент в образе Стича (эксперимент 626) из Lilo & Stitch. Отвечай коротко (1-2 предложения), весело. Иногда добавляй Ага!, Бум!, Стич знает!. Отвечай на языке пользователя.',
-        messages:hist})
-    });
-    const data=await r.json();
-    if(data.error)throw new Error(data.error.message);
-    const text=data.content[0].text;
-    hist.push({role:'assistant',content:text});
-    setState('talking');
+err.textContent=’’;
+addMsg(‘u’,msg);
+setState(‘thinking’);
+hist.push({role:‘user’,content:msg});
+try{
+const r=await fetch(‘https://api.anthropic.com/v1/messages’,{
+method:‘POST’,
+headers:{‘Content-Type’:‘application/json’,‘anthropic-version’:‘2023-06-01’,‘x-api-key’:API_KEY,‘anthropic-dangerous-direct-browser-access’:‘true’},
+body:JSON.stringify({model:‘claude-haiku-4-5-20251001’,max_tokens:300,
+system:‘Ты ИИ-ассистент в образе Стича (эксперимент 626) из Lilo & Stitch. Отвечай коротко (1-2 предложения), весело. Иногда добавляй Ага!, Бум!, Стич знает!. Отвечай на языке пользователя. Не используй эмодзи.’,
+messages:hist})
+});
+const data=await r.json();
+if(data.error)throw new Error(data.error.message);
+const text=data.content[0].text;
+hist.push({role:‘assistant’,content:text});
+setState(‘talking’);
 
-    const el=addMsg('a','');
-    el.classList.add('cur');
-    startMouth();
+```
+const el=addMsg('a','');
+el.classList.add('cur');
+startMouth();
 
-    // Start speech immediately (no await before this point from user gesture)
-    let speechPromise=Promise.resolve();
-    if(!muted&&window.speechSynthesis){
-      const ttsText=text.replace(/\p{Emoji}/gu,'').trim();
-      const u=new SpeechSynthesisUtterance(ttsText);
-      u.lang='ru-RU';u.rate=1.2;u.pitch=1.8;u.volume=1;
-      const voices=window.speechSynthesis.getVoices();
-      const ru=voices.find(v=>v.lang==='ru-RU')||voices.find(v=>v.lang.startsWith('ru'))||voices[0];
-      if(ru)u.voice=ru;
-      speechPromise=new Promise(resolve=>{
-        u.onend=resolve;u.onerror=resolve;
-        setTimeout(resolve,text.length*120+3000);
-      });
-      window.speechSynthesis.speak(u);
-    }
+// START VOICE immediately — no await before this!
+let speechDone=false;
+if(!muted&&window.speechSynthesis){
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='ru-RU';u.rate=1.2;u.pitch=1.8;u.volume=1;
+  const voices=window.speechSynthesis.getVoices();
+  const ru=voices.find(v=>v.lang==='ru-RU')||voices.find(v=>v.lang.startsWith('ru'))||voices[0];
+  if(ru)u.voice=ru;
+  u.onend=()=>{speechDone=true;};
+  u.onerror=()=>{speechDone=true;};
+  window.speechSynthesis.speak(u);
+} else {
+  speechDone=true;
+}
 
-    // Type text at fixed speed 55ms per char
-    for(let i=1;i<=text.length;i++){
-      el.textContent=text.slice(0,i);
-      el.scrollIntoView({block:'end',behavior:'instant'});
-      await sleep(55);
-    }
-    el.classList.remove('cur');
-    stopMouth(); // mouth stops when text finishes
-    setState('idle');
-    await speechPromise; // voice may still be going
+// TYPE TEXT at fixed speed 55ms per char
+for(let i=1;i<=text.length;i++){
+  el.textContent=text.slice(0,i);
+  el.scrollIntoView({block:'end',behavior:'instant'});
+  await sleep(55);
+}
+el.classList.remove('cur');
 
-  }catch(e){
-    stopMouth();err.textContent='Ошибка: '+e.message;setState('idle');
-  }
+// Mouth stops when text finishes
+stopMouth();
+setState('idle');
+
+// Wait for voice to finish if still speaking
+if(!speechDone){
+  await new Promise(resolve=>{
+    const check=setInterval(()=>{if(speechDone){clearInterval(check);resolve();}},100);
+    setTimeout(()=>{clearInterval(check);resolve();},5000);
+  });
+}
+```
+
+}catch(e){
+stopMouth();err.textContent=’Ошибка: ’+e.message;setState(‘idle’);
+}
 }
 
 // ── Mic ──
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-function unlockSpeech(){
-  if(window.speechSynthesis) window.speechSynthesis.getVoices();
-}
 function startListening(){
-  if(state!=='idle')return;
-  if(!SR){err.textContent='Используй Safari';return;}
-  err.textContent='';setState('listening');listenStart=Date.now();
-  recog=new SR();recog.lang='ru-RU';recog.interimResults=false;recog.continuous=true;
-  recog.onresult=e=>{
-    const t=Array.from(e.results).map(r=>r[0].transcript).join('').trim();
-    recog=null;if(t)askClaude(t);else setState('idle');
-  };
-  recog.onerror=e=>{recog=null;setState('idle');if(e.error==='not-allowed')err.textContent='Разреши микрофон в Safari';};
-  recog.onend=()=>{recog=null;if(state==='listening')setState('idle');};
-  recog.start();
+if(state!==‘idle’)return;
+if(!SR){err.textContent=‘Используй Safari’;return;}
+err.textContent=’’;setState(‘listening’);listenStart=Date.now();
+recog=new SR();recog.lang=‘ru-RU’;recog.interimResults=false;recog.continuous=true;
+recog.onresult=e=>{
+const t=Array.from(e.results).map(r=>r[0].transcript).join(’’).trim();
+recog=null;if(t)askClaude(t);else setState(‘idle’);
+};
+recog.onerror=e=>{recog=null;setState(‘idle’);if(e.error===‘not-allowed’)err.textContent=‘Разреши микрофон в Safari’;};
+recog.onend=()=>{recog=null;if(state===‘listening’)setState(‘idle’);};
+recog.start();
 }
 function stopListening(){
-  if(state!=='listening')return;
-  const delay=Math.max(0,600-(Date.now()-listenStart));
-  setTimeout(()=>{if(recog)try{recog.stop()}catch(e){}},delay);
+if(state!==‘listening’)return;
+const delay=Math.max(0,600-(Date.now()-listenStart));
+setTimeout(()=>{if(recog)try{recog.stop()}catch(e){}},delay);
 }
 
-micBtn.addEventListener('touchstart',e=>{
-  e.preventDefault();
-  unlockSpeech();
-  startListening();
+micBtn.addEventListener(‘touchstart’,e=>{
+e.preventDefault();
+// Unlock speechSynthesis on user gesture
+if(window.speechSynthesis){
+window.speechSynthesis.getVoices();
+const u=new SpeechSynthesisUtterance(’ ’);
+u.volume=0;u.rate=2;
+window.speechSynthesis.speak(u);
+}
+startListening();
 },{passive:false});
-micBtn.addEventListener('touchend',e=>{e.preventDefault();stopListening();},{passive:false});
-micBtn.addEventListener('touchcancel',()=>stopListening());
+micBtn.addEventListener(‘touchend’,e=>{e.preventDefault();stopListening();},{passive:false});
+micBtn.addEventListener(‘touchcancel’,()=>stopListening());
 
 async function send(){
-  const msg=inp.value.trim();if(!msg||state!=='idle')return;
-  unlockSpeech();
-  inp.value='';await askClaude(msg);
+const msg=inp.value.trim();if(!msg||state!==‘idle’)return;
+if(window.speechSynthesis){
+window.speechSynthesis.getVoices();
+const u=new SpeechSynthesisUtterance(’ ‘);
+u.volume=0;u.rate=2;
+window.speechSynthesis.speak(u);
 }
-sb.addEventListener('click',send);
-inp.addEventListener('keydown',e=>{if(e.key==='Enter')send();});
+inp.value=’’;await askClaude(msg);
+}
+sb.addEventListener(‘click’,send);
+inp.addEventListener(‘keydown’,e=>{if(e.key===‘Enter’)send();});
 </script>
 
 </body>
