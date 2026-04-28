@@ -8,19 +8,17 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8ff;font-family:system-ui,sans-serif}
-
 #keyScreen{position:fixed;inset:0;background:#0a0e16;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:12px;z-index:999}
 #keyScreen h2{font-size:22px;color:#a0c8f0;text-align:center}
 #keyScreen p{font-size:13px;color:#4a7090;text-align:center;line-height:1.6}
+.key-lbl{font-size:11px;color:#3a6090;align-self:flex-start;letter-spacing:1px;text-transform:uppercase}
 .key-inp{width:100%;background:#060c14;border:1px solid rgba(40,90,180,.4);border-radius:14px;color:#b0d0f0;font-size:15px;padding:12px 16px;-webkit-user-select:text;user-select:text}
 .key-inp:focus{outline:none;border-color:rgba(60,140,240,.6)}
 .key-inp::placeholder{color:#1a3050;font-size:13px}
-.key-lbl{font-size:11px;color:#3a6090;align-self:flex-start;letter-spacing:1px;text-transform:uppercase}
 .key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer;margin-top:4px}
-
 #app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0;flex-shrink:0}
-.stage{position:relative;width:170px;height:170px;margin-top:4px;flex-shrink:0}
+.stage{position:relative;width:185px;height:185px;margin-top:4px;flex-shrink:0}
 .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(30,90,180,.3) 0%,transparent 68%);animation:gI 3s ease-in-out infinite}
 .glow.on{animation:gT .22s ease-in-out infinite}
 .head{position:absolute;inset:0;animation:iB 3.5s ease-in-out infinite}
@@ -45,7 +43,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .bbl.u{justify-content:flex-end}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#0a1624;border:1px solid rgba(40,90,180,.2);color:#90b8e0}
 .bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
-.cur::after{content:‘▋’;color:#60b0ff;animation:cur .6s infinite}
+.cur::after{content:'▋';color:#60b0ff;animation:cur .6s infinite}
 .err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;flex-shrink:0}
 .bottom{flex-shrink:0;padding:8px 14px 28px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);width:100%;max-width:500px;display:flex;flex-direction:column;gap:10px;align-items:center}
 .mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;transition:background .2s;touch-action:none}
@@ -60,13 +58,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .sbtn:disabled{background:#111a2e;opacity:.35}
 </style>
-
 </head>
 <body>
 
 <div id="keyScreen">
   <h2>👋 Стич · Claude</h2>
-  <p>Введи ключи один раз — сохранятся в телефоне</p>
+  <p>Введи API ключ один раз — сохранится в телефоне</p>
   <div class="key-lbl">Anthropic API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
   <button class="key-btn" id="keyBtn">Начать общение 🐾</button>
@@ -77,154 +74,71 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
   <div class="stage">
     <div class="glow" id="glow"></div>
     <div class="head" id="head">
-      <svg viewBox="0 0 400 420" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 300 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <!-- Main fur: light cyan center, darker blue edges -->
-          <radialGradient id="fur" cx="45%" cy="35%" r="60%">
-            <stop offset="0%" stop-color="#9dd8f0"/>
-            <stop offset="40%" stop-color="#6ab4d8"/>
-            <stop offset="75%" stop-color="#4a8ec0"/>
-            <stop offset="100%" stop-color="#2a5a90"/>
+          <radialGradient id="bg" cx="42%" cy="30%" r="65%">
+            <stop offset="0%" stop-color="#a8dff0"/><stop offset="35%" stop-color="#72b8e0"/>
+            <stop offset="70%" stop-color="#4a8ec8"/><stop offset="100%" stop-color="#2a5a9a"/>
           </radialGradient>
-          <!-- Ear gradient -->
-          <radialGradient id="ear" cx="35%" cy="30%" r="65%">
-            <stop offset="0%" stop-color="#7abcd4"/>
-            <stop offset="100%" stop-color="#2a5080"/>
+          <radialGradient id="eg" cx="40%" cy="25%" r="65%">
+            <stop offset="0%" stop-color="#7ac0d8"/><stop offset="100%" stop-color="#3060a0"/>
           </radialGradient>
-          <!-- Nose: dark slate blue -->
-          <radialGradient id="nose" cx="30%" cy="25%" r="65%">
-            <stop offset="0%" stop-color="#3a5898"/>
-            <stop offset="100%" stop-color="#0e1e48"/>
-          </radialGradient>
-          <!-- Inner ear pink -->
-          <linearGradient id="pink" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#d8a0cc"/>
-            <stop offset="100%" stop-color="#b070a8"/>
-          </linearGradient>
-          <!-- Shadow overlay for depth -->
-          <radialGradient id="shadow" cx="50%" cy="80%" r="50%">
-            <stop offset="0%" stop-color="#1a3870" stop-opacity="0.3"/>
-            <stop offset="100%" stop-color="#1a3870" stop-opacity="0"/>
+          <radialGradient id="ng" cx="30%" cy="25%" r="65%">
+            <stop offset="0%" stop-color="#4a68b0"/><stop offset="100%" stop-color="#1a2858"/>
           </radialGradient>
         </defs>
-
-```
-    <!-- ═══ LEFT EAR ═══ -->
-    <!-- Large wide ear, angled outward-left, pointed at top -->
-    <g transform="rotate(-18, 95, 120)">
-      <!-- Outer ear shape -->
-      <path d="M30 260 Q-10 200 5 110 Q20 30 70 5 Q105 -8 120 25 Q138 60 125 130 Q112 190 98 248Z"
-            fill="url(#ear)" stroke="#1a3870" stroke-width="3"/>
-      <!-- Inner pink -->
-      <path d="M48 240 Q18 188 30 112 Q44 50 72 28 Q96 14 110 40 Q124 68 114 128 Q104 180 90 232Z"
-            fill="url(#pink)" opacity="0.7"/>
-      <!-- Ear notch (torn) -->
-      <path d="M10 95 Q0 78 12 68 Q6 80 12 92Z" fill="#0a0e16"/>
-    </g>
-
-    <!-- ═══ RIGHT EAR ═══ -->
-    <g transform="rotate(18, 305, 120)">
-      <path d="M370 260 Q410 200 395 110 Q380 30 330 5 Q295 -8 280 25 Q262 60 275 130 Q288 190 302 248Z"
-            fill="url(#ear)" stroke="#1a3870" stroke-width="3"/>
-      <path d="M352 240 Q382 188 370 112 Q356 50 328 28 Q304 14 290 40 Q276 68 286 128 Q296 180 310 232Z"
-            fill="url(#pink)" opacity="0.7"/>
-      <!-- Ear notch (torn) -->
-      <path d="M390 95 Q400 78 388 68 Q394 80 388 92Z" fill="#0a0e16"/>
-    </g>
-
-    <!-- ═══ BODY/NECK stub ═══ -->
-    <path d="M148 390 Q165 408 200 412 Q235 408 252 390 Q244 372 200 370 Q156 372 148 390Z"
-          fill="#3a6898" opacity="0.8"/>
-    <!-- Chest line details -->
-    <path d="M168 385 Q200 395 232 385" stroke="#2a5080" stroke-width="2" fill="none" opacity="0.5"/>
-
-    <!-- ═══ MAIN HEAD ═══ -->
-    <!-- Head shape: wide oval, slightly pointed chin -->
-    <path d="
-      M200 55
-      C 258 52, 308 75, 330 118
-      C 352 162, 348 205, 332 238
-      C 318 266, 296 285, 272 300
-      C 252 312, 228 320, 200 322
-      C 172 320, 148 312, 128 300
-      C 104 285, 82 266, 68 238
-      C 52 205, 48 162, 70 118
-      C 92 75, 142 52, 200 55Z
-    " fill="url(#fur)" stroke="#1a3870" stroke-width="3"/>
-
-    <!-- Fur texture highlight (light patch top) -->
-    <ellipse cx="185" cy="120" rx="80" ry="48" fill="#c0e8f8" opacity="0.25"/>
-
-    <!-- Shadow depth bottom -->
-    <path d="M200 322 C 172 320, 148 312, 128 300 C 104 285, 82 266, 68 238 C 52 205, 48 162, 70 118"
-          fill="none" stroke="none"/>
-    <ellipse cx="200" cy="300" rx="110" ry="40" fill="#1a3870" opacity="0.15"/>
-
-    <!-- ═══ CHEEKS ═══ -->
-    <!-- Left cheek puff -->
-    <ellipse cx="88" cy="248" rx="42" ry="26" fill="#7ac8e0" opacity="0.3"/>
-    <!-- Right cheek puff -->
-    <ellipse cx="312" cy="248" rx="42" ry="26" fill="#7ac8e0" opacity="0.3"/>
-    <!-- Cheek dots left -->
-    <circle cx="72"  cy="238" r="4.5" fill="#2a5890" opacity="0.45"/>
-    <circle cx="88"  cy="254" r="4.5" fill="#2a5890" opacity="0.45"/>
-    <circle cx="104" cy="244" r="4.5" fill="#2a5890" opacity="0.45"/>
-    <!-- Cheek dots right -->
-    <circle cx="296" cy="238" r="4.5" fill="#2a5890" opacity="0.45"/>
-    <circle cx="312" cy="254" r="4.5" fill="#2a5890" opacity="0.45"/>
-    <circle cx="328" cy="244" r="4.5" fill="#2a5890" opacity="0.45"/>
-
-    <!-- ═══ NOSE ═══ -->
-    <!-- Big rounded triangular dark nose, center of face -->
-    <path d="
-      M200 175
-      C 174 175, 158 192, 160 212
-      C 162 232, 176 248, 200 250
-      C 224 248, 238 232, 240 212
-      C 242 192, 226 175, 200 175Z
-    " fill="url(#nose)" stroke="#0a1430" stroke-width="2"/>
-    <!-- Nose highlight -->
-    <ellipse cx="186" cy="190" rx="14" ry="9" fill="#4a6aaa" opacity="0.5"/>
-    <!-- Nostrils -->
-    <ellipse cx="184" cy="230" rx="11" ry="8" fill="#060e28" opacity="0.7"/>
-    <ellipse cx="216" cy="230" rx="11" ry="8" fill="#060e28" opacity="0.7"/>
-
-    <!-- ═══ EYES ═══ -->
-    <!-- Left eye — large, round, very dark -->
-    <ellipse cx="128" cy="180" rx="40" ry="40" fill="white" stroke="#0a1e50" stroke-width="3"/>
-    <ellipse cx="131" cy="184" rx="30" ry="30" fill="#080c14"/>
-    <!-- Main shine top-right -->
-    <ellipse cx="143" cy="168" rx="13" ry="10" fill="white" opacity="0.92"/>
-    <!-- Secondary small shine -->
-    <ellipse cx="120" cy="192" rx="6"  ry="5"  fill="white" opacity="0.3"/>
-
-    <!-- Right eye -->
-    <ellipse cx="272" cy="180" rx="40" ry="40" fill="white" stroke="#0a1e50" stroke-width="3"/>
-    <ellipse cx="275" cy="184" rx="30" ry="30" fill="#080c14"/>
-    <ellipse cx="287" cy="168" rx="13" ry="10" fill="white" opacity="0.92"/>
-    <ellipse cx="264" cy="192" rx="6"  ry="5"  fill="white" opacity="0.3"/>
-
-    <!-- ═══ HEAD BUMPS (small antenna-like) ═══ -->
-    <ellipse cx="168" cy="68" rx="13" ry="9" fill="#5aa8c8" stroke="#2a6090" stroke-width="2"/>
-    <ellipse cx="232" cy="68" rx="13" ry="9" fill="#5aa8c8" stroke="#2a6090" stroke-width="2"/>
-
-    <!-- ═══ MOUTH ═══ -->
-    <!-- Controlled by JS -->
-    <g id="MC">
-      <!-- Closed: neutral small line, not smiling -->
-      <path d="M172 302 Q186 308 200 308 Q214 308 228 302"
-            stroke="#0a1e50" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    </g>
-    <g id="MO" style="display:none">
-      <path id="MS" fill="#060e1e"/>
-      <path id="MT" fill="white"/>
-      <ellipse id="TG" fill="#c03060" opacity="0.9"/>
-      <path id="ML" stroke="#0a1e50" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    </g>
-  </svg>
-</div>
-```
-
+        <!-- Ears -->
+        <g transform="rotate(-22,80,95)">
+          <path d="M42 180 Q10 140 18 70 Q28 20 68 8 Q95 0 102 30 Q108 55 95 100 Q85 140 75 175Z" fill="url(#eg)"/>
+          <path d="M55 165 Q30 132 36 75 Q44 38 68 28 Q85 22 90 45 Q94 65 83 100 Q74 130 66 162Z" fill="#c090cc" opacity=".5"/>
+        </g>
+        <g transform="rotate(22,220,95)">
+          <path d="M258 180 Q290 140 282 70 Q272 20 232 8 Q205 0 198 30 Q192 55 205 100 Q215 140 225 175Z" fill="url(#eg)"/>
+          <path d="M245 165 Q270 132 264 75 Q256 38 232 28 Q215 22 210 45 Q206 65 217 100 Q226 130 234 162Z" fill="#c090cc" opacity=".5"/>
+        </g>
+        <!-- Neck -->
+        <path d="M110 288 Q122 300 150 302 Q178 300 190 288 Q183 275 150 273 Q117 275 110 288Z" fill="#3a70a8" opacity=".65"/>
+        <!-- Head -->
+        <path d="M150 40 C200 38,240 60,255 100 C270 140,265 175,250 200 C240 218,225 232,210 245 C195 258,175 266,150 268 C125 266,105 258,90 245 C75 232,60 218,50 200 C35 175,30 140,45 100 C60 60,100 38,150 40Z" fill="url(#bg)"/>
+        <ellipse cx="135" cy="98" rx="62" ry="40" fill="#b8e8f8" opacity=".16"/>
+        <!-- Cheeks -->
+        <ellipse cx="68" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/>
+        <ellipse cx="232" cy="206" rx="33" ry="20" fill="#90c8e0" opacity=".22"/>
+        <circle cx="55" cy="198" r="3" fill="#3060a0" opacity=".38"/>
+        <circle cx="68" cy="210" r="3" fill="#3060a0" opacity=".38"/>
+        <circle cx="80" cy="202" r="3" fill="#3060a0" opacity=".38"/>
+        <circle cx="245" cy="198" r="3" fill="#3060a0" opacity=".38"/>
+        <circle cx="232" cy="210" r="3" fill="#3060a0" opacity=".38"/>
+        <circle cx="220" cy="202" r="3" fill="#3060a0" opacity=".38"/>
+        <!-- Nose -->
+        <path d="M150 148 C128 148,116 162,118 178 C120 194,132 204,150 205 C168 204,180 194,182 178 C184 162,172 148,150 148Z" fill="url(#ng)"/>
+        <ellipse cx="140" cy="160" rx="11" ry="7" fill="#6080c0" opacity=".38"/>
+        <ellipse cx="138" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
+        <ellipse cx="162" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
+        <!-- Eyes -->
+        <ellipse cx="100" cy="148" rx="32" ry="32" fill="white"/>
+        <ellipse cx="102" cy="151" rx="23" ry="23" fill="#080c12"/>
+        <ellipse cx="113" cy="139" rx="10" ry="8" fill="white" opacity=".9"/>
+        <ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
+        <ellipse cx="200" cy="148" rx="32" ry="32" fill="white"/>
+        <ellipse cx="202" cy="151" rx="23" ry="23" fill="#080c12"/>
+        <ellipse cx="213" cy="139" rx="10" ry="8" fill="white" opacity=".9"/>
+        <ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
+        <!-- Bumps -->
+        <ellipse cx="128" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
+        <ellipse cx="172" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
+        <!-- Mouth -->
+        <g id="MC">
+          <path d="M124 234 Q137 244 150 245 Q163 244 176 234" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </g>
+        <g id="MO" style="display:none">
+          <path id="MS" fill="#06101e"/>
+          <path id="MT" fill="white"/>
+          <ellipse id="TG" fill="#c03858" opacity=".85"/>
+          <path id="ML" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
   </div>
   <div class="status"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
   <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич 👽 Держи 🎙️ и говори!</div></div></div>
@@ -241,32 +155,118 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <script>
 function $(id){return document.getElementById(id)}
-const keyScreen=$('keyScreen'),app=$('app'),
-      keyInp=$('keyInp'),keyBtn=$('keyBtn'),
+const keyScreen=$('keyScreen'),app=$('app'),keyInp=$('keyInp'),keyBtn=$('keyBtn'),
       glow=$('glow'),head=$('head'),dot=$('dot'),stxt=$('stxt'),
       chat=$('chat'),err=$('err'),inp=$('inp'),sb=$('sb'),
       micBtn=$('micBtn'),micHint=$('micHint'),
       MC=$('MC'),MO=$('MO'),MS=$('MS'),MT=$('MT'),TG=$('TG'),ML=$('ML');
 
-let API_KEY = localStorage.getItem('sk') || '';
+let API_KEY=localStorage.getItem('sk')||'';
+let state='idle',hist=[],raf=null,mC=0,mT=0,lastB=0,recog=null,listenStart=0;
 
-function showApp(){
-  keyScreen.style.display = 'none';
-  app.style.display = 'flex';
+function showApp(){keyScreen.style.display='none';app.style.display='flex';}
+if(API_KEY) showApp();
+keyBtn.addEventListener('click',()=>{
+  const k=keyInp.value.trim();if(!k)return;
+  API_KEY=k;localStorage.setItem('sk',k);showApp();
+});
+keyInp.addEventListener('keydown',e=>{if(e.key==='Enter')keyBtn.click()});
+
+// ── Simlish audio engine ──
+let audioCtx=null;
+function getAudioCtx(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
 }
 
-if(API_KEY){ showApp(); }
+// Play one simlish "syllable" — short vowel-like tone with wobble
+function playSyllable(freq, duration, volume=0.18){
+  try{
+    const ctx=getAudioCtx();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    const filter=ctx.createBiquadFilter();
 
-keyBtn.addEventListener('click', ()=>{
-  const k = keyInp.value.trim();
-  if(!k) return;
-  API_KEY = k; localStorage.setItem('sk', k);
-  showApp();
-});
-keyInp.addEventListener('keydown', e=>{ if(e.key==='Enter') keyBtn.click(); });
+    // Warm tone like voice formant
+    osc.type='sine';
+    filter.type='bandpass';
+    filter.frequency.value=freq;
+    filter.Q.value=3;
 
-let state='idle', hist=[], raf=null, mC=0, mT=0, lastB=0, recog=null, listenStart=0;
+    // Pitch wobble — makes it sound organic
+    osc.frequency.setValueAtTime(freq*0.92, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(freq*1.05, ctx.currentTime+duration*0.3);
+    osc.frequency.linearRampToValueAtTime(freq*0.97, ctx.currentTime+duration*0.7);
+    osc.frequency.linearRampToValueAtTime(freq*0.88, ctx.currentTime+duration);
 
+    // Envelope: attack, sustain, release
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(volume, ctx.currentTime+duration*0.15);
+    gain.gain.setValueAtTime(volume*0.8, ctx.currentTime+duration*0.6);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime+duration);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+duration);
+  }catch(e){}
+}
+
+// Simlish syllable patterns — vowel frequencies like in The Sims
+const vowelFreqs=[280,320,260,350,310,290,340,270,380,300];
+const consonantFreqs=[180,200,160,220,190,170,210,185];
+
+let simlishTimer=null;
+let syllableIndex=0;
+
+function startSimlish(){
+  if(simlishTimer) return;
+  syllableIndex=0;
+  function playNext(){
+    if(!simlishTimer) return;
+    // Alternate: consonant (short) + vowel (longer) — like real speech
+    const isVowel=syllableIndex%2===1;
+    const freqs=isVowel?vowelFreqs:consonantFreqs;
+    const freq=freqs[Math.floor(Math.random()*freqs.length)];
+    const dur=isVowel?(0.08+Math.random()*0.07):(0.04+Math.random()*0.04);
+    const vol=isVowel?0.15:0.08;
+    playSyllable(freq, dur, vol);
+    syllableIndex++;
+    // Vary timing — sometimes faster, sometimes a tiny pause
+    const nextDelay=isVowel?(60+Math.random()*60):(30+Math.random()*40);
+    simlishTimer=setTimeout(playNext, nextDelay);
+  }
+  simlishTimer=setTimeout(playNext,0);
+}
+
+function stopSimlish(){
+  if(simlishTimer){clearTimeout(simlishTimer);simlishTimer=null;}
+}
+
+// ── Mouth animation ──
+function drawMouth(a){
+  if(a<0.06){MC.style.display='';MO.style.display='none';return}
+  MC.style.display='none';MO.style.display='';
+  const cx=150,cy=235,w=54+a*24,h=a*30,L=cx-w/2,R=cx+w/2,bY=cy+h,th=7+a*8;
+  MS.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-5} ${R} ${cy} Q${R-5} ${bY} ${cx} ${bY+2} Q${L+5} ${bY} ${L} ${cy}Z`);
+  MT.setAttribute('d',`M${cx-15} ${cy} Q${cx-8} ${cy-2} ${cx-3} ${cy-1} L${cx+3} ${cy-1} Q${cx+8} ${cy-2} ${cx+15} ${cy} Q${cx+8} ${cy+th} ${cx} ${cy+th+1} Q${cx-8} ${cy+th} ${cx-15} ${cy}Z`);
+  TG.setAttribute('cx',cx);TG.setAttribute('cy',cy+h*0.6);TG.setAttribute('rx',12+a*5);TG.setAttribute('ry',5+a*7);
+  ML.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-7} ${R} ${cy}`);
+}
+function mLoop(t){
+  raf=requestAnimationFrame(mLoop);
+  const age=(t-lastB)/1000;
+  if(age>0.08) mT=Math.max(0,mT-0.05);
+  mC+=(mT-mC)*0.22;
+  drawMouth(mC);
+}
+function beat(){lastB=performance.now();mT=0.7+Math.random()*0.3;}
+function startMouth(){if(!raf)raf=requestAnimationFrame(mLoop);}
+function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null;}mC=0;mT=0;drawMouth(0);}
+
+// ── UI ──
 function setState(s){
   state=s;
   dot.className='dot'+(s==='thinking'?' y':s==='talking'?' g':s==='listening'?' b':'');
@@ -277,29 +277,14 @@ function setState(s){
   micBtn.className='mic-btn'+(s==='listening'?' listening':busy?' disabled':'');
   micBtn.textContent=s==='listening'?'⏹':'🎙️';
   micHint.textContent=s==='listening'?'ОТПУСТИ...':busy?'...':'ДЕРЖИ И ГОВОРИ';
-  inp.disabled=busy; sb.disabled=busy;
+  inp.disabled=busy;sb.disabled=busy;
 }
-
-function drawMouth(a){
-  if(a<0.06){MC.style.display='';MO.style.display='none';return}
-  MC.style.display='none';MO.style.display='';
-  const cx=200, cy=298, w=84+a*32, h=a*42, L=cx-w/2, R=cx+w/2, bY=cy+h, th=10+a*12;
-  MS.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-7} ${R} ${cy} Q${R-7} ${bY} ${cx} ${bY+3} Q${L+7} ${bY} ${L} ${cy}Z`);
-  MT.setAttribute('d',`M${cx-22} ${cy} Q${cx-12} ${cy-3} ${cx-4} ${cy-2} L${cx+4} ${cy-2} Q${cx+12} ${cy-3} ${cx+22} ${cy} Q${cx+12} ${cy+th} ${cx} ${cy+th+2} Q${cx-12} ${cy+th} ${cx-22} ${cy}Z`);
-  TG.setAttribute('cx',cx); TG.setAttribute('cy',cy+h*0.58);
-  TG.setAttribute('rx',18+a*8); TG.setAttribute('ry',8+a*10);
-  ML.setAttribute('d',`M${L} ${cy} Q${cx} ${cy-10} ${R} ${cy}`);
-}
-function mLoop(t){raf=requestAnimationFrame(mLoop);const age=(t-lastB)/1000;if(age>0.08)mT=Math.max(0,mT-0.05);mC+=(mT-mC)*0.22;drawMouth(mC)}
-function beat(){lastB=performance.now();mT=0.7+Math.random()*0.3}
-function startMouth(){if(!raf)raf=requestAnimationFrame(mLoop)}
-function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null}mC=0;mT=0;drawMouth(0)}
 
 function addMsg(role,text){
   const w=document.createElement('div');w.className='bbl'+(role==='u'?' u':'');
   const b=document.createElement('div');b.className='bi';b.textContent=text;
   w.appendChild(b);chat.appendChild(w);
-  setTimeout(()=>chat.scrollTop=chat.scrollHeight, 50);
+  setTimeout(()=>chat.scrollTop=chat.scrollHeight,50);
   return b;
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -308,14 +293,14 @@ async function typeText(el,text){
   el.textContent='';el.classList.add('cur');
   for(let i=1;i<=text.length;i++){
     el.textContent=text.slice(0,i);
-    if(text[i-1]!==' ')beat();
+    if(text[i-1]!==' ') beat();
     chat.scrollTop=chat.scrollHeight;
     await sleep(18);
   }
   el.classList.remove('cur');
 }
 
-
+// ── Claude API ──
 async function askClaude(msg){
   err.textContent='';
   addMsg('u',msg);
@@ -344,69 +329,60 @@ async function askClaude(msg){
     setState('talking');
     const el=addMsg('a','');
     startMouth();
-    await typeText(el, text);
+    startSimlish(); // 🎵 Simlish starts!
+    await typeText(el,text);
+    stopSimlish();  // 🎵 Simlish stops!
     stopMouth();
     setState('idle');
   }catch(e){
-    stopMouth();
+    stopMouth();stopSimlish();
     err.textContent='Ошибка: '+e.message;
     setState('idle');
   }
 }
 
+// ── Mic ──
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-
 function startListening(){
-  if(state!=='idle') return;
+  if(state!=='idle')return;
   if(!SR){err.textContent='Используй Safari';return}
-  err.textContent='';
-  setState('listening');
+  // Unlock audio context on user gesture
+  getAudioCtx();
+  err.textContent='';setState('listening');
   listenStart=Date.now();
   recog=new SR();
-  recog.lang='ru-RU';
-  recog.interimResults=false;
-  recog.continuous=true;
+  recog.lang='ru-RU';recog.interimResults=false;recog.continuous=true;
   recog.onresult=e=>{
     const t=Array.from(e.results).map(r=>r[0].transcript).join('').trim();
-    recog=null;
-    if(t) askClaude(t);
-    else setState('idle');
+    recog=null;if(t)askClaude(t);else setState('idle');
   };
   recog.onerror=e=>{
-    recog=null;
-    setState('idle');
-    if(e.error==='not-allowed') err.textContent='Разреши микрофон в Safari';
-    else if(e.error!=='aborted') err.textContent='Ошибка mic: '+e.error;
+    recog=null;setState('idle');
+    if(e.error==='not-allowed')err.textContent='Разреши микрофон в Safari';
+    else if(e.error!=='aborted')err.textContent='Ошибка: '+e.error;
   };
   recog.onend=()=>{recog=null;if(state==='listening')setState('idle')};
   recog.start();
 }
-
 function stopListening(){
-  if(state!=='listening') return;
-  const elapsed=Date.now()-listenStart;
-  const delay=Math.max(0, 600-elapsed);
-  setTimeout(()=>{
-    if(recog){ try{recog.stop()}catch(e){} }
-    else setState('idle');
-  }, delay);
+  if(state!=='listening')return;
+  const delay=Math.max(0,600-(Date.now()-listenStart));
+  setTimeout(()=>{if(recog)try{recog.stop()}catch(e){}},delay);
 }
-
-micBtn.addEventListener('touchstart', e=>{
-  e.preventDefault();
-  startListening();
-},{passive:false});
-micBtn.addEventListener('touchend',   e=>{e.preventDefault();stopListening();},{passive:false});
+micBtn.addEventListener('touchstart',e=>{e.preventDefault();startListening();},{passive:false});
+micBtn.addEventListener('touchend',  e=>{e.preventDefault();stopListening();},{passive:false});
 micBtn.addEventListener('touchcancel',()=>stopListening());
 
+// ── Text input ──
 async function send(){
   const msg=inp.value.trim();
-  if(!msg||state!=='idle') return;
-  inp.value='';
-  await askClaude(msg);
+  if(!msg||state!=='idle')return;
+  // Unlock audio on button press
+  getAudioCtx();
+  inp.value='';await askClaude(msg);
 }
-sb.addEventListener('click', send);
-inp.addEventListener('keydown', e=>{if(e.key==='Enter') send()});
+sb.addEventListener('click',send);
+inp.addEventListener('keydown',e=>{if(e.key==='Enter')send()});
 </script>
 
 </body>
