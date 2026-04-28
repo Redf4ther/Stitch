@@ -251,7 +251,6 @@ async function askClaude(msg){
     el.classList.add('cur');
     startMouth();
     stopKeepAlive();
-    window.speechSynthesis.cancel();
 
     // Start speech if not muted
     let speechPromise=Promise.resolve();
@@ -275,8 +274,9 @@ async function askClaude(msg){
       await sleep(70);
     }
     el.classList.remove('cur');
-    await speechPromise;
+    // Stop mouth when text finishes, wait for speech if still going
     stopMouth();
+    await speechPromise;
     setState('idle');
   }catch(e){
     stopMouth();stopKeepAlive();err.textContent='Ошибка: '+e.message;setState('idle');
