@@ -7,19 +7,19 @@
 <title>Стич · Claude</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8ff;font-family:system-ui,sans-serif;-webkit-user-select:none;user-select:none}
-#keyScreen{position:fixed;inset:0;background:#0a0e16;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:12px;z-index:999;-webkit-user-select:auto;user-select:auto}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8ff;font-family:system-ui,sans-serif}
+#keyScreen{position:fixed;inset:0;background:#0a0e16;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:12px;z-index:10}
 #keyScreen h2{font-size:22px;color:#a0c8f0;text-align:center}
 #keyScreen p{font-size:13px;color:#4a7090;text-align:center;line-height:1.6}
 .key-lbl{font-size:11px;color:#3a6090;align-self:flex-start;letter-spacing:1px;text-transform:uppercase}
-.key-inp{width:100%;background:#060c14;border:1px solid rgba(40,90,180,.4);border-radius:14px;color:#b0d0f0;font-size:15px;padding:12px 16px;-webkit-user-select:text;user-select:text}
-.key-inp:focus{outline:none;border-color:rgba(60,140,240,.6)}
-.key-inp::placeholder{color:#1a3050;font-size:13px}
-.key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer;margin-top:4px;-webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,255,255,.1)}
-#app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow-y:auto}#app.visible{display:flex!important}
-.top-fixed{position:relative;display:flex;flex-direction:column;align-items:center;background:#0a0e16;padding-bottom:4px;width:100%}
+.key-inp{width:100%;background:#060c14;border:1px solid rgba(40,90,180,.4);border-radius:14px;color:#b0d0f0;font-size:15px;padding:12px 16px}
+.key-inp:focus{outline:none}
+.key-inp::placeholder{color:#1a3050}
+.key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer}
+#app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
+.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:#0a0e16;z-index:5;padding-bottom:4px}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0}
-.build{font-size:10px;opacity:.6;letter-spacing:2px;margin-left:4px;font-weight:700}
+.build{font-size:10px;opacity:.6;margin-left:4px}
 .stage{position:relative;width:160px;height:160px;margin-top:2px}
 .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(30,90,180,.3) 0%,transparent 68%);animation:gI 3s ease-in-out infinite}
 .glow.on{animation:gT .22s ease-in-out infinite}
@@ -40,39 +40,40 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .dot.y{background:#facc15;box-shadow:0 0 6px #facc15;animation:db .5s infinite}
 .dot.g{background:#4ade80;box-shadow:0 0 6px #4ade80;animation:db 1s infinite}
 .dot.b{background:#60a5fa;box-shadow:0 0 6px #60a5fa;animation:db .4s infinite}
-.chat{flex:1;width:100%;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px;margin-bottom:185px}
+.chat{position:fixed;left:0;right:0;top:215px;bottom:185px;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#0a1624;border:1px solid rgba(40,90,180,.2);color:#90b8e0}
 .bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
 .cur::after{content:'▋';color:#60b0ff;animation:cur .4s steps(1) infinite}
-.err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center}
-.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:10}
-.mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;transition:background .2s;touch-action:none}
+.err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;position:fixed;bottom:190px;left:0;right:0}
+.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:5}
+.mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;touch-action:none}
 .mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
 .mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
 .mic-hint{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#2a4060}
 .irow{display:flex;gap:8px;width:100%}
-.inp{flex:1;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:22px;color:#b0d0f0;font-size:16px;padding:10px 16px;-webkit-user-select:text;user-select:text}
-.inp:focus{outline:none;border-color:rgba(60,140,240,.55)}
-.inp:disabled{opacity:.4}
+.inp{flex:1;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:22px;color:#b0d0f0;font-size:16px;padding:10px 16px}
+.inp:focus{outline:none}
 .inp::placeholder{color:#1a3050}
-.sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.inp:disabled{opacity:.4}
+.sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;cursor:pointer}
 .sbtn:disabled{background:#111a2e;opacity:.35}
-
 </style>
 </head>
 <body>
+
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:12px;opacity:.5;font-weight:400">v36</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v38</span></h2>
   <p>Введи API ключ один раз — сохранится в телефоне</p>
   <div class="key-lbl">Anthropic API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
   <button class="key-btn" id="keyBtn">Начать общение 🐾</button>
 </div>
+
 <div id="app">
-  <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v36</span></div>
+  <div class="top">
+    <div class="title">Стич · Claude <span class="build">v38</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -103,7 +104,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
     </div>
     <div class="status"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
   </div>
-  <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич 👽 Держи 🎙️ и говори!</div></div></div>
+  <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич! Держи микрофон и говори!</div></div></div>
   <div class="err" id="err"></div>
   <div class="bottom">
     <button class="mic-btn" id="micBtn">🎙️</button>
@@ -114,203 +115,206 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
     </div>
   </div>
 </div>
-<script type="module">
-// Wait for DOM
-window.addEventListener('load', function(){
-  var keyScreen=document.getElementById('keyScreen');
-  var app=document.getElementById('app');
-  var keyInp=document.getElementById('keyInp');
-  var keyBtn=document.getElementById('keyBtn');
 
-function enter(){
-var k=(keyInp?keyInp.value.trim():’’)||localStorage.getItem(‘sk’)||’’;
-if(k){ localStorage.setItem(‘sk’,k); }
-keyScreen.style.display=‘none’;
-app.style.display=‘flex’;
-initApp();
+<script>
+var KEY_SK = 'sk';
+var apiKey = localStorage.getItem(KEY_SK) || '';
+
+function showApp() {
+  document.getElementById('keyScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
 }
 
-if(keyBtn) keyBtn.onclick=enter;
-if(keyInp) keyInp.onkeydown=function(e){if(e.key===‘Enter’)enter();};
+// Auto-login if key exists
+if (apiKey) showApp();
 
-// Auto-enter if key saved
-if(localStorage.getItem(‘sk’)){
-keyScreen.style.display=‘none’;
-app.style.display=‘flex’;
-initApp();
-}
-});
+document.getElementById('keyBtn').onclick = function() {
+  var k = document.getElementById('keyInp').value.trim();
+  if (k) { apiKey = k; localStorage.setItem(KEY_SK, k); }
+  if (apiKey) { showApp(); }
+};
 
-function initApp(){
-var API_KEY=localStorage.getItem(‘sk’)||’’;
-var glow=document.getElementById(‘glow’),head=document.getElementById(‘head’),
-dot=document.getElementById(‘dot’),stxt=document.getElementById(‘stxt’),
-chat=document.getElementById(‘chat’),err=document.getElementById(‘err’),
-inp=document.getElementById(‘inp’),sb=document.getElementById(‘sb’),
-micBtn=document.getElementById(‘micBtn’),micHint=document.getElementById(‘micHint’),
-MC=document.getElementById(‘MC’),MO=document.getElementById(‘MO’),
-MS=document.getElementById(‘MS’),MT=document.getElementById(‘MT’),
-TG=document.getElementById(‘TG’),TOP=document.getElementById(‘TOP’),BOT=document.getElementById(‘BOT’);
+document.getElementById('keyInp').onkeydown = function(e) {
+  if (e.key === 'Enter') document.getElementById('keyBtn').onclick();
+};
 
-var state=‘idle’,hist=[],raf=null,mC=0,lastFlip=0,isOpen=false,posIdx=0,shapeIdx=0;
-var recog=null,listenStart=0;
+// ── App logic ──
+var glow = document.getElementById('glow');
+var head = document.getElementById('head');
+var dot = document.getElementById('dot');
+var stxt = document.getElementById('stxt');
+var chat = document.getElementById('chat');
+var errEl = document.getElementById('err');
+var inp = document.getElementById('inp');
+var sb = document.getElementById('sb');
+var micBtn = document.getElementById('micBtn');
+var micHint = document.getElementById('micHint');
+var MC = document.getElementById('MC');
+var MO = document.getElementById('MO');
+var MS = document.getElementById('MS');
+var MT = document.getElementById('MT');
+var TG = document.getElementById('TG');
+var TOP = document.getElementById('TOP');
+var BOT = document.getElementById('BOT');
 
-var shapes=[‘normal’,‘normal’,‘wide’,‘normal’,‘tube’,‘normal’,‘wide’,‘tube’,‘normal’];
-var openPos=[0.3,0.5,0.7,0.9,0.4,0.75,0.55];
-var currentShape=‘normal’;
+var state = 'idle';
+var hist = [];
+var raf = null;
+var mC = 0, lastFlip = 0, isOpen = false, posIdx = 0, shapeIdx = 0;
+var recog = null, listenStart = 0;
+var currentShape = 'normal';
+var shapes = ['normal','normal','wide','normal','tube','normal','wide','tube','normal'];
+var openPos = [0.3,0.5,0.7,0.9,0.4,0.75,0.55];
 
-function drawMouth(a,shape){
-if(a<0.04){MC.style.display=’’;MO.style.display=‘none’;return;}
-MC.style.display=‘none’;MO.style.display=’’;
-var cx=150,cy=235,w,h;
-if(shape===‘tube’){w=18+a*10;h=a*40;}
-else if(shape===‘wide’){w=52+a*16;h=a*14;}
-else{w=42+a*16;h=a*26;}
-var L=cx-w/2,R=cx+w/2,bY=cy+h,th=shape===‘tube’?3+a*5:5+a*8;
-MS.setAttribute(‘d’,‘M’+L+’ ‘+cy+’ Q’+cx+’ ‘+(cy-6)+’ ‘+R+’ ‘+cy+’ Q’+(R-4)+’ ‘+bY+’ ‘+cx+’ ‘+(bY+2)+’ Q’+(L+4)+’ ‘+bY+’ ‘+L+’ ‘+cy+‘Z’);
-if(a>0.5){MT.setAttribute(‘d’,‘M’+(cx-14)+’ ‘+cy+’ Q’+(cx-8)+’ ‘+(cy-2)+’ ‘+(cx-2)+’ ‘+(cy-1)+’ L’+(cx+2)+’ ‘+(cy-1)+’ Q’+(cx+8)+’ ‘+(cy-2)+’ ‘+(cx+14)+’ ‘+cy+’ Q’+(cx+7)+’ ‘+(cy+th)+’ ‘+cx+’ ‘+(cy+th+1)+’ Q’+(cx-7)+’ ‘+(cy+th)+’ ‘+(cx-14)+’ ‘+cy+‘Z’);MT.style.display=’’;}
-else{MT.style.display=‘none’;}
-if(a>0.35){TG.setAttribute(‘cx’,cx);TG.setAttribute(‘cy’,cy+h*0.65);TG.setAttribute(‘rx’,10+a*4);TG.setAttribute(‘ry’,4+a*5);TG.style.display=’’;}
-else{TG.style.display=‘none’;}
-TOP.setAttribute(‘d’,‘M’+L+’ ‘+cy+’ Q’+cx+’ ‘+(cy-8)+’ ‘+R+’ ‘+cy);
-BOT.setAttribute(‘d’,‘M’+L+’ ‘+cy+’ Q’+(L+6)+’ ‘+(bY+2)+’ ‘+cx+’ ‘+(bY+3)+’ Q’+(R-6)+’ ‘+(bY+2)+’ ‘+R+’ ’+cy);
-}
-
-function mLoop(t){
-raf=requestAnimationFrame(mLoop);
-var interval=60+Math.random()*40;
-if(t-lastFlip>interval){
-isOpen=!isOpen;lastFlip=t;
-if(isOpen){posIdx=(posIdx+1)%openPos.length;shapeIdx=(shapeIdx+1)%shapes.length;currentShape=shapes[shapeIdx];mC=openPos[posIdx];}
-else{mC=0;}
-drawMouth(mC,currentShape);
-}
-}
-function startMouth(){if(!raf)raf=requestAnimationFrame(mLoop);}
-function stopMouth(){if(raf){cancelAnimationFrame(raf);raf=null;}mC=0;drawMouth(0,‘normal’);}
-
-function setState(s){
-state=s;
-dot.className=‘dot’+(s===‘thinking’?’ y’:s===‘talking’?’ g’:s===‘listening’?’ b’:’’);
-stxt.textContent={idle:‘Готов’,listening:‘Слушаю…’,thinking:‘Думаю…’,talking:‘Говорит…’}[s];
-head.className=‘head’+(s===‘talking’?’ talk’:s===‘listening’?’ listen’:’’);
-glow.className=‘glow’+(s===‘talking’?’ on’:’’);
-var busy=s===‘thinking’||s===‘talking’;
-micBtn.className=‘mic-btn’+(s===‘listening’?’ listening’:busy?’ disabled’:’’);
-micBtn.textContent=s===‘listening’?‘⏹’:‘🎙️’;
-micHint.textContent=s===‘listening’?‘ОТПУСТИ…’:busy?’…’:‘ДЕРЖИ И ГОВОРИ’;
-inp.disabled=busy;sb.disabled=busy;
+function drawMouth(a, shape) {
+  if (a < 0.04) { MC.style.display=''; MO.style.display='none'; return; }
+  MC.style.display='none'; MO.style.display='';
+  var cx=150, cy=235, w, h;
+  if (shape==='tube') { w=18+a*10; h=a*40; }
+  else if (shape==='wide') { w=52+a*16; h=a*14; }
+  else { w=42+a*16; h=a*26; }
+  var L=cx-w/2, R=cx+w/2, bY=cy+h, th=shape==='tube'?3+a*5:5+a*8;
+  MS.setAttribute('d','M'+L+' '+cy+' Q'+cx+' '+(cy-6)+' '+R+' '+cy+' Q'+(R-4)+' '+bY+' '+cx+' '+(bY+2)+' Q'+(L+4)+' '+bY+' '+L+' '+cy+'Z');
+  if (a>0.5) { MT.setAttribute('d','M'+(cx-14)+' '+cy+' Q'+(cx-8)+' '+(cy-2)+' '+(cx-2)+' '+(cy-1)+' L'+(cx+2)+' '+(cy-1)+' Q'+(cx+8)+' '+(cy-2)+' '+(cx+14)+' '+cy+' Q'+(cx+7)+' '+(cy+th)+' '+cx+' '+(cy+th+1)+' Q'+(cx-7)+' '+(cy+th)+' '+(cx-14)+' '+cy+'Z'); MT.style.display=''; }
+  else { MT.style.display='none'; }
+  if (a>0.35) { TG.setAttribute('cx',cx); TG.setAttribute('cy',cy+h*0.65); TG.setAttribute('rx',10+a*4); TG.setAttribute('ry',4+a*5); TG.style.display=''; }
+  else { TG.style.display='none'; }
+  TOP.setAttribute('d','M'+L+' '+cy+' Q'+cx+' '+(cy-8)+' '+R+' '+cy);
+  BOT.setAttribute('d','M'+L+' '+cy+' Q'+(L+6)+' '+(bY+2)+' '+cx+' '+(bY+3)+' Q'+(R-6)+' '+(bY+2)+' '+R+' '+cy);
 }
 
-function addMsg(role,text){
-var w=document.createElement(‘div’);w.className=‘bbl’+(role===‘u’?’ u’:’’);
-var b=document.createElement(‘div’);b.className=‘bi’;b.textContent=text;
-w.appendChild(b);chat.appendChild(w);
-chat.scrollTop=chat.scrollHeight;
-return b;
+function mLoop(t) {
+  raf = requestAnimationFrame(mLoop);
+  var interval = 60 + Math.random()*40;
+  if (t - lastFlip > interval) {
+    isOpen = !isOpen; lastFlip = t;
+    if (isOpen) { posIdx=(posIdx+1)%openPos.length; shapeIdx=(shapeIdx+1)%shapes.length; currentShape=shapes[shapeIdx]; mC=openPos[posIdx]; }
+    else { mC = 0; }
+    drawMouth(mC, currentShape);
+  }
+}
+function startMouth() { if (!raf) raf = requestAnimationFrame(mLoop); }
+function stopMouth() { if (raf) { cancelAnimationFrame(raf); raf=null; } mC=0; drawMouth(0,'normal'); }
+
+function setState(s) {
+  state = s;
+  dot.className = 'dot'+(s==='thinking'?' y':s==='talking'?' g':s==='listening'?' b':'');
+  stxt.textContent = {idle:'Готов',listening:'Слушаю...',thinking:'Думаю...',talking:'Говорит...'}[s];
+  head.className = 'head'+(s==='talking'?' talk':s==='listening'?' listen':'');
+  glow.className = 'glow'+(s==='talking'?' on':'');
+  var busy = s==='thinking'||s==='talking';
+  micBtn.className = 'mic-btn'+(s==='listening'?' listening':busy?' disabled':'');
+  micBtn.textContent = s==='listening'?'⏹':'🎙️';
+  micHint.textContent = s==='listening'?'ОТПУСТИ...':busy?'...':'ДЕРЖИ И ГОВОРИ';
+  inp.disabled = busy;
+  sb.disabled = busy;
 }
 
-function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+function addMsg(role, text) {
+  var w = document.createElement('div'); w.className = 'bbl'+(role==='u'?' u':'');
+  var b = document.createElement('div'); b.className = 'bi'; b.textContent = text;
+  w.appendChild(b); chat.appendChild(w);
+  chat.scrollTop = chat.scrollHeight;
+  return b;
+}
 
-async function askClaude(msg){
-err.textContent=’’;
-addMsg(‘u’,msg);
-setState(‘thinking’);
-hist.push({role:‘user’,content:msg});
-try{
-var r=await fetch(‘https://api.anthropic.com/v1/messages’,{
-method:‘POST’,
-headers:{‘Content-Type’:‘application/json’,‘anthropic-version’:‘2023-06-01’,‘x-api-key’:API_KEY,‘anthropic-dangerous-direct-browser-access’:‘true’},
-body:JSON.stringify({model:‘claude-haiku-4-5-20251001’,max_tokens:300,
-system:‘Ты ИИ-ассистент в образе Стича (эксперимент 626) из Lilo & Stitch. Отвечай коротко (1-2 предложения), весело. Иногда добавляй Ага!, Бум!, Стич знает!. Отвечай на языке пользователя. Не используй эмодзи.’,
-messages:hist})
-});
-var data=await r.json();
-if(data.error)throw new Error(data.error.message);
-var text=data.content[0].text;
-hist.push({role:‘assistant’,content:text});
-setState(‘talking’);
-var el=addMsg(‘a’,’’);
-el.classList.add(‘cur’);
-startMouth();
+function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
-```
-  var speechDone=false;
-  if(window.speechSynthesis){
-    var u=new SpeechSynthesisUtterance(text);
-    u.lang='ru-RU';u.rate=1.2;u.pitch=1.8;u.volume=1;
-    var voices=window.speechSynthesis.getVoices();
-    var ru=voices.find(function(v){return v.lang==='ru-RU';})||voices.find(function(v){return v.lang.startsWith('ru');})||voices[0];
-    if(ru)u.voice=ru;
-    u.onend=function(){speechDone=true;};
-    u.onerror=function(){speechDone=true;};
+async function askClaude(msg) {
+  errEl.textContent = '';
+  addMsg('u', msg);
+  setState('thinking');
+  hist.push({role:'user', content:msg});
+  try {
+    var r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','anthropic-version':'2023-06-01','x-api-key':apiKey,'anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        system: 'Ты ИИ-ассистент в образе Стича (эксперимент 626) из Lilo & Stitch. Отвечай коротко (1-2 предложения), весело. Иногда добавляй Ага!, Бум!, Стич знает!. Отвечай на языке пользователя. Не используй эмодзи.',
+        messages: hist
+      })
+    });
+    var data = await r.json();
+    if (data.error) throw new Error(data.error.message);
+    var text = data.content[0].text;
+    hist.push({role:'assistant', content:text});
+    setState('talking');
+    var el = addMsg('a', '');
+    el.classList.add('cur');
+    // 1. Start voice immediately (independent)
+    if (window.speechSynthesis) {
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang='ru-RU'; u.rate=1.2; u.pitch=1.8; u.volume=1;
+      var vv = window.speechSynthesis.getVoices();
+      var ru = vv.find(function(v){return v.lang==='ru-RU';}) || vv.find(function(v){return v.lang.startsWith('ru');}) || vv[0];
+      if (ru) u.voice = ru;
+      window.speechSynthesis.speak(u);
+    }
+    // 2. Start mouth animation
+    startMouth();
+    // 3. Type text at fixed 55ms per char
+    for (var i=1; i<=text.length; i++) {
+      el.textContent = text.slice(0,i);
+      el.scrollIntoView({block:'end',behavior:'instant'});
+      await sleep(55);
+    }
+    el.classList.remove('cur');
+    // 4. Stop mouth when text finishes
+    stopMouth();
+    setState('idle');
+  } catch(e) {
+    stopMouth();
+    errEl.textContent = 'Ошибка: '+e.message;
+    setState('idle');
+  }
+}
+
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function startListening() {
+  if (state!=='idle') return;
+  if (!SR) { errEl.textContent='Используй Safari'; return; }
+  errEl.textContent=''; setState('listening'); listenStart=Date.now();
+  recog = new SR(); recog.lang='ru-RU'; recog.interimResults=false; recog.continuous=true;
+  recog.onresult = function(e) {
+    var t = Array.from(e.results).map(function(r){return r[0].transcript;}).join('').trim();
+    recog=null; if(t) askClaude(t); else setState('idle');
+  };
+  recog.onerror = function(e) { recog=null; setState('idle'); };
+  recog.onend = function() { recog=null; if(state==='listening') setState('idle'); };
+  recog.start();
+}
+
+function stopListening() {
+  if (state!=='listening') return;
+  var delay = Math.max(0, 600-(Date.now()-listenStart));
+  setTimeout(function(){ if(recog) try{recog.stop();}catch(e){} }, delay);
+}
+
+micBtn.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  if (window.speechSynthesis) {
+    var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
     window.speechSynthesis.speak(u);
   }
+  startListening();
+}, {passive:false});
 
-  for(var i=1;i<=text.length;i++){
-    el.textContent=text.slice(0,i);
-    el.scrollIntoView({block:'end',behavior:'instant'});
-    await sleep(55);
+micBtn.addEventListener('touchend', function(e) { e.preventDefault(); stopListening(); }, {passive:false});
+micBtn.addEventListener('touchcancel', stopListening);
+
+sb.onclick = function() {
+  var msg = inp.value.trim(); if(!msg||state!=='idle') return;
+  if (window.speechSynthesis) {
+    var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
+    window.speechSynthesis.speak(u);
   }
-  el.classList.remove('cur');
-  stopMouth();
-  setState('idle');
-
-  if(!speechDone){
-    await new Promise(function(resolve){
-      var check=setInterval(function(){if(speechDone){clearInterval(check);resolve();}},100);
-      setTimeout(function(){clearInterval(check);resolve();},5000);
-    });
-  }
-}catch(e){
-  stopMouth();err.textContent='Ошибка: '+e.message;setState('idle');
-}
-```
-
-}
-
-var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-function startListening(){
-if(state!==‘idle’)return;
-if(!SR){err.textContent=‘Используй Safari’;return;}
-err.textContent=’’;setState(‘listening’);listenStart=Date.now();
-recog=new SR();recog.lang=‘ru-RU’;recog.interimResults=false;recog.continuous=true;
-recog.onresult=function(e){
-var t=Array.from(e.results).map(function(r){return r[0].transcript;}).join(’’).trim();
-recog=null;if(t)askClaude(t);else setState(‘idle’);
+  inp.value=''; askClaude(msg);
 };
-recog.onerror=function(e){recog=null;setState(‘idle’);if(e.error===‘not-allowed’)err.textContent=‘Разреши микрофон в Safari’;};
-recog.onend=function(){recog=null;if(state===‘listening’)setState(‘idle’);};
-recog.start();
-}
-function stopListening(){
-if(state!==‘listening’)return;
-var delay=Math.max(0,600-(Date.now()-listenStart));
-setTimeout(function(){if(recog)try{recog.stop();}catch(e){}},delay);
-}
 
-micBtn.addEventListener(‘touchstart’,function(e){
-e.preventDefault();
-if(window.speechSynthesis){
-window.speechSynthesis.getVoices();
-var u=new SpeechSynthesisUtterance(’ ’);u.volume=0;u.rate=2;
-window.speechSynthesis.speak(u);
-}
-startListening();
-},{passive:false});
-micBtn.addEventListener(‘touchend’,function(e){e.preventDefault();stopListening();},{passive:false});
-micBtn.addEventListener(‘touchcancel’,stopListening);
-
-sb.onclick=function(){
-var msg=inp.value.trim();if(!msg||state!==‘idle’)return;
-if(window.speechSynthesis){
-var u=new SpeechSynthesisUtterance(’ ‘);u.volume=0;u.rate=2;
-window.speechSynthesis.speak(u);
-}
-inp.value=’’;askClaude(msg);
-};
-inp.onkeydown=function(e){if(e.key===‘Enter’)sb.onclick();};
-}
+inp.onkeydown = function(e) { if(e.key==='Enter') sb.onclick(); };
 </script>
 
 </body>
