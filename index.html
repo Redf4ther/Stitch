@@ -289,10 +289,26 @@ async function askClaude(msg){
     startMouth();
     stopKeepAlive();
     window.speechSynthesis && window.speechSynthesis.cancel();
-    await sleep(100);
+    await sleep(80);
+
+    // Estimate speech duration: rate 1.2 ≈ 70ms per char
+    const speechMs = text.length * 70;
+    const charDelay = speechMs / text.length; // same as 70ms
+
+    // Start voice
     speak(text);
-    await typeText(el,text);
-    await sleep(1500);
+
+    // Type text at same speed as speech
+    el.classList.add('cur');
+    for(let i=1;i<=text.length;i++){
+      el.textContent=text.slice(0,i);
+      chat.scrollTop=chat.scrollHeight;
+      await sleep(charDelay);
+    }
+    el.classList.remove('cur');
+
+    // Wait for voice to finish (a bit extra)
+    await sleep(600);
     stopMouth();
     setState('idle');
   }catch(e){
