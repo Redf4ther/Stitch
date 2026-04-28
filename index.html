@@ -287,11 +287,12 @@ async function askClaude(msg){
     setState('talking');
     const el=addMsg('a','');
     startMouth();
-    stopKeepAlive(); // stop pinging, now real speech takes over
+    stopKeepAlive();
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    await sleep(100);
     speak(text);
     await typeText(el,text);
-    // Wait a bit for speech to finish
-    await sleep(1000);
+    await sleep(1500);
     stopMouth();
     setState('idle');
   }catch(e){
