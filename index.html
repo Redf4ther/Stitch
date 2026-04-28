@@ -19,7 +19,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 #app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow:hidden}
 .top-fixed{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:#0a0e16;z-index:20;padding-bottom:4px}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0}
-.build{font-size:8px;opacity:.4;letter-spacing:1px;margin-left:4px}
+.build{font-size:14px;opacity:.6;letter-spacing:1px;margin-left:6px;font-weight:700}
 .stage{position:relative;width:160px;height:160px;margin-top:2px}
 .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(30,90,180,.3) 0%,transparent 68%);animation:gI 3s ease-in-out infinite}
 .glow.on{animation:gT .22s ease-in-out infinite}
@@ -75,7 +75,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <div id="app">
   <button class="mute-btn" id="muteBtn">🔊</button>
   <div class="top-fixed">
-    <div class="title">Стич · Claude <span class="build">v6</span></div>
+    <div class="title">Стич · Claude <span class="build">v7</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -253,22 +253,29 @@ async function askClaude(msg){
       window.speechSynthesis.speak(u);
     }
 
-    // Total speech time in ms (rate 1.2, ~60ms per char average)
-    // Shorter text → fewer chars → more ms per char → slower typing
-    // Longer text → more chars → fewer ms per char → faster typing
-    const totalMs=text.length*60; // total estimated speech ms
-    const charDelay=totalMs/text.length; // = 60ms always... 
-    // Actually: use words per minute approach
-    // Russian avg ~5 chars/word, speech rate 1.2 = ~180wpm = ~15 chars/sec = 67ms/char
-    // So: delay = 67ms for any length. To sync longer texts faster:
-    // delay = max(20, min(100, 3000/text.length * 2))
-    const syncDelay=Math.max(20,Math.min(100,6000/text.length));
-
+    // Sync: measure when speech actually starts, type until it ends
+    const speechStarted=new Promise(resolve=>{
+      // onstart fires when speech begins playing
+      if(window.speechSynthesis&&window.speechSynthesis.speaking) resolve(Date.now());
+      else setTimeout(()=>resolve(Date.now()),100);
+    });
+    const t0=await speechStarted;
+    // Type text proportionally over speech duration
+    // We update char position based on elapsed/total time ratio
+    let done=false;
+    speechPromise.then(()=>done=true);
+    const estTotal=text.length*62; // 62ms/char at rate 1.2
     for(let i=1;i<=text.length;i++){
       el.textContent=text.slice(0,i);
       chat.scrollTop=chat.scrollHeight;
-      await sleep(syncDelay);
+      el.scrollIntoView({block:'end'});
+      if(done) break;
+      const elapsed=Date.now()-t0;
+      const target=(i/text.length)*estTotal;
+      const delay=Math.max(15,target-elapsed);
+      await sleep(delay);
     }
+    el.textContent=text;
     el.classList.remove('cur');
     chat.scrollTop=chat.scrollHeight;
     await speechPromise;
