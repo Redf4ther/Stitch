@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v78</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v79</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -73,7 +73,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v78</span></div>
+    <div class="title">Стич · Claude <span class="build">v79</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -301,14 +301,23 @@ function startListening() {
   if (state!=='idle') return;
   if (!SR) { errEl.textContent='Используй Safari'; return; }
   errEl.textContent=''; setState('listening'); listenStart=Date.now();
-  recog = new SR(); recog.lang='ru-RU'; recog.interimResults=false; recog.continuous=true;
-  recog.onresult = function(e) {
-    var t = Array.from(e.results).map(function(r){return r[0].transcript;}).join('').trim();
-    recog=null; if(t) askClaude(t); else setState('idle');
-  };
-  recog.onerror = function(e) { recog=null; setState('idle'); };
-  recog.onend = function() { recog=null; if(state==='listening') setState('idle'); };
-  recog.start();
+  // Small delay to let previous session fully close
+  setTimeout(function() {
+    if (state !== 'listening') return;
+    try {
+      recog = new SR();
+      recog.lang='ru-RU';
+      recog.interimResults=false;
+      recog.continuous=false;
+      recog.onresult = function(e) {
+        var t = Array.from(e.results).map(function(r){return r[0].transcript;}).join('').trim();
+        recog=null; if(t) askClaude(t); else setState('idle');
+      };
+      recog.onerror = function(e) { recog=null; setState('idle'); };
+      recog.onend = function() { recog=null; if(state==='listening') setState('idle'); };
+      recog.start();
+    } catch(e) { setState('idle'); }
+  }, 300);
 }
 
 function stopListening() {
