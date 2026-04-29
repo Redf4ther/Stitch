@@ -64,16 +64,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v40</span></h2>
-  <p>Введи API ключ один раз — сохранится в телефоне</p>
-  <div class="key-lbl">Anthropic API ключ</div>
-  <input class="key-inp" id="keyInp" type="password" placeholder="sk-ant-api03-..."/>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v54</span></h2>
+  <p>Введи API ключ OpenAI — сохранится в телефоне</p>
+  <div class="key-lbl">OpenAI API ключ</div>
+  <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
   <button class="key-btn" id="keyBtn">Начать общение 🐾</button>
 </div>
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v40</span></div>
+    <div class="title">Стич · Claude <span class="build">v54</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -129,12 +129,6 @@ function showApp() {
 if (apiKey) showApp();
 
 document.getElementById('keyBtn').onclick = function() {
-  // Unlock speech on button press (user gesture)
-  if (window.speechSynthesis) {
-    var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
-    window.speechSynthesis.speak(u);
-    window.speechSynthesis.cancel();
-  }
   var k = document.getElementById('keyInp').value.trim();
   if (k) { apiKey = k; localStorage.setItem(KEY_SK, k); }
   if (apiKey) { showApp(); }
@@ -232,33 +226,78 @@ async function askClaude(msg) {
   setState('thinking');
   hist.push({role:'user', content:msg});
   try {
-    var r = await fetch('https://api.anthropic.com/v1/messages', {
+    var messages = [{role:'system', content:'Ты — персональный репетитор для ученика. Имя узнавай как зовут и запоминай.
+
+Тебя зовут: Липо Скич
+
+Твоя главная цель — не давать ответы, а развивать мышление ребёнка и помогать ей самой прийти к правильному решению.
+
+СТРОГО ЗАПРЕЩЕНО:
+- Давать готовые ответы
+- Решать задачу полностью за ученицу
+- Подставлять числа и показывать конечный результат
+- Подтверждать правильный ответ напрямую
+- Давать подсказки, которые сразу раскрывают решение
+
+РАЗРЕШЕНО И ОБЯЗАТЕЛЬНО:
+- Объяснять через простые вопросы
+- Разбивать задачу на маленькие шаги
+- Просить ученицу рассуждать вслух
+- Хвалить за ход мыслей, а не за результат
+
+УРОВЕНЬ: объясняй как для ученика 8-9 лет, простой язык.
+
+МЕТОД ОБУЧЕНИЯ:
+1. Попроси прочитать задачу и сказать что поняла
+2. Спроси: Что нам известно?
+3. Спроси: Что нужно найти?
+4. Помоги выбрать действие через наводящие вопросы
+5. Двигайся шаг за шагом
+6. Если ошибка — мягко направь
+
+МАНЕРА РЕЧИ: маленький весёлый инопланетный помощник. Короткие фразы, лёгкая озорность, иногда ломаная речь, повторения: чуть-чуть, думаем-думаем. Вставки: ха!, хм!, ага!, бум. Иногда: Охана… думаем вместе!, Хи-хи! Почти-почти!, Бум! Нашли зацепку!, Ты почти! Ещё чуть-чуть!, Хм… мозг думает!
+
+ЕСЛИ ПРОСИТ ОТВЕТ: Давай попробуем вместе разобраться — ты точно сможешь!
+
+ГЛАВНОЕ ПРАВИЛО: ученик должен САМ прийти к ответу. Ты не решаешь задачи — ты учишь думать.'}].concat(hist);
+    var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
-      headers: {'Content-Type':'application/json','anthropic-version':'2023-06-01','x-api-key':apiKey,'anthropic-dangerous-direct-browser-access':'true'},
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'gpt-4o-mini',
         max_tokens: 300,
-        system: 'Ты ИИ-ассистент в образе Стича (эксперимент 626) из Lilo & Stitch. Отвечай коротко (1-2 предложения), весело. Иногда добавляй Ага!, Бум!, Стич знает!. Отвечай на языке пользователя. Не используй эмодзи.',
-        messages: hist
+        messages: messages
       })
     });
     var data = await r.json();
     if (data.error) throw new Error(data.error.message);
-    var text = data.content[0].text;
+    var text = data.choices[0].message.content;
     hist.push({role:'assistant', content:text});
-    setState('talking');
+
+    // Still in "thinking" — download audio
+    var audioBlob = null;
+    try {
+      var ttsResp = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+        body: JSON.stringify({model:'tts-1', input:text, voice:'echo', speed:1.2})
+      });
+      audioBlob = await ttsResp.blob();
+    } catch(e) {}
+
+    // Audio ready — switch to "Говорит" and start everything at once
     var el = addMsg('a', '');
     el.classList.add('cur');
+    setState('talking');
     startMouth();
-    // Start voice
-    if (window.speechSynthesis) {
-      var u = new SpeechSynthesisUtterance(text);
-      u.lang='ru-RU'; u.rate=1.2; u.pitch=1.8; u.volume=1;
-      var vv = window.speechSynthesis.getVoices();
-      var ru = vv.find(function(v){return v.lang==='ru-RU';}) || vv.find(function(v){return v.lang.startsWith('ru');}) || vv[0];
-      if (ru) u.voice = ru;
-      window.speechSynthesis.speak(u);
+
+    if (audioBlob) {
+      var url = URL.createObjectURL(audioBlob);
+      var audio = new Audio(url);
+      audio.onended = function(){ URL.revokeObjectURL(url); };
+      audio.play().catch(function(){});
     }
+
     // Type text
     for (var i=1; i<=text.length; i++) {
       el.textContent = text.slice(0,i);
@@ -274,16 +313,6 @@ async function askClaude(msg) {
     setState('idle');
   }
 }
-
-// Unlock speechSynthesis on first touch anywhere
-document.addEventListener('touchstart', function() {
-  if (window.speechSynthesis) {
-    var u = new SpeechSynthesisUtterance(' ');
-    u.volume=0; u.rate=2;
-    window.speechSynthesis.speak(u);
-    window.speechSynthesis.cancel();
-  }
-}, {once: true});
 
 var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
