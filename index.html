@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v88</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v89</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -73,7 +73,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v88</span></div>
+    <div class="title">Стич · Claude <span class="build">v89</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -235,7 +235,7 @@ async function askClaude(msg) {
   setState('thinking');
   hist.push({role:'user', content:msg});
   try {
-    var prompt = 'Ты — персональный репетитор. Тебя зовут Липо Скич. Имя ученика узнавай и запоминай. Не давай готовые ответы — учи думать. Говори коротко, весело, как инопланетный помощник. Вставки: ха!, хм!, ага!, бум. Фразы: Охана думаем вместе!, Бум нашли зацепку!, Ты почти ещё чуть-чуть!';
+    var prompt = 'Ты — персональный репетитор. Тебя зовут Липо Скич. Узнай имя ученика и запомни. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, подтверждать правильный ответ напрямую. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. Уровень: 8-9 лет, простой язык. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь. Стиль: весёлый инопланетный помощник, короткие фразы, озорность, доброта. Вставки изредка: ха!, хм!, ага!, бум! Фразы иногда: Хи-хи! Почти-почти!, Бум! Нашли зацепку!, Ты почти! Ещё чуть-чуть!, Хм... мозг думает! Если просит ответ: Давай попробуем вместе — ты точно сможешь! Главное правило: ученик должен САМ прийти к ответу. Ты не решаешь задачи — ты учишь думать.';
     var messages = [{role:'system',content:prompt}].concat(hist);
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
