@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v69</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v71</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -73,7 +73,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v69</span></div>
+    <div class="title">Стич · Claude <span class="build">v71</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -284,6 +284,14 @@ async function askClaude(msg) {
   }
 }
 
+// Global AudioContext - must be created/resumed on user gesture
+var gAudioCtx = null;
+function getAudioCtx() {
+  if (!gAudioCtx) gAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (gAudioCtx.state === 'suspended') gAudioCtx.resume();
+  return gAudioCtx;
+}
+
 var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 function startListening() {
@@ -308,10 +316,7 @@ function stopListening() {
 
 micBtn.addEventListener('touchstart', function(e) {
   e.preventDefault();
-  if (window.speechSynthesis) {
-    var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
-    window.speechSynthesis.speak(u);
-  }
+  getAudioCtx(); // unlock on user gesture
   startListening();
 }, {passive:false});
 
@@ -326,10 +331,7 @@ micBtn.addEventListener('click', function() {
 
 sb.onclick = function() {
   var msg = inp.value.trim(); if(!msg||state!=='idle') return;
-  if (window.speechSynthesis) {
-    var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
-    window.speechSynthesis.speak(u);
-  }
+  getAudioCtx(); // unlock on user gesture
   inp.value=''; askClaude(msg);
 };
 
