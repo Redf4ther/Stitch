@@ -16,8 +16,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .key-inp:focus{outline:none}
 .key-inp::placeholder{color:#1a3050}
 .key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer}
-#app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
-.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:#0a0e16;z-index:5;padding-bottom:4px}
+#app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}#app.hidden *{display:none!important}
+.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:#0a0e16;z-index:5;padding-bottom:4px;pointer-events:none;visibility:hidden}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0}
 .build{font-size:10px;opacity:.6;margin-left:4px}
 .stage{position:relative;width:160px;height:160px;margin-top:2px}
@@ -40,14 +40,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .dot.y{background:#facc15;box-shadow:0 0 6px #facc15;animation:db .5s infinite}
 .dot.g{background:#4ade80;box-shadow:0 0 6px #4ade80;animation:db 1s infinite}
 .dot.b{background:#60a5fa;box-shadow:0 0 6px #60a5fa;animation:db .4s infinite}
-.chat{position:fixed;left:0;right:0;top:215px;bottom:185px;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px}
+.chat{position:fixed;left:0;right:0;top:215px;bottom:185px;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px;pointer-events:none;visibility:hidden}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#0a1624;border:1px solid rgba(40,90,180,.2);color:#90b8e0}
 .bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
 .cur::after{content:'▋';color:#60b0ff;animation:cur .4s steps(1) infinite}
-.err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;position:fixed;bottom:190px;left:0;right:0}
-.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:5}
+.err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;position:fixed;bottom:190px;left:0;right:0;pointer-events:none;visibility:hidden}
+.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:5;pointer-events:none;visibility:hidden}
 .mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;touch-action:none}
 .mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
 .mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v55</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v56</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -73,7 +73,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v55</span></div>
+    <div class="title">Стич · Claude <span class="build">v56</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -123,6 +123,14 @@ var apiKey = localStorage.getItem(KEY_SK) || '';
 function showApp() {
   document.getElementById('keyScreen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
+  // Show all fixed children
+  document.querySelector('.top').style.visibility = 'visible';
+  document.querySelector('.top').style.pointerEvents = 'auto';
+  document.querySelector('.chat').style.visibility = 'visible';
+  document.querySelector('.chat').style.pointerEvents = 'auto';
+  document.querySelector('.err').style.visibility = 'visible';
+  document.querySelector('.bottom').style.visibility = 'visible';
+  document.querySelector('.bottom').style.pointerEvents = 'auto';
 }
 
 // Auto-login if key exists
