@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v76</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v77</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -73,7 +73,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v76</span></div>
+    <div class="title">Стич · Claude <span class="build">v77</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -118,6 +118,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <script>
 var KEY_SK = 'sk';
+var gAudioCtx = null;
+function getAudioCtx() {
+  if (!gAudioCtx) gAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (gAudioCtx.state === 'suspended') gAudioCtx.resume();
+  return gAudioCtx;
+}
 var apiKey = localStorage.getItem(KEY_SK) || '';
 
 function showApp() {
@@ -133,10 +139,9 @@ function showApp() {
 if (apiKey) showApp();
 
 document.getElementById('keyBtn').onclick = function() {
-  if (window.speechSynthesis) {
-    var u = new SpeechSynthesisUtterance(' '); u.volume=0; u.rate=2;
-    window.speechSynthesis.speak(u);
-  }
+  // Unlock AudioContext on user gesture
+  if (!gAudioCtx) gAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (gAudioCtx.state === 'suspended') gAudioCtx.resume();
   var k = document.getElementById('keyInp').value.trim();
   if (k) { apiKey = k; localStorage.setItem(KEY_SK, k); }
   if (apiKey) { showApp(); } else { document.getElementById('err').textContent = 'Введи API ключ!'; }
@@ -302,13 +307,7 @@ async function askClaude(msg) {
   }
 }
 
-// Global AudioContext - must be created/resumed on user gesture
-var gAudioCtx = null;
-function getAudioCtx() {
-  if (!gAudioCtx) gAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (gAudioCtx.state === 'suspended') gAudioCtx.resume();
-  return gAudioCtx;
-}
+
 
 var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
