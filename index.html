@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v84</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v88</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -73,7 +73,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v84</span></div>
+    <div class="title">Стич · Claude <span class="build">v88</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -166,6 +166,7 @@ var TOP = document.getElementById('TOP');
 var BOT = document.getElementById('BOT');
 
 var state = 'idle';
+var audioPlaying = false;
 var hist = [];
 var raf = null;
 var mC = 0, lastFlip = 0, isOpen = false, posIdx = 0, shapeIdx = 0;
@@ -335,15 +336,25 @@ function stopListening() {
 micBtn.addEventListener('touchstart', function(e) {
   e.preventDefault();
   if (state !== 'idle') return;
+  if (audioPlaying) {
+    errEl.textContent = 'Подожди...';
+    setTimeout(function(){ errEl.textContent=''; }, 1000);
+    return;
+  }
   errEl.textContent = '';
-  setState('listening');
+  setState('idle'); // stay idle until mic actually opens
   listenStart = Date.now();
   var SRClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SRClass) { errEl.textContent='Используй Safari'; setState('idle'); return; }
+  if (!SRClass) { errEl.textContent='Используй Safari'; return; }
   recog = new SRClass();
   recog.lang = 'ru-RU';
   recog.interimResults = false;
-  recog.continuous = false;
+  recog.continuous = true;
+  recog.onstart = function() {
+    // Mic is NOW open — show listening
+    setState('listening');
+    listenStart = Date.now();
+  };
   var lastTranscript = '';
   recog.onresult = function(e) {
     lastTranscript = Array.from(e.results).map(function(r){return r[0].transcript;}).join('').trim();
@@ -363,8 +374,8 @@ micBtn.addEventListener('touchstart', function(e) {
 micBtn.addEventListener('touchend', function(e) {
   e.preventDefault();
   if (state !== 'listening') return;
-  var delay = Math.max(0, 600-(Date.now()-listenStart));
-  setTimeout(function(){ if(recog) try{recog.stop();}catch(ex){} }, delay);
+  // Stop immediately on release - continuous mode captured everything
+  if(recog) try{recog.stop();}catch(ex){}
 }, {passive:false});
 
 micBtn.addEventListener('touchcancel', function() {
