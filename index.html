@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v75</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v76</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -73,7 +73,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v75</span></div>
+    <div class="title">Стич · Claude <span class="build">v76</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -246,13 +246,47 @@ async function askClaude(msg) {
     var text = data.choices[0].message.content;
     hist.push({role:'assistant', content:text});
 
-    // Show text immediately - dont wait for audio
+    // STEP 1: Download audio (still showing "Думает...")
+    var audioBlob = null;
+    try {
+      var xhr = new XMLHttpRequest();
+      audioBlob = await new Promise(function(resolve) {
+        xhr.open('POST','https://api.openai.com/v1/audio/speech');
+        xhr.setRequestHeader('Content-Type','application/json');
+        xhr.setRequestHeader('Authorization','Bearer '+apiKey);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function(){ resolve(xhr.status===200 ? xhr.response : null); };
+        xhr.onerror = function(){ resolve(null); };
+        xhr.send(JSON.stringify({model:'tts-1',input:text,voice:'echo',speed:1.2}));
+      });
+    } catch(e2) { audioBlob = null; }
+
+    // STEP 2: Decode audio (still "Думает...")
+    var audioBuf = null;
+    if (audioBlob) {
+      try {
+        var ctx = getAudioCtx();
+        audioBuf = await new Promise(function(resolve, reject) {
+          ctx.decodeAudioData(audioBlob, resolve, reject);
+        });
+      } catch(e3) { audioBuf = null; }
+    }
+
+    // STEP 3: Audio ready — start playing, switch to "Говорит", type text
     setState('talking');
     var el = addMsg('a', '');
     el.classList.add('cur');
     startMouth();
 
-    // Type text right away
+    if (audioBuf) {
+      var ctx2 = getAudioCtx();
+      var src = ctx2.createBufferSource();
+      src.buffer = audioBuf;
+      src.connect(ctx2.destination);
+      src.start(0);
+    }
+
+    // Type text simultaneously
     for (var i=1; i<=text.length; i++) {
       el.textContent = text.slice(0,i);
       el.scrollIntoView({block:'end',behavior:'instant'});
@@ -261,22 +295,6 @@ async function askClaude(msg) {
     el.classList.remove('cur');
     stopMouth();
     setState('idle');
-
-    // Try audio in background (non-blocking)
-    try {
-      var tr = await fetch('https://api.openai.com/v1/audio/speech', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-        body: JSON.stringify({model:'tts-1', input:text, voice:'echo', speed:1.2})
-      });
-      if (tr.ok) {
-        var blob = await tr.blob();
-        var url = URL.createObjectURL(blob);
-        var audio = new Audio(url);
-        audio.onended = function(){ URL.revokeObjectURL(url); };
-        audio.play().catch(function(){});
-      }
-    } catch(e2) {}
   } catch(e) {
     stopMouth();
     errEl.textContent = 'Ошибка: '+e.message;
