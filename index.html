@@ -47,8 +47,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
 .cur::after{content:'▋';color:#60b0ff;animation:cur .4s steps(1) infinite}
 .err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;position:fixed;bottom:190px;left:0;right:0}
-.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:5}
-.mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;touch-action:none}
+.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:5;overflow:visible}
+.mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none}
 .mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
 .mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
 .mic-hint{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#2a4060}
@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v98</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v106</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -74,7 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v98</span></div>
+    <div class="title">Стич · Claude <span class="build">v106</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -108,16 +108,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
   <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич! Держи микрофон и говори!</div></div></div>
   <div class="err" id="err"></div>
   <div class="bottom">
-    <div style="display:flex;align-items:center;width:100%;position:relative;justify-content:center">
-      <button class="mic-btn" id="micBtn" style="width:180px;height:70px;border-radius:35px">🎙️</button>
-      <button class="mic-btn" id="camBtn" style="position:absolute;right:0;width:70px;height:70px;z-index:10;background:linear-gradient(135deg,#1a6a2a,#2aa050);box-shadow:0 4px 20px rgba(30,150,80,.4)">📷</button>
+    <div style="display:flex;align-items:center;width:100%;justify-content:center;gap:10px">
+      <button class="mic-btn" id="micBtn" style="width:calc(100% - 90px);height:70px;border-radius:35px">🎙️</button>
+      <label for="fileInput" style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#1a6a2a,#2aa050);box-shadow:0 4px 20px rgba(30,150,80,.4);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;cursor:pointer">📷</label>
+      <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)"/>
     </div>
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
     <div class="irow">
       <input class="inp" id="inp" placeholder="Или напечатай вопрос..." autocomplete="off"/>
       <button class="sbtn" id="sb">➤</button>
     </div>
-    <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)"/>
   </div>
 </div>
 
@@ -240,7 +240,6 @@ async function askClaude(msg) {
   setState('thinking');
   hist.push({role:'user', content:msg});
   try {
-    var prompt = 'Ты — персональный репетитор. Тебя зовут Липо Скич. Узнай имя ученика и запомни. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, подтверждать правильный ответ напрямую. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. Уровень: 8-9 лет, простой язык. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь. Стиль: весёлый инопланетный помощник, короткие фразы, озорность, доброта. Вставки изредка: ха!, хм!, ага!, бум! Фразы иногда: Хи-хи! Почти-почти!, Бум! Нашли зацепку!, Ты почти! Ещё чуть-чуть!, Хм... мозг думает! Если просит ответ: Давай попробуем вместе — ты точно сможешь! Главное правило: ученик должен САМ прийти к ответу. Ты не решаешь задачи — ты учишь думать.';
     var messages = [{role:'system',content:prompt}].concat(hist);
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
