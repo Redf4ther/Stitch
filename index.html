@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v242</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v243</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v242</span></div>
+    <div class="title">Скич · Claude <span class="build">v243</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -138,12 +138,8 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
               <path d="M3 7h3l2-2h8l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
               <circle cx="12" cy="13" r="4"/>
             </svg>
-            <svg id="centerPaw" viewBox="0 0 24 24" width="22" height="22" fill="#00ddff" stroke="#00ddff" stroke-width="0.5" style="position:absolute;filter:drop-shadow(0 0 4px #00ddff);opacity:0;transition:opacity .2s">
-              <ellipse cx="6" cy="11" rx="2" ry="2.6"/>
-              <ellipse cx="10" cy="7" rx="2" ry="2.6"/>
-              <ellipse cx="14" cy="7" rx="2" ry="2.6"/>
-              <ellipse cx="18" cy="11" rx="2" ry="2.6"/>
-              <path d="M12 11.5c-3 0-5 2-5 4.5 0 2.2 1.6 3.5 3.4 3.5.7 0 1.1-.3 1.6-.3s.9.3 1.6.3c1.8 0 3.4-1.3 3.4-3.5 0-2.5-2-4.5-5-4.5z"/>
+            <svg id="centerPaw" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#00ddff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;filter:drop-shadow(0 0 4px #00ddff);opacity:0;transition:opacity .2s">
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
             </svg>
           </div>
         </div>
@@ -492,13 +488,8 @@ function resetCamButton() {
 
 // Reset button when page regains focus (after camera/gallery closes)
 document.addEventListener('visibilitychange', function() {
-  if (document.hidden) {
-    // Camera/gallery opened - kill timers and reset button
-    if (camTimer && camTimer.clear) camTimer.clear();
-    camTimer = null;
-    camCountdownEl.style.display = 'none';
-    resetCamButton();
-  } else {
+  // Only reset when page becomes visible (camera closed) AND we're not actively pressing
+  if (!document.hidden && !camTimer) {
     resetCamButton();
   }
 });
