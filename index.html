@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v258</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v259</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v258</span></div>
+    <div class="title">Скич · Claude <span class="build">v259</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -127,7 +127,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
         </svg>
       </button>
       <div style="position:relative;width:70px;height:70px;flex-shrink:0">
-        <label id="camBtn" for="fileInputCamera" style="position:absolute;inset:0;width:70px;height:70px;border-radius:50%;background:#008db0;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;z-index:2">
+        <label id="camBtn" style="position:absolute;inset:0;width:70px;height:70px;border-radius:50%;background:#008db0;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;z-index:2">
           <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 7h3l2-2h8l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
             <circle cx="12" cy="13" r="4"/>
@@ -513,16 +513,17 @@ var camBtn = document.getElementById('camBtn');
 var camTimer = null;
 var camCountdownEl = document.getElementById('camCountdown');
 var camLongPress = false;
+var wasLongPress = false;
 var countdownVal = 0;
 
 function startCamPress(e) {
   // Clear any leftover timers from previous press
   if (camTimer && camTimer.clear) camTimer.clear();
   camTimer = null;
-  // Full reset like after camera close
   resetCamButton();
   camBtn.classList.remove('neon');
   camLongPress = false;
+  wasLongPress = false;
   // Recreate center icons fresh (cam visible, paw hidden)
   var camIcon = document.getElementById('camIcon');
   if (camIcon) {
@@ -576,11 +577,11 @@ function startCamPress(e) {
       if (a) a.style.opacity = '1';
     }, d));
   });
-  // After all 5 lit - mark long press complete + show paw + switch label
+  // After all 5 lit - mark long press complete + show paw
   timers.push(setTimeout(function() {
     camLongPress = true;
+    wasLongPress = true;
     camBtn.classList.add('neon');
-    camBtn.setAttribute('for', 'fileInput');
     var cc = document.getElementById('centerCam');
     var cp = document.getElementById('centerPaw');
     if (cc) cc.style.opacity = '0';
@@ -595,7 +596,6 @@ function endCamPress(e) {
   setTimeout(function() {
     camCountdownEl.style.display = 'none';
     camBtn.classList.remove('neon');
-    camBtn.setAttribute('for', 'fileInputCamera');
     camLongPress = false;
   }, 100);
 }
@@ -605,6 +605,18 @@ camBtn.addEventListener('touchend', function(e){
   endCamPress(e);
   resetLines();
 }, {passive:false});
+
+// Intercept the click that label generates - decide which input to open
+camBtn.addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (wasLongPress) {
+    wasLongPress = false;
+    document.getElementById('fileInput').click();
+  } else {
+    document.getElementById('fileInputCamera').click();
+  }
+});
 function resetLines() {
   camBtn.classList.remove('neon');
   var cc = document.getElementById('centerCam');
