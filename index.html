@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v163</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v164</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v163</span></div>
+    <div class="title">Скич · Claude <span class="build">v164</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -414,27 +414,26 @@ sb.onclick = function() {
     var userText = inp.value.trim();
     cancelAllPhotos();
     inp.value = '';
-    // Render unified bubble: photos grid + text
-    var w = document.createElement('div'); w.className = 'bbl u';
-    var bi = document.createElement('div'); bi.className = 'bi';
-    bi.style.cssText = 'padding:6px;background:linear-gradient(135deg,#112e6a,#1550a0);border-radius:14px';
+    // Photos bubble (transparent, no background)
+    var pw = document.createElement('div'); pw.className = 'bbl u';
     var grid = document.createElement('div');
-    grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;max-width:240px';
+    grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;max-width:240px;justify-content:flex-end';
     photos.forEach(function(p) {
       var im = document.createElement('img');
       im.src = p;
-      im.style.cssText = (photos.length===1 ? 'width:100%;max-width:200px' : 'width:78px;height:78px;object-fit:cover')+';border-radius:8px';
+      im.style.cssText = (photos.length===1 ? 'width:100%;max-width:200px' : 'width:78px;height:78px;object-fit:cover')+';border-radius:12px';
       grid.appendChild(im);
     });
-    bi.appendChild(grid);
+    pw.appendChild(grid);
+    chat.appendChild(pw);
+    // Text bubble separately (only if text exists)
     if (userText) {
-      var txt = document.createElement('div');
-      txt.textContent = userText;
-      txt.style.cssText = 'margin-top:6px;color:#e0f0ff;font-size:15px';
-      bi.appendChild(txt);
+      var tw = document.createElement('div'); tw.className = 'bbl u';
+      var tb = document.createElement('div'); tb.className = 'bi';
+      tb.textContent = userText;
+      tw.appendChild(tb);
+      chat.appendChild(tw);
     }
-    w.appendChild(bi);
-    chat.appendChild(w);
     chat.scrollTop = chat.scrollHeight;
     askWithImages(photos, userText);
     return;
