@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v257</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v258</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v257</span></div>
+    <div class="title">Скич · Claude <span class="build">v258</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -576,10 +576,11 @@ function startCamPress(e) {
       if (a) a.style.opacity = '1';
     }, d));
   });
-  // After all 5 lit - mark long press complete + show paw
+  // After all 5 lit - mark long press complete + show paw + switch label
   timers.push(setTimeout(function() {
     camLongPress = true;
     camBtn.classList.add('neon');
+    camBtn.setAttribute('for', 'fileInput');
     var cc = document.getElementById('centerCam');
     var cp = document.getElementById('centerPaw');
     if (cc) cc.style.opacity = '0';
@@ -594,17 +595,13 @@ function endCamPress(e) {
   setTimeout(function() {
     camCountdownEl.style.display = 'none';
     camBtn.classList.remove('neon');
+    camBtn.setAttribute('for', 'fileInputCamera');
     camLongPress = false;
   }, 100);
 }
 
 camBtn.addEventListener('touchstart', startCamPress, {passive:false});
 camBtn.addEventListener('touchend', function(e){
-  // If long press completed, prevent camera and open gallery instead
-  if (camLongPress) {
-    e.preventDefault();
-    document.getElementById('fileInput').click();
-  }
   endCamPress(e);
   resetLines();
 }, {passive:false});
