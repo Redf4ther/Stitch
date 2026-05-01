@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v225</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v226</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v225</span></div>
+    <div class="title">Скич · Claude <span class="build">v226</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -552,12 +552,14 @@ function startCamPress(e) {
     arc.getBoundingClientRect();
     arc.setAttribute('stroke-dasharray', circ + ' ' + circ);
   }
-  // Animate glow from 5% to 30% during arc fill
+  // Reset glow first, then animate to 20%
   var glow = document.getElementById('camGlow');
   if (glow) {
-    glow.style.transition = 'opacity 1.25s cubic-bezier(.5,0,.9,.5)';
+    glow.style.transition = 'opacity 0s';
+    glow.style.opacity = '0';
     glow.getBoundingClientRect();
-    glow.style.opacity = '0.30';
+    glow.style.transition = 'opacity 1.25s cubic-bezier(.5,0,.9,.5)';
+    glow.style.opacity = '0.20';
   }
 
   var timers = [];
@@ -565,10 +567,10 @@ function startCamPress(e) {
     camBtn.setAttribute('for', 'fileInput');
     camLongPress = true;
     camBtn.classList.add('neon');
-    // Boost glow to 50%
+    // Boost glow to 30%
     if (glow) {
       glow.style.transition = 'opacity .25s';
-      glow.style.opacity = '0.50';
+      glow.style.opacity = '0.30';
     }
     // Light all 3 lines simultaneously
     var pic = document.getElementById('pawIcon');
