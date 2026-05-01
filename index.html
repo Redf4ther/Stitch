@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v190</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v191</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v190</span></div>
+    <div class="title">Скич · Claude <span class="build">v191</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -476,7 +476,7 @@ function resetCamButton() {
   cb.style.boxShadow = '';
   cb.setAttribute('for', 'fileInputCamera');
   var p=document.getElementById('pawIcon');
-  if(p){p.setAttribute('stroke','#fff');p.querySelectorAll('circle').forEach(function(c){c.setAttribute('fill','#fff');});p.style.filter='none';}
+  if(p){p.style.filter='none';}
   camLongPress = false;
 }
 
@@ -557,7 +557,7 @@ function startCamPress(e) {
         // Last arc lit
         camBtn.setAttribute('for', 'fileInput');
         camLongPress = true;
-        camBtn.classList.add('neon'); var p=document.getElementById('pawIcon'); if(p){p.setAttribute('stroke','#00ddff');p.querySelectorAll('circle').forEach(function(c){c.setAttribute('fill','#00ddff');});p.style.filter='drop-shadow(0 0 4px #00ddff)';}
+        camBtn.classList.add('neon'); var p=document.getElementById('pawIcon'); if(p){p.style.filter='drop-shadow(0 0 4px #00ddff)';}
       }
     }, delay);
     timers.push(t);
@@ -570,7 +570,7 @@ function endCamPress(e) {
     if (camTimer && camTimer.clear) camTimer.clear(); camTimer = null;
   }
   camCountdownEl.style.display = 'none';
-  camBtn.classList.remove('neon'); var p=document.getElementById('pawIcon'); if(p){p.setAttribute('stroke','#fff');p.querySelectorAll('circle').forEach(function(c){c.setAttribute('fill','#fff');});p.style.filter='none';}
+  camBtn.classList.remove('neon'); var p=document.getElementById('pawIcon'); if(p){p.style.filter='none';}
   setTimeout(function() {
     camBtn.setAttribute('for', 'fileInputCamera');
     camLongPress = false;
