@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v224</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v225</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v224</span></div>
+    <div class="title">Скич · Claude <span class="build">v225</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -548,34 +548,37 @@ function startCamPress(e) {
   var circ = window._circ || (2 * Math.PI * 19);
   var arc = document.getElementById('progressArc');
   if (arc) {
-    arc.style.transition = 'stroke-dasharray .7s cubic-bezier(.5,0,.9,.5)';
+    arc.style.transition = 'stroke-dasharray 1.25s cubic-bezier(.5,0,.9,.5)';
     arc.getBoundingClientRect();
     arc.setAttribute('stroke-dasharray', circ + ' ' + circ);
+  }
+  // Animate glow from 5% to 30% during arc fill
+  var glow = document.getElementById('camGlow');
+  if (glow) {
+    glow.style.transition = 'opacity 1.25s cubic-bezier(.5,0,.9,.5)';
+    glow.getBoundingClientRect();
+    glow.style.opacity = '0.30';
   }
 
   var timers = [];
   var doneT = setTimeout(function() {
+    camBtn.setAttribute('for', 'fileInput');
+    camLongPress = true;
+    camBtn.classList.add('neon');
+    // Boost glow to 50%
+    if (glow) {
+      glow.style.transition = 'opacity .25s';
+      glow.style.opacity = '0.50';
+    }
+    // Light all 3 lines simultaneously
     var pic = document.getElementById('pawIcon');
     if (pic) {
-      var lines = pic.querySelectorAll('line');
-      lines.forEach(function(ln, i) {
-        var t = setTimeout(function() {
-          ln.setAttribute('stroke', '#00ddff');
-          ln.style.filter = 'drop-shadow(0 0 4px #00ddff)';
-          // Increase glow: 5%, 10%, 15%
-          var glow = document.getElementById('camGlow');
-          if (glow) { var levels=[0.10,0.40,0.90]; glow.style.opacity = levels[i]; }
-          // After LAST line lights up - arm gallery + light button
-          if (i === lines.length - 1) {
-            camBtn.setAttribute('for', 'fileInput');
-            camLongPress = true;
-            camBtn.classList.add('neon');
-          }
-        }, i * 100);
-        timers.push(t);
+      pic.querySelectorAll('line').forEach(function(ln){
+        ln.setAttribute('stroke', '#00ddff');
+        ln.style.filter = 'drop-shadow(0 0 4px #00ddff)';
       });
     }
-  }, 700);
+  }, 1250);
   timers.push(doneT);
   camTimer = { timers: timers, clear: function() { this.timers.forEach(clearTimeout); } };
 }
