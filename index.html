@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v151</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v152</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v151</span></div>
+    <div class="title">Скич · Claude <span class="build">v152</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -505,7 +505,7 @@ function startCamPress(e) {
   if (bg2) { bg2.setAttribute('cx','30'); bg2.setAttribute('cy','30'); bg2.setAttribute('r','26'); }
   
   camCountdownEl.style.display = 'block';
-  var delays = [200, 300, 600, 700];
+  var delays = [400, 700, 850, 1000];
   var timers = [];
   delays.forEach(function(delay, idx) {
     var t = setTimeout(function() {
