@@ -51,8 +51,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;touch-action:none}
 .mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
 .mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
-.mic-btn{transition:filter .1s}
-.mic-btn:active{filter:brightness(.7)}
+.mic-btn{transition:background .1s}
+.mic-btn:active{filter:none}
+.mic-btn:active:not(.listening){background:linear-gradient(135deg,#0a2050,#0f3580)}
+label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !important}
 .mic-hint{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#2a4060}
 .irow{display:flex;gap:8px;width:100%}
 .inp{flex:1;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:22px;color:#b0d0f0;font-size:16px;padding:10px 16px;-webkit-user-select:text;user-select:text}
@@ -67,7 +69,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v143</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v144</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -76,7 +78,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v143</span></div>
+    <div class="title">Скич · Claude <span class="build">v144</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -124,7 +126,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
           <path d="M3 7h3l2-2h8l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
           <circle cx="12" cy="13" r="4"/>
         </svg>
-        <div id="camCountdown" style="display:none;position:absolute;top:-72px;left:50%;transform:translateX(-50%);width:60px;height:60px;pointer-events:none">
+        <div id="camCountdown" style="display:none;position:absolute;top:-72px;left:50%;transform:translateX(-50%);width:60px;height:60px;pointer-events:none;filter:brightness(1) !important;isolation:isolate">
           <svg id="camArcs" viewBox="0 0 60 60" width="60" height="60" style="position:absolute;inset:0;transform:rotate(-90deg)"></svg>
           <svg viewBox="0 0 24 24" width="26" height="26" style="position:absolute;inset:0;margin:auto" fill="none" stroke="#00ddff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="3"/>
@@ -478,12 +480,11 @@ function startCamPress(e) {
   bg.setAttribute('cx','30'); bg.setAttribute('cy','30'); bg.setAttribute('r','26');
   bg.setAttribute('fill','none'); bg.setAttribute('stroke','rgba(0,200,255,.12)'); bg.setAttribute('stroke-width','3');
   svg.appendChild(bg);
-  // 5 segments, circle r=26, circumference 2*PI*26 = 163.36
-  // Each segment: 163.36/5 = 32.67. Visible 28, gap 4.67
+  // 3 segments, circle r=26
   var circumference = 2 * Math.PI * 26;
-  var segLen = (circumference / 5) - 5;
-  var per = circumference / 5;
-  for (var i=0; i<5; i++) {
+  var segLen = (circumference / 3) - 8;
+  var per = circumference / 3;
+  for (var i=0; i<3; i++) {
     var c2 = document.createElementNS('http://www.w3.org/2000/svg','circle');
     c2.setAttribute('id','arc'+(i+1));
     c2.setAttribute('cx','30'); c2.setAttribute('cy','30'); c2.setAttribute('r','26');
@@ -506,12 +507,12 @@ function startCamPress(e) {
     arcIdx++;
     var arc = document.getElementById('arc'+arcIdx);
     if (arc) arc.style.opacity = '1';
-    if (arcIdx >= 5) {
+    if (arcIdx >= 3) {
       clearInterval(camTimer); camTimer = null;
       camBtn.setAttribute('for', 'fileInput');
       camLongPress = true;
     }
-  }, 200);
+  }, 333);
 }
 
 function endCamPress(e) {
