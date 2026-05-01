@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v138</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v139</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -74,7 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v138</span></div>
+    <div class="title">Скич · Claude <span class="build">v139</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -109,7 +109,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
   <div class="err" id="err"></div>
   <div class="bottom">
     <div style="display:flex;align-items:center;width:100%;justify-content:center;gap:10px">
-      <button class="mic-btn" id="micBtn" style="width:calc(100% - 90px);height:70px;border-radius:35px">🎙️</button>
+      <button class="mic-btn" id="micBtn" style="width:calc(100% - 90px);height:70px;border-radius:35px;display:flex;align-items:center;justify-content:center">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="3" width="6" height="11" rx="3"/>
+          <path d="M5 11a7 7 0 0 0 14 0"/>
+          <line x1="12" y1="18" x2="12" y2="22"/>
+          <line x1="8" y1="22" x2="16" y2="22"/>
+        </svg>
+      </button>
       <label id="camBtn" for="fileInputCamera" class="mic-btn" style="width:70px;height:70px;background:linear-gradient(135deg,#1a6a2a,#2aa050);box-shadow:0 4px 20px rgba(30,150,80,.4);flex-shrink:0;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center">
         <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 7h3l2-2h8l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
@@ -235,7 +242,11 @@ function setState(s) {
   glow.className = 'glow'+(s==='talking'?' on':'');
   var busy = s==='thinking'||s==='talking';
   micBtn.className = 'mic-btn'+(s==='listening'?' listening':busy?' disabled':'');
-  micBtn.textContent = s==='listening'?'⏹':'🎙️';
+  if (s === 'listening') {
+    micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="32" height="32" fill="#fff"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+  } else {
+    micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
+  }
   micHint.textContent = s==='listening'?'ОТПУСТИ...':busy?'...':'ДЕРЖИ И ГОВОРИ';
   inp.disabled = busy;
   sb.disabled = busy;
@@ -455,7 +466,7 @@ var camLongPress = false;
 var countdownVal = 0;
 
 function startCamPress(e) {
-  e.preventDefault();
+  // Don't preventDefault - label needs to work naturally
   camLongPress = false;
   // Generate 9 arc segments
   var svg = document.getElementById('camArcs');
