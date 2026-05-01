@@ -53,7 +53,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
 .mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
 .mic-btn{transition:background .1s}
-#camBtn.neon{box-shadow:0 0 25px 4px rgba(0,221,255,.8),0 0 45px 8px rgba(0,221,255,.5)!important;transition:box-shadow .3s}
+#camBtn.neon{box-shadow:0 0 12px 2px rgba(0,221,255,.6),0 0 20px 4px rgba(0,221,255,.3)!important;transition:box-shadow .3s}
 .mic-btn:active{filter:none}
 .mic-btn:active:not(.listening){background:linear-gradient(135deg,#0a2050,#0f3580)}
 label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !important}
@@ -72,7 +72,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v177</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v178</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -81,7 +81,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v177</span></div>
+    <div class="title">Скич · Claude <span class="build">v178</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -132,12 +132,10 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
         <div id="camCountdown" style="display:none;position:absolute;top:-58px;left:50%;transform:translateX(-50%);width:46px;height:46px;pointer-events:none;filter:brightness(1) !important;isolation:isolate">
           <svg id="camArcs" viewBox="0 0 46 46" width="46" height="46" style="position:absolute;inset:0;transform:rotate(-90deg)"></svg>
           <div id="camIcon" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="#0a4060" stroke="#0a4060" stroke-width="0.5" id="pawIcon" style="transition:fill .25s,stroke .25s,filter .25s">
-              <ellipse cx="6" cy="11" rx="2" ry="2.6"/>
-              <ellipse cx="10" cy="7" rx="2" ry="2.6"/>
-              <ellipse cx="14" cy="7" rx="2" ry="2.6"/>
-              <ellipse cx="18" cy="11" rx="2" ry="2.6"/>
-              <path d="M12 11.5c-3 0-5 2-5 4.5 0 2.2 1.6 3.5 3.4 3.5.7 0 1.1-.3 1.6-.3s.9.3 1.6.3c1.8 0 3.4-1.3 3.4-3.5 0-2.5-2-4.5-5-4.5z"/>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#0a4060" stroke-width="2" stroke-linecap="round" id="pawIcon" style="transition:stroke .25s,filter .25s">
+              <circle cx="12" cy="6" r="1.5" fill="#0a4060"/>
+              <circle cx="12" cy="12" r="1.5" fill="#0a4060"/>
+              <circle cx="12" cy="18" r="1.5" fill="#0a4060"/>
             </svg>
           </div>
         </div>
@@ -474,7 +472,7 @@ function resetCamButton() {
   cb.classList.remove('neon');
   cb.setAttribute('for', 'fileInputCamera');
   var p=document.getElementById('pawIcon');
-  if(p){p.setAttribute('fill','#0a4060');p.setAttribute('stroke','#0a4060');p.style.filter='none';}
+  if(p){p.setAttribute('stroke','#0a4060');p.querySelectorAll('circle').forEach(function(c){c.setAttribute('fill','#0a4060');});p.style.filter='none';}
   camLongPress = false;
 }
 
@@ -549,7 +547,7 @@ function startCamPress(e) {
         // Last arc lit
         camBtn.setAttribute('for', 'fileInput');
         camLongPress = true;
-        camBtn.classList.add('neon'); var p=document.getElementById('pawIcon'); if(p){p.setAttribute('fill','#00ddff');p.setAttribute('stroke','#00ddff');p.style.filter='drop-shadow(0 0 6px #00ddff)';}
+        camBtn.classList.add('neon'); var p=document.getElementById('pawIcon'); if(p){p.setAttribute('stroke','#00ddff');p.querySelectorAll('circle').forEach(function(c){c.setAttribute('fill','#00ddff');});p.style.filter='drop-shadow(0 0 4px #00ddff)';}
       }
     }, delay);
     timers.push(t);
@@ -562,7 +560,7 @@ function endCamPress(e) {
     if (camTimer && camTimer.clear) camTimer.clear(); camTimer = null;
   }
   camCountdownEl.style.display = 'none';
-  camBtn.classList.remove('neon'); var p=document.getElementById('pawIcon'); if(p){p.setAttribute('fill','#0a4060');p.setAttribute('stroke','#0a4060');p.style.filter='none';}
+  camBtn.classList.remove('neon'); var p=document.getElementById('pawIcon'); if(p){p.setAttribute('stroke','#0a4060');p.querySelectorAll('circle').forEach(function(c){c.setAttribute('fill','#0a4060');});p.style.filter='none';}
   setTimeout(function() {
     camBtn.setAttribute('for', 'fileInputCamera');
     camLongPress = false;
