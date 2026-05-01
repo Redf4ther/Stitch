@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v222</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v223</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v222</span></div>
+    <div class="title">Скич · Claude <span class="build">v223</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -564,7 +564,7 @@ function startCamPress(e) {
           ln.style.filter = 'drop-shadow(0 0 4px #00ddff)';
           // Increase glow: 5%, 10%, 15%
           var glow = document.getElementById('camGlow');
-          if (glow) glow.style.opacity = ((i+1)*0.10).toString();
+          if (glow) { var levels=[0.10,0.30,0.50]; glow.style.opacity = levels[i]; }
           // After LAST line lights up - arm gallery + light button
           if (i === lines.length - 1) {
             camBtn.setAttribute('for', 'fileInput');
