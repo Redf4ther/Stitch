@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v199</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v200</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v199</span></div>
+    <div class="title">Скич · Claude <span class="build">v200</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -526,34 +526,34 @@ function startCamPress(e) {
   bg.setAttribute('cx','23'); bg.setAttribute('cy','23'); bg.setAttribute('r','19');
   bg.setAttribute('fill','none'); bg.setAttribute('stroke','rgba(0,200,255,.12)'); bg.setAttribute('stroke-width','3');
   svg.appendChild(bg);
-  // 5 segments, circle r=19 for 46x46 svg
+  // Single arc that grows around the circle
   var circumference = 2 * Math.PI * 19;
-  var segLen = (circumference / 5) - 4;
-  var per = circumference / 5;
-  for (var i=0; i<5; i++) {
-    var c2 = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    c2.setAttribute('id','arc'+(i+1));
-    c2.setAttribute('cx','23'); c2.setAttribute('cy','23'); c2.setAttribute('r','19');
-    c2.setAttribute('fill','none'); c2.setAttribute('stroke','#00ddff'); c2.setAttribute('stroke-width','3');
-    c2.setAttribute('stroke-linecap','round');
-    c2.setAttribute('stroke-dasharray', segLen+' '+circumference);
-    c2.setAttribute('stroke-dashoffset', String(-i*per));
-    c2.style.cssText = 'filter:drop-shadow(0 0 6px #00ddff);opacity:0;transition:opacity .15s';
-    svg.appendChild(c2);
-  }
+  var arc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  arc.setAttribute('id','progressArc');
+  arc.setAttribute('cx','23'); arc.setAttribute('cy','23'); arc.setAttribute('r','19');
+  arc.setAttribute('fill','none'); arc.setAttribute('stroke','#00ddff'); arc.setAttribute('stroke-width','3');
+  arc.setAttribute('stroke-linecap','round');
+  arc.setAttribute('stroke-dasharray', '0 '+circumference);
+  arc.style.cssText = 'filter:drop-shadow(0 0 6px #00ddff);transition:stroke-dasharray .25s ease';
+  svg.appendChild(arc);
+  // store circumference for later use
+  window._circ = circumference;
   // Light first arc immediately
   setTimeout(function(){ var a1=document.getElementById('arc1'); if(a1) a1.style.opacity='1'; }, 0);
 
   
   camCountdownEl.style.display = 'block';
-  var delays = [500, 850, 1100, 1250];
+  // Same timing pacing as 5 segments but on continuous arc
+  var stops = [0.2, 0.4, 0.6, 0.8, 1.0]; // arc fill amounts (1/5 already shown immediately)
+  var delays = [0, 500, 850, 1100, 1250];
   var timers = [];
-  delays.forEach(function(delay, idx) {
+  var circ = window._circ || (2 * Math.PI * 19);
+  stops.forEach(function(stop, idx) {
     var t = setTimeout(function() {
-      var arc = document.getElementById('arc'+(idx+2));
-      if (arc) arc.style.opacity = '1';
-      if (idx === 3) {
-        // Last arc lit - now animate menu lines turning neon one by one
+      var arc = document.getElementById('progressArc');
+      if (arc) arc.setAttribute('stroke-dasharray', (circ*stop)+' '+circ);
+      if (idx === 4) {
+        // Full circle - turn on menu lines neon
         camBtn.setAttribute('for', 'fileInput');
         camLongPress = true;
         camBtn.classList.add('neon');
@@ -568,7 +568,7 @@ function startCamPress(e) {
           });
         }
       }
-    }, delay);
+    }, delays[idx]);
     timers.push(t);
   });
   camTimer = { timers: timers, clear: function() { this.timers.forEach(clearTimeout); } };
