@@ -35,7 +35,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
-#camBtn.neon{background:linear-gradient(135deg,#0066cc,#00ddff)!important;box-shadow:0 0 25px rgba(0,221,255,.6),inset 0 0 12px rgba(0,221,255,.4)!important;transition:background .25s,box-shadow .25s}
+#camBtn.neon{box-shadow:0 0 0 2px #00ddff,0 0 20px rgba(0,221,255,.8),0 0 35px rgba(0,221,255,.5)!important;transition:box-shadow .25s}
 .status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1e3050;margin:2px 0}
 .dot{width:6px;height:6px;border-radius:50%;background:#101820;transition:all .3s}
 .dot.y{background:#facc15;box-shadow:0 0 6px #facc15;animation:db .5s infinite}
@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v173</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v175</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v173</span></div>
+    <div class="title">Скич · Claude <span class="build">v175</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -470,28 +470,15 @@ function handleFiles(files) {
 function resetCamButton() {
   var cb = document.getElementById('camBtn');
   cb.classList.remove('neon');
-  // Force remove neon styles
-  cb.style.background = 'linear-gradient(135deg,#1a6a2a,#2aa050)';
-  cb.style.boxShadow = '0 4px 20px rgba(30,150,80,.4)';
   cb.setAttribute('for', 'fileInputCamera');
   var p=document.getElementById('pawIcon');
   if(p){p.setAttribute('fill','#0a4060');p.setAttribute('stroke','#0a4060');p.style.filter='none';}
   camLongPress = false;
-  // Clear inline styles after a moment so future neon class can work
-  setTimeout(function(){
-    cb.style.removeProperty('background');
-    cb.style.removeProperty('box-shadow');
-  }, 100);
 }
 
-// Reset button when page becomes hidden (camera opens) and when it returns
+// Reset button when page regains focus (after camera/gallery closes)
 document.addEventListener('visibilitychange', function() {
-  if (document.hidden) {
-    // Camera opened - kill any running countdown timers
-    if (camTimer && camTimer.clear) camTimer.clear();
-    camTimer = null;
-    camCountdownEl.style.display = 'none';
-  } else {
+  if (!document.hidden) {
     resetCamButton();
   }
 });
