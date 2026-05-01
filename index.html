@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v112</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v113</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -74,7 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v112</span></div>
+    <div class="title">Стич · Claude <span class="build">v113</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -114,7 +114,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
       <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none"/>
     </div>
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
-    <div id="photoPreview" style="display:none;align-items:center;gap:8px;width:100%;padding:4px 0;background:#060c14;border-radius:14px;padding:8px"></div>
+    <div id="photoPreview" style="display:none;width:100%;align-items:center;gap:8px;padding:6px 4px">
+      <img id="photoThumb" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0"/>
+      <span style="color:#90b8e0;font-size:13px;flex:1">Фото готово</span>
+      <button onclick="cancelPhoto()" style="background:none;border:none;color:#f87171;font-size:20px;cursor:pointer;padding:0 4px;-webkit-user-select:none;user-select:none">✕</button>
+    </div>
     <div class="irow">
       <input class="inp" id="inp" placeholder="Или напечатай вопрос..." autocomplete="off"/>
       <button class="sbtn" id="sb" style="-webkit-user-select:none;user-select:none">➤</button>
