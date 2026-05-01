@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v260</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v261</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v260</span></div>
+    <div class="title">Скич · Claude <span class="build">v261</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -602,21 +602,18 @@ function endCamPress(e) {
 
 camBtn.addEventListener('touchstart', startCamPress, {passive:false});
 camBtn.addEventListener('touchend', function(e){
+  e.preventDefault();
+  // Decide which input to open BEFORE endCamPress resets state
+  var wantGallery = camLongPress;
   endCamPress(e);
   resetLines();
-}, {passive:false});
-
-// Intercept the click that label generates - decide which input to open
-camBtn.addEventListener('click', function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  if (wasLongPress) {
-    wasLongPress = false;
+  // Open input directly in touchend (still a user gesture)
+  if (wantGallery) {
     document.getElementById('fileInput').click();
   } else {
     document.getElementById('fileInputCamera').click();
   }
-});
+}, {passive:false});
 function resetLines() {
   camBtn.classList.remove('neon');
   var cc = document.getElementById('centerCam');
