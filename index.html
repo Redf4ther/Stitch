@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v256</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v257</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v256</span></div>
+    <div class="title">Скич · Claude <span class="build">v257</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -133,7 +133,6 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
             <circle cx="12" cy="13" r="4"/>
           </svg>
         </label>
-        <label id="galBtn" for="fileInput" style="position:absolute;inset:0;width:70px;height:70px;border-radius:50%;background:#008db0;cursor:pointer;display:none;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;z-index:3"></label>
         <div id="camCountdown" style="display:none;position:absolute;top:-58px;left:50%;transform:translateX(-50%);width:46px;height:46px;pointer-events:none;filter:brightness(1) !important;isolation:isolate;z-index:4">
           <svg id="camArcs" viewBox="0 0 46 46" width="46" height="46" style="position:absolute;inset:0;transform:rotate(-90deg)"></svg>
           <div id="camIcon" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
@@ -577,11 +576,10 @@ function startCamPress(e) {
       if (a) a.style.opacity = '1';
     }, d));
   });
-  // After all 5 lit - show gallery label on top + show paw
+  // After all 5 lit - mark long press complete + show paw
   timers.push(setTimeout(function() {
     camLongPress = true;
     camBtn.classList.add('neon');
-    document.getElementById('galBtn').style.display = 'flex';
     var cc = document.getElementById('centerCam');
     var cp = document.getElementById('centerPaw');
     if (cc) cc.style.opacity = '0';
@@ -593,9 +591,7 @@ function startCamPress(e) {
 function endCamPress(e) {
   if (camTimer && camTimer.clear) camTimer.clear();
   camTimer = null;
-  // Hide gallery button after click can fire
   setTimeout(function() {
-    document.getElementById('galBtn').style.display = 'none';
     camCountdownEl.style.display = 'none';
     camBtn.classList.remove('neon');
     camLongPress = false;
