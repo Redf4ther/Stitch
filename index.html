@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v118</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v119</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -74,7 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v118</span></div>
+    <div class="title">Стич · Claude <span class="build">v119</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -257,7 +257,7 @@ async function askClaude(msg) {
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body: JSON.stringify({model:'gpt-5', max_tokens:300, messages:messages})
+      body: JSON.stringify({model:'gpt-5', max_completion_tokens:300, messages:messages})
     });
     var data = await r.json();
     if (data.error) throw new Error(data.error.message);
@@ -374,15 +374,15 @@ sb.onclick = function() {
 inp.onkeydown = function(e) { if(e.key==='Enter') sb.onclick(); };
 
 // Camera
-var pendingPhoto = null;
+window.window.pendingPhoto = null;
 
 document.getElementById('fileInput').addEventListener('change', function() {
   var file = this.files[0];
   if (!file) return;
   var reader = new FileReader();
   reader.onload = function(ev) {
-    pendingPhoto = ev.target.result;
-    document.getElementById('photoThumb').src = pendingPhoto;
+    window.pendingPhoto = ev.target.result;
+    document.getElementById('photoThumb').src = window.pendingPhoto;
     document.getElementById('photoPreview').style.display = 'flex';
   };
   reader.readAsDataURL(file);
@@ -390,7 +390,7 @@ document.getElementById('fileInput').addEventListener('change', function() {
 });
 
 function cancelPhoto() {
-  pendingPhoto = null;
+  window.pendingPhoto = null;
   document.getElementById('photoPreview').style.display = 'none';
   document.getElementById('photoThumb').src = '';
 }
@@ -406,7 +406,7 @@ async function askWithImage(base64) {
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body:JSON.stringify({model:'gpt-5', max_tokens:400, messages:[{role:'system',content:prompt}].concat(hist)})
+      body:JSON.stringify({model:'gpt-5', max_completion_tokens:400, messages:[{role:'system',content:prompt}].concat(hist)})
     });
     var data = await r.json();
     if (data.error) throw new Error(data.error.message);
