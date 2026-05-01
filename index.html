@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v268</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v269</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v268</span></div>
+    <div class="title">Скич · Claude <span class="build">v269</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -591,13 +591,18 @@ function startCamPress(e) {
 function endCamPress(e) {
   if (camTimer && camTimer.clear) camTimer.clear();
   camTimer = null;
+  // Capture state BEFORE delay - we need to know if it was a long press
+  var wasLong = camLongPress;
   setTimeout(function() {
     camCountdownEl.style.display = 'none';
     camBtn.classList.remove('neon');
-    // Restore capture attribute for next time
-    document.getElementById('fileInputCamera').setAttribute('capture', 'environment');
+    // Restore capture only if NOT long press (camera was used or no countdown)
+    // For long press, capture stays removed until next press
+    if (!wasLong) {
+      document.getElementById('fileInputCamera').setAttribute('capture', 'environment');
+    }
     camLongPress = false;
-  }, 500);
+  }, 100);
 }
 
 camBtn.addEventListener('touchstart', startCamPress, {passive:false});
