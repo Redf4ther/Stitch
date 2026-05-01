@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v192</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v193</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v192</span></div>
+    <div class="title">Скич · Claude <span class="build">v193</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -134,7 +134,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
         <div id="camCountdown" style="display:none;position:absolute;top:-58px;left:50%;transform:translateX(-50%);width:46px;height:46px;pointer-events:none;filter:brightness(1) !important;isolation:isolate">
           <svg id="camArcs" viewBox="0 0 46 46" width="46" height="46" style="position:absolute;inset:0;transform:rotate(-90deg)"></svg>
           <div id="camIcon" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#008db0" stroke-width="2.5" stroke-linecap="round" id="pawIcon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#008db0" stroke-width="2.5" stroke-linecap="round" id="pawIcon" style="transition:stroke .3s">
               <line x1="6" y1="8" x2="18" y2="8"/>
               <line x1="6" y1="12" x2="18" y2="12"/>
               <line x1="6" y1="16" x2="18" y2="16"/>
@@ -476,7 +476,7 @@ function resetCamButton() {
   cb.style.boxShadow = '';
   cb.setAttribute('for', 'fileInputCamera');
   var p=document.getElementById('pawIcon');
-  
+  if(p) p.setAttribute('stroke','#008db0');
   camLongPress = false;
 }
 
@@ -557,7 +557,7 @@ function startCamPress(e) {
         // Last arc lit
         camBtn.setAttribute('for', 'fileInput');
         camLongPress = true;
-        camBtn.classList.add('neon'); var p=document.getElementById('pawIcon'); 
+        camBtn.classList.add('neon'); var p=document.getElementById('pawIcon'); if(p) p.setAttribute('stroke','#fff'); 
       }
     }, delay);
     timers.push(t);
@@ -570,7 +570,7 @@ function endCamPress(e) {
     if (camTimer && camTimer.clear) camTimer.clear(); camTimer = null;
   }
   camCountdownEl.style.display = 'none';
-  camBtn.classList.remove('neon'); var p=document.getElementById('pawIcon'); 
+  camBtn.classList.remove('neon'); var p=document.getElementById('pawIcon'); if(p) p.setAttribute('stroke','#008db0'); 
   setTimeout(function() {
     camBtn.setAttribute('for', 'fileInputCamera');
     camLongPress = false;
