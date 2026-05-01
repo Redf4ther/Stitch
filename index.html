@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v170</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v171</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v170</span></div>
+    <div class="title">Скич · Claude <span class="build">v171</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -554,11 +554,25 @@ function endCamPress(e) {
 }
 
 camBtn.addEventListener('touchstart', startCamPress, {passive:false});
-camBtn.addEventListener('touchend', endCamPress, {passive:false});
-camBtn.addEventListener('touchcancel', function(){ if(camTimer){clearInterval(camTimer);camTimer=null;camCountdownEl.style.display='none';}});
+camBtn.addEventListener('touchend', function(e){
+  endCamPress(e);
+  // Force remove neon and reset
+  camBtn.classList.remove('neon');
+}, {passive:false});
+camBtn.addEventListener('touchcancel', function(){
+  if(camTimer && camTimer.clear) camTimer.clear();
+  camTimer=null;
+  camCountdownEl.style.display='none';
+  camBtn.classList.remove('neon');
+});
 camBtn.addEventListener('mousedown', startCamPress);
 camBtn.addEventListener('mouseup', endCamPress);
-camBtn.addEventListener('mouseleave', function(){ if(camTimer){clearInterval(camTimer);camTimer=null;camCountdownEl.style.display='none';}});
+camBtn.addEventListener('mouseleave', function(){
+  if(camTimer && camTimer.clear) camTimer.clear();
+  camTimer=null;
+  camCountdownEl.style.display='none';
+  camBtn.classList.remove('neon');
+});
 
 function renderPhotoPreview() {
   var thumbs = document.getElementById('photoThumbs');
