@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v120</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v122</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -74,7 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v120</span></div>
+    <div class="title">Скич · Claude <span class="build">v122</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -238,13 +238,14 @@ function addMsg(role, text) {
 
 function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
+var prompt = 'Ты — персональный репетитор. Тебя зовут Липо Скич. Имя ученика узнавай и запоминай. Не давай готовые ответы — учи думать. Говори коротко, весело, как инопланетный помощник. Вставки: ха!, хм!, ага!, бум. Фразы: Охана думаем вместе!, Бум нашли зацепку!, Ты почти ещё чуть-чуть!';
+
 async function askClaude(msg) {
   errEl.textContent = '';
   addMsg('u', msg);
   setState('thinking');
   hist.push({role:'user', content:msg});
   try {
-    var prompt = 'Ты — персональный репетитор. Тебя зовут Липо Скич. Имя ученика узнавай и запоминай. Не давай готовые ответы — учи думать. Говори коротко, весело, как инопланетный помощник. Вставки: ха!, хм!, ага!, бум. Фразы: Охана думаем вместе!, Бум нашли зацепку!, Ты почти ещё чуть-чуть!';
     // Filter out image messages for gpt-4o-mini (text only)
     var textHist = hist.map(function(m) {
       if (Array.isArray(m.content)) {
@@ -366,15 +367,26 @@ micBtn.addEventListener('click', function() {
 });
 
 sb.onclick = function() {
-  var msg = inp.value.trim(); if(!msg||state!=='idle') return;
-  getAudioCtx(); // unlock on user gesture
+  if (state !== 'idle') return;
+  if (window.pendingPhoto) {
+    var photo = window.pendingPhoto;
+    cancelPhoto();
+    var w = document.createElement('div'); w.className = 'bbl u';
+    var img = document.createElement('img');
+    img.src = photo; img.className = 'img-msg';
+    w.appendChild(img); chat.appendChild(w);
+    chat.scrollTop = chat.scrollHeight;
+    askWithImage(photo);
+    return;
+  }
+  var msg = inp.value.trim(); if(!msg) return;
   inp.value=''; askClaude(msg);
 };
 
 inp.onkeydown = function(e) { if(e.key==='Enter') sb.onclick(); };
 
 // Camera
-window.window.pendingPhoto = null;
+window.pendingPhoto = null;
 
 document.getElementById('fileInput').addEventListener('change', function() {
   var file = this.files[0];
