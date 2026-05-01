@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v266</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v267</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v266</span></div>
+    <div class="title">Скич · Claude <span class="build">v267</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -146,7 +146,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
           </div>
         </div>
       </div>
-      <input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="display:none"/>
+      <input type="file" id="fileInputCamera" accept="image/*" capture="environment" multiple style="display:none"/>
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
     </div>
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
@@ -567,11 +567,12 @@ function startCamPress(e) {
       if (a) a.style.opacity = '1';
     }, d));
   });
-  // After all 5 lit - mark long press complete + show paw + switch label target
+  // After all 5 lit - mark long press complete + show paw + remove capture for gallery
   timers.push(setTimeout(function() {
     camLongPress = true;
     camBtn.classList.add('neon');
-    camBtn.setAttribute('for', 'fileInput');
+    // Remove capture attribute so the same input opens gallery instead of camera
+    document.getElementById('fileInputCamera').removeAttribute('capture');
     var cc = document.getElementById('centerCam');
     var cp = document.getElementById('centerPaw');
     if (cc) cc.style.opacity = '0';
@@ -586,7 +587,8 @@ function endCamPress(e) {
   setTimeout(function() {
     camCountdownEl.style.display = 'none';
     camBtn.classList.remove('neon');
-    camBtn.setAttribute('for', 'fileInputCamera');
+    // Restore capture attribute for next time
+    document.getElementById('fileInputCamera').setAttribute('capture', 'environment');
     camLongPress = false;
   }, 500);
 }
