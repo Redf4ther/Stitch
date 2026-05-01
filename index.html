@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v160</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v162</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v160</span></div>
+    <div class="title">Скич · Claude <span class="build">v162</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -127,10 +127,10 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
           <path d="M3 7h3l2-2h8l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
           <circle cx="12" cy="13" r="4"/>
         </svg>
-        <div id="camCountdown" style="display:none;position:absolute;top:-72px;left:50%;transform:translateX(-50%);width:60px;height:60px;pointer-events:none;filter:brightness(1) !important;isolation:isolate">
-          <svg id="camArcs" viewBox="0 0 60 60" width="60" height="60" style="position:absolute;inset:0;transform:rotate(-90deg)"></svg>
+        <div id="camCountdown" style="display:none;position:absolute;top:-58px;left:50%;transform:translateX(-50%);width:46px;height:46px;pointer-events:none;filter:brightness(1) !important;isolation:isolate">
+          <svg id="camArcs" viewBox="0 0 46 46" width="46" height="46" style="position:absolute;inset:0;transform:rotate(-90deg)"></svg>
           <div id="camIcon" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-            <svg viewBox="0 0 24 24" width="34" height="34" fill="#0a4060" stroke="#0a4060" stroke-width="0.5" id="pawIcon" style="transition:fill .25s,stroke .25s,filter .25s">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="#0a4060" stroke="#0a4060" stroke-width="0.5" id="pawIcon" style="transition:fill .25s,stroke .25s,filter .25s">
               <ellipse cx="6" cy="11" rx="2" ry="2.6"/>
               <ellipse cx="10" cy="7" rx="2" ry="2.6"/>
               <ellipse cx="14" cy="7" rx="2" ry="2.6"/>
@@ -273,7 +273,7 @@ function addMsg(role, text) {
 
 function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
-var prompt = 'Ты — персональный репетитор. Тебя зовут Липо Скич. Узнай имя ученика и запомни. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, подтверждать правильный ответ напрямую. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. Уровень: 8-9 лет, простой язык. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь. Стиль: весёлый инопланетный помощник, короткие фразы, озорность. Вставки изредка: ха!, хм!, ага!, бум! Фразы иногда: Хи-хи! Почти-почти!, Бум!, Ты почти!, Хм... мозг думает! Если просит ответ: Давай попробуем вместе! Главное правило: ученик должен САМ прийти к ответу. Если фото и не понимаешь — просто спроси что с этим делать.';
+var prompt = 'Ты — персональный репетитор. Тебя зовут Липо Скич. Узнай имя ученика и запомни. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь или дождись задания. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, подтверждать правильный ответ напрямую. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. Уровень: 8-9 лет, простой язык. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь. Стиль: весёлый инопланетный помощник, короткие фразы, озорность. Вставки изредка: ха!, хм!, ага!, бум! Фразы иногда: Хи-хи! Почти-почти!, Бум!, Ты почти!, Хм... мозг думает! Если просит ответ: Давай попробуем вместе! Главное правило: ученик должен САМ прийти к ответу. Если фото и не понимаешь — просто спроси что с этим делать.';
 
 async function askClaude(msg) {
   errEl.textContent = '';
@@ -484,17 +484,17 @@ function startCamPress(e) {
   svg.innerHTML = '';
   // background ring
   var bg = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  bg.setAttribute('cx','30'); bg.setAttribute('cy','30'); bg.setAttribute('r','26');
+  bg.setAttribute('cx','23'); bg.setAttribute('cy','23'); bg.setAttribute('r','19');
   bg.setAttribute('fill','none'); bg.setAttribute('stroke','rgba(0,200,255,.12)'); bg.setAttribute('stroke-width','3');
   svg.appendChild(bg);
-  // 5 segments, circle r=26
-  var circumference = 2 * Math.PI * 26;
-  var segLen = (circumference / 5) - 5;
+  // 5 segments, circle r=19 for 46x46 svg
+  var circumference = 2 * Math.PI * 19;
+  var segLen = (circumference / 5) - 4;
   var per = circumference / 5;
   for (var i=0; i<5; i++) {
     var c2 = document.createElementNS('http://www.w3.org/2000/svg','circle');
     c2.setAttribute('id','arc'+(i+1));
-    c2.setAttribute('cx','30'); c2.setAttribute('cy','30'); c2.setAttribute('r','26');
+    c2.setAttribute('cx','23'); c2.setAttribute('cy','23'); c2.setAttribute('r','19');
     c2.setAttribute('fill','none'); c2.setAttribute('stroke','#00ddff'); c2.setAttribute('stroke-width','3');
     c2.setAttribute('stroke-linecap','round');
     c2.setAttribute('stroke-dasharray', segLen+' '+circumference);
