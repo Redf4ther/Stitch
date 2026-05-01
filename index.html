@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v200</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v201</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v200</span></div>
+    <div class="title">Скич · Claude <span class="build">v201</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -543,34 +543,32 @@ function startCamPress(e) {
 
   
   camCountdownEl.style.display = 'block';
-  // Same timing pacing as 5 segments but on continuous arc
-  var stops = [0.2, 0.4, 0.6, 0.8, 1.0]; // arc fill amounts (1/5 already shown immediately)
-  var delays = [0, 500, 850, 1100, 1250];
-  var timers = [];
+  // Smooth continuous fill over 1.25s with ease-in (slow start, faster end)
   var circ = window._circ || (2 * Math.PI * 19);
-  stops.forEach(function(stop, idx) {
-    var t = setTimeout(function() {
-      var arc = document.getElementById('progressArc');
-      if (arc) arc.setAttribute('stroke-dasharray', (circ*stop)+' '+circ);
-      if (idx === 4) {
-        // Full circle - turn on menu lines neon
-        camBtn.setAttribute('for', 'fileInput');
-        camLongPress = true;
-        camBtn.classList.add('neon');
-        var pic = document.getElementById('pawIcon');
-        if (pic) {
-          var lines = pic.querySelectorAll('line');
-          lines.forEach(function(ln, i) {
-            setTimeout(function() {
-              ln.setAttribute('stroke', '#00ddff');
-              ln.style.filter = 'drop-shadow(0 0 4px #00ddff)';
-            }, i * 120);
-          });
-        }
-      }
-    }, delays[idx]);
-    timers.push(t);
-  });
+  var arc = document.getElementById('progressArc');
+  if (arc) {
+    arc.style.transition = 'stroke-dasharray 1.25s cubic-bezier(.5,0,.9,.5)';
+    // Force reflow then set target
+    arc.getBoundingClientRect();
+    arc.setAttribute('stroke-dasharray', circ + ' ' + circ);
+  }
+  var timers = [];
+  var doneT = setTimeout(function() {
+    camBtn.setAttribute('for', 'fileInput');
+    camLongPress = true;
+    camBtn.classList.add('neon');
+    var pic = document.getElementById('pawIcon');
+    if (pic) {
+      var lines = pic.querySelectorAll('line');
+      lines.forEach(function(ln, i) {
+        setTimeout(function() {
+          ln.setAttribute('stroke', '#00ddff');
+          ln.style.filter = 'drop-shadow(0 0 4px #00ddff)';
+        }, i * 120);
+      });
+    }
+  }, 1250);
+  timers.push(doneT);
   camTimer = { timers: timers, clear: function() { this.timers.forEach(clearTimeout); } };
 }
 
