@@ -53,7 +53,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
 .mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
 .mic-btn{transition:background .1s}
-#camBtn.neon{box-shadow:0 0 12px 2px rgba(0,221,255,.6),0 0 20px 4px rgba(0,221,255,.3)!important;transition:box-shadow .3s}
+#camBtn.neon{box-shadow:0 0 6px #00ddff,0 0 16px rgba(0,221,255,.7)!important;transition:box-shadow .3s}
 .mic-btn:active{filter:none}
 button.mic-btn:active:not(.listening){background:linear-gradient(135deg,#0a2050,#0f3580)}
 label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !important}
@@ -72,7 +72,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v179</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v180</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -81,7 +81,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v179</span></div>
+    <div class="title">Скич · Claude <span class="build">v180</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -124,7 +124,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
           <line x1="8" y1="22" x2="16" y2="22"/>
         </svg>
       </button>
-      <label id="camBtn" for="fileInputCamera" class="mic-btn" style="width:70px;height:70px;background:linear-gradient(135deg,#1a6a2a,#2aa050);box-shadow:0 4px 20px rgba(30,150,80,.4);flex-shrink:0;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center">
+      <label id="camBtn" for="fileInputCamera" class="mic-btn" style="width:70px;height:70px;background:linear-gradient(135deg,#1a6a2a,#2aa050)!important;flex-shrink:0;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center">
         <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 7h3l2-2h8l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
           <circle cx="12" cy="13" r="4"/>
