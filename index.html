@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v124</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v125</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -74,7 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v124</span></div>
+    <div class="title">Скич · Claude <span class="build">v125</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -262,20 +262,13 @@ async function askClaude(msg) {
     });
     var data = await r.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    if (!data.choices || !data.choices[0]) throw new Error('Нет ответа: ' + JSON.stringify(data));
+    if (!data.choices || !data.choices[0]) throw new Error('API: ' + JSON.stringify(data).slice(0,200));
     var msg0 = data.choices[0].message;
-    // gpt-5 may use content array or string
     var text = '';
-    if (typeof msg0.content === 'string') {
-      text = msg0.content;
-    } else if (Array.isArray(msg0.content)) {
-      text = msg0.content.map(function(p){return p.text||'';}).join('');
-    } else if (msg0.refusal) {
-      text = msg0.refusal;
-    } else {
-      text = JSON.stringify(msg0);
-    }
-    if (!text) throw new Error('Пустой ответ от модели');
+    if (typeof msg0.content === 'string') text = msg0.content;
+    else if (Array.isArray(msg0.content)) text = msg0.content.map(function(p){return p.text||'';}).join('');
+    else if (msg0.refusal) text = msg0.refusal;
+    if (!text) throw new Error('Empty: ' + JSON.stringify(data.choices[0]).slice(0,300));
     hist.push({role:'assistant', content:text});
 
     // STEP 1: Download audio (still showing "Думает...")
@@ -435,20 +428,13 @@ async function askWithImage(base64) {
     });
     var data = await r.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    if (!data.choices || !data.choices[0]) throw new Error('Нет ответа: ' + JSON.stringify(data));
+    if (!data.choices || !data.choices[0]) throw new Error('API: ' + JSON.stringify(data).slice(0,200));
     var msg0 = data.choices[0].message;
-    // gpt-5 may use content array or string
     var text = '';
-    if (typeof msg0.content === 'string') {
-      text = msg0.content;
-    } else if (Array.isArray(msg0.content)) {
-      text = msg0.content.map(function(p){return p.text||'';}).join('');
-    } else if (msg0.refusal) {
-      text = msg0.refusal;
-    } else {
-      text = JSON.stringify(msg0);
-    }
-    if (!text) throw new Error('Пустой ответ от модели');
+    if (typeof msg0.content === 'string') text = msg0.content;
+    else if (Array.isArray(msg0.content)) text = msg0.content.map(function(p){return p.text||'';}).join('');
+    else if (msg0.refusal) text = msg0.refusal;
+    if (!text) throw new Error('Empty: ' + JSON.stringify(data.choices[0]).slice(0,300));
     hist.push({role:'assistant', content:text});
 
     var audioBlob = null;
