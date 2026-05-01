@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v250</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v251</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v250</span></div>
+    <div class="title">Скич · Claude <span class="build">v251</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -592,9 +592,17 @@ function endCamPress(e) {
   camTimer = null;
   camCountdownEl.style.display = 'none';
   camBtn.classList.remove('neon');
-  // Immediate reset (no delayed setTimeout)
-  camBtn.setAttribute('for', 'fileInputCamera');
-  camLongPress = false;
+  // If long press completed (folder shown) - keep label as fileInput so gallery opens on click
+  // Reset back to camera AFTER click fires
+  if (camLongPress) {
+    setTimeout(function() {
+      camBtn.setAttribute('for', 'fileInputCamera');
+      camLongPress = false;
+    }, 50);
+  } else {
+    camBtn.setAttribute('for', 'fileInputCamera');
+    camLongPress = false;
+  }
 }
 
 camBtn.addEventListener('touchstart', startCamPress, {passive:false});
