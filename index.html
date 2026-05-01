@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v130</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v131</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -74,7 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v130</span></div>
+    <div class="title">Скич · Claude <span class="build">v131</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -110,7 +110,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
   <div class="bottom">
     <div style="display:flex;align-items:center;width:100%;justify-content:center;gap:10px">
       <button class="mic-btn" id="micBtn" style="width:calc(100% - 90px);height:70px;border-radius:35px">🎙️</button>
-      <label for="fileInput" class="mic-btn" style="width:70px;height:70px;background:linear-gradient(135deg,#1a6a2a,#2aa050);box-shadow:0 4px 20px rgba(30,150,80,.4);flex-shrink:0;cursor:pointer">📷</label>
+      <button class="mic-btn" id="camBtn" style="width:70px;height:70px;background:linear-gradient(135deg,#1a6a2a,#2aa050);box-shadow:0 4px 20px rgba(30,150,80,.4);flex-shrink:0;cursor:pointer;position:relative">📷<span id="camCountdown" style="display:none;position:absolute;top:-32px;left:50%;transform:translateX(-50%);background:#1a3a8a;color:#fff;padding:6px 14px;border-radius:14px;font-size:18px;font-weight:700;white-space:nowrap">3</span></button>
+      <input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="display:none"/>
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
     </div>
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
@@ -409,15 +410,14 @@ sb.onclick = function() {
 
 inp.onkeydown = function(e) { if(e.key==='Enter') sb.onclick(); };
 
-// Camera - multiple photos
+// Camera - multiple photos with long-press for gallery
 window.pendingPhotos = [];
 var MAX_PHOTOS = 9;
 
-document.getElementById('fileInput').addEventListener('change', function() {
-  var files = Array.from(this.files);
-  if (!files.length) return;
+function handleFiles(files) {
+  if (!files || !files.length) return;
   var slots = MAX_PHOTOS - window.pendingPhotos.length;
-  files.slice(0, slots).forEach(function(file) {
+  Array.from(files).slice(0, slots).forEach(function(file) {
     var reader = new FileReader();
     reader.onload = function(ev) {
       window.pendingPhotos.push(ev.target.result);
@@ -425,8 +425,58 @@ document.getElementById('fileInput').addEventListener('change', function() {
     };
     reader.readAsDataURL(file);
   });
-  this.value = '';
+}
+
+document.getElementById('fileInput').addEventListener('change', function() {
+  handleFiles(this.files); this.value = '';
 });
+document.getElementById('fileInputCamera').addEventListener('change', function() {
+  handleFiles(this.files); this.value = '';
+});
+
+// Long-press: 1.5s → gallery; tap → camera
+var camBtn = document.getElementById('camBtn');
+var camTimer = null;
+var camCountdownEl = document.getElementById('camCountdown');
+var camLongPress = false;
+var countdownVal = 0;
+
+function startCamPress(e) {
+  e.preventDefault();
+  camLongPress = false;
+  countdownVal = 3;
+  camCountdownEl.textContent = countdownVal;
+  camCountdownEl.style.display = 'block';
+  camTimer = setInterval(function() {
+    countdownVal--;
+    if (countdownVal <= 0) {
+      clearInterval(camTimer); camTimer = null;
+      camCountdownEl.style.display = 'none';
+      camLongPress = true;
+      document.getElementById('fileInput').click(); // gallery
+    } else {
+      camCountdownEl.textContent = countdownVal;
+    }
+  }, 500);
+}
+
+function endCamPress(e) {
+  e.preventDefault();
+  if (camTimer) {
+    clearInterval(camTimer); camTimer = null;
+    camCountdownEl.style.display = 'none';
+    if (!camLongPress) {
+      document.getElementById('fileInputCamera').click(); // camera
+    }
+  }
+}
+
+camBtn.addEventListener('touchstart', startCamPress, {passive:false});
+camBtn.addEventListener('touchend', endCamPress, {passive:false});
+camBtn.addEventListener('touchcancel', function(){ if(camTimer){clearInterval(camTimer);camTimer=null;camCountdownEl.style.display='none';}});
+camBtn.addEventListener('mousedown', startCamPress);
+camBtn.addEventListener('mouseup', endCamPress);
+camBtn.addEventListener('mouseleave', function(){ if(camTimer){clearInterval(camTimer);camTimer=null;camCountdownEl.style.display='none';}});
 
 function renderPhotoPreview() {
   var thumbs = document.getElementById('photoThumbs');
