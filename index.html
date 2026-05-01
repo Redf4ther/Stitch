@@ -35,6 +35,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
+@keyframes shakeReady{0%,100%{transform:translateX(-50%) translateY(0) rotate(0)}25%{transform:translateX(-52%) translateY(-1px) rotate(-3deg)}50%{transform:translateX(-48%) translateY(1px) rotate(3deg)}75%{transform:translateX(-52%) translateY(-1px) rotate(-2deg)}}
+#camCountdown.ready{animation:shakeReady .15s ease-in-out infinite}
 .status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1e3050;margin:2px 0}
 .dot{width:6px;height:6px;border-radius:50%;background:#101820;transition:all .3s}
 .dot.y{background:#facc15;box-shadow:0 0 6px #facc15;animation:db .5s infinite}
@@ -69,7 +71,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v144</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v146</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -78,7 +80,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v144</span></div>
+    <div class="title">Скич · Claude <span class="build">v146</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -480,11 +482,11 @@ function startCamPress(e) {
   bg.setAttribute('cx','30'); bg.setAttribute('cy','30'); bg.setAttribute('r','26');
   bg.setAttribute('fill','none'); bg.setAttribute('stroke','rgba(0,200,255,.12)'); bg.setAttribute('stroke-width','3');
   svg.appendChild(bg);
-  // 3 segments, circle r=26
+  // 5 segments, circle r=26
   var circumference = 2 * Math.PI * 26;
-  var segLen = (circumference / 3) - 8;
-  var per = circumference / 3;
-  for (var i=0; i<3; i++) {
+  var segLen = (circumference / 5) - 5;
+  var per = circumference / 5;
+  for (var i=0; i<5; i++) {
     var c2 = document.createElementNS('http://www.w3.org/2000/svg','circle');
     c2.setAttribute('id','arc'+(i+1));
     c2.setAttribute('cx','30'); c2.setAttribute('cy','30'); c2.setAttribute('r','26');
@@ -502,24 +504,31 @@ function startCamPress(e) {
   if (bg2) { bg2.setAttribute('cx','30'); bg2.setAttribute('cy','30'); bg2.setAttribute('r','26'); }
   
   camCountdownEl.style.display = 'block';
-  var arcIdx = 1; // arc1 already lit
-  camTimer = setInterval(function() {
-    arcIdx++;
-    var arc = document.getElementById('arc'+arcIdx);
-    if (arc) arc.style.opacity = '1';
-    if (arcIdx >= 3) {
-      clearInterval(camTimer); camTimer = null;
-      camBtn.setAttribute('for', 'fileInput');
-      camLongPress = true;
-    }
-  }, 333);
+  // Custom timing: arc1 already lit. arc2 +100ms, arc3 +200ms, arc4 +500ms, arc5 +900ms
+  var delays = [100, 200, 500, 900];
+  var timers = [];
+  delays.forEach(function(delay, idx) {
+    var t = setTimeout(function() {
+      var arc = document.getElementById('arc'+(idx+2));
+      if (arc) arc.style.opacity = '1';
+      if (idx === 3) {
+        // Last arc lit
+        camBtn.setAttribute('for', 'fileInput');
+        camLongPress = true;
+        camCountdownEl.classList.add('ready');
+      }
+    }, delay);
+    timers.push(t);
+  });
+  camTimer = { timers: timers, clear: function() { this.timers.forEach(clearTimeout); } };
 }
 
 function endCamPress(e) {
   if (camTimer) {
-    clearInterval(camTimer); camTimer = null;
+    if (camTimer && camTimer.clear) camTimer.clear(); camTimer = null;
   }
   camCountdownEl.style.display = 'none';
+  camCountdownEl.classList.remove('ready');
   setTimeout(function() {
     camBtn.setAttribute('for', 'fileInputCamera');
     camLongPress = false;
