@@ -53,7 +53,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
 .mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
 .mic-btn{transition:background .1s}
-#camBtn.neon{background:linear-gradient(135deg,#00aacc,#00ddff)!important;box-shadow:0 0 6px #00ddff,0 0 16px rgba(0,221,255,.7)!important;transition:box-shadow .3s,background .3s}
+#camBtn{transition:background .15s}
+#camBtn:active{background:#0d1424!important}
+#camBtn.neon{background:#00ddff!important;box-shadow:0 0 6px #00ddff,0 0 16px rgba(0,221,255,.7)!important}
 .mic-btn:active{filter:none}
 button.mic-btn:active:not(.listening){background:linear-gradient(135deg,#0d4a18,#1a7035)}
 label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !important}
@@ -72,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v184</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v185</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -81,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v184</span></div>
+    <div class="title">Скич · Claude <span class="build">v185</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
