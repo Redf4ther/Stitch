@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v169</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v170</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v169</span></div>
+    <div class="title">Скич · Claude <span class="build">v170</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -467,10 +467,21 @@ function handleFiles(files) {
   });
 }
 
+function resetCamButton() {
+  var cb = document.getElementById('camBtn');
+  cb.classList.remove('neon');
+  cb.setAttribute('for', 'fileInputCamera');
+  var p=document.getElementById('pawIcon');
+  if(p){p.setAttribute('fill','#0a4060');p.setAttribute('stroke','#0a4060');p.style.filter='none';}
+  camLongPress = false;
+}
+
 document.getElementById('fileInput').addEventListener('change', function() {
+  resetCamButton();
   handleFiles(this.files); this.value = '';
 });
 document.getElementById('fileInputCamera').addEventListener('change', function() {
+  resetCamButton();
   handleFiles(this.files); this.value = '';
 });
 
