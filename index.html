@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v215</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v216</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v215</span></div>
+    <div class="title">Скич · Claude <span class="build">v216</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -561,10 +561,11 @@ function startCamPress(e) {
     if (pic) {
       var lines = pic.querySelectorAll('line');
       lines.forEach(function(ln, i) {
-        setTimeout(function() {
+        var t = setTimeout(function() {
           ln.setAttribute('stroke', '#00ddff');
           ln.style.filter = 'drop-shadow(0 0 4px #00ddff)';
         }, i * 120);
+        timers.push(t);
       });
     }
   }, 1250);
@@ -594,12 +595,21 @@ function endCamPress(e) {
 camBtn.addEventListener('touchstart', startCamPress, {passive:false});
 camBtn.addEventListener('touchend', function(e){
   endCamPress(e);
-  // Force remove neon and reset
-  camBtn.classList.remove('neon');
+  resetLines();
 }, {passive:false});
+function resetLines() {
+  var p=document.getElementById('pawIcon');
+  if (p) p.querySelectorAll('line').forEach(function(ln){
+    ln.setAttribute('stroke','rgba(0,200,255,.25)');
+    ln.style.filter='none';
+  });
+  camBtn.classList.remove('neon');
+}
+
 camBtn.addEventListener('touchcancel', function(){
   if(camTimer && camTimer.clear) camTimer.clear();
   camTimer=null;
+  resetLines();
   camCountdownEl.style.display='none';
   camBtn.classList.remove('neon');
 });
@@ -608,6 +618,7 @@ camBtn.addEventListener('mouseup', endCamPress);
 camBtn.addEventListener('mouseleave', function(){
   if(camTimer && camTimer.clear) camTimer.clear();
   camTimer=null;
+  resetLines();
   camCountdownEl.style.display='none';
   camBtn.classList.remove('neon');
 });
