@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v209</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v210</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v209</span></div>
+    <div class="title">Скич · Claude <span class="build">v210</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -547,34 +547,27 @@ function startCamPress(e) {
   var circ = window._circ || (2 * Math.PI * 19);
   var arc = document.getElementById('progressArc');
   if (arc) {
-    arc.style.transition = 'stroke-dasharray .7s cubic-bezier(.1,.5,.3,1)';
+    arc.style.transition = 'stroke-dasharray 1.25s cubic-bezier(.1,.5,.3,1)';
     arc.getBoundingClientRect();
     arc.setAttribute('stroke-dasharray', circ + ' ' + circ);
   }
   var timers = [];
-  // Arm gallery target after circle done (.7s)
-  timers.push(setTimeout(function() {
+  var doneT = setTimeout(function() {
     camBtn.setAttribute('for', 'fileInput');
     camLongPress = true;
-  }, 700));
-  // Lines progressively slower: 1.0s, 1.7s, 2.5s
-  var lineTimings = [1000, 1700, 2500];
-  lineTimings.forEach(function(delay, i) {
-    timers.push(setTimeout(function() {
-      var pic = document.getElementById('pawIcon');
-      if (pic) {
-        var lns = pic.querySelectorAll('line');
-        if (lns[i]) {
-          lns[i].setAttribute('stroke', '#00ddff');
-          lns[i].style.filter = 'drop-shadow(0 0 4px #00ddff)';
-        }
-      }
-    }, delay));
-  });
-  // Button neon AFTER last line (3.0s total)
-  timers.push(setTimeout(function() {
     camBtn.classList.add('neon');
-  }, 3000));
+    var pic = document.getElementById('pawIcon');
+    if (pic) {
+      var lines = pic.querySelectorAll('line');
+      lines.forEach(function(ln, i) {
+        setTimeout(function() {
+          ln.setAttribute('stroke', '#00ddff');
+          ln.style.filter = 'drop-shadow(0 0 4px #00ddff)';
+        }, i * 120);
+      });
+    }
+  }, 1250);
+  timers.push(doneT);
   camTimer = { timers: timers, clear: function() { this.timers.forEach(clearTimeout); } };
 }
 
