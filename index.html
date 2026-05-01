@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v255</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v256</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v255</span></div>
+    <div class="title">Скич · Claude <span class="build">v256</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -604,15 +604,11 @@ function endCamPress(e) {
 
 camBtn.addEventListener('touchstart', startCamPress, {passive:false});
 camBtn.addEventListener('touchend', function(e){
-  endCamPress(e);
-  resetLines();
-}, {passive:false});
-// Gallery overlay button - same touch handlers
-var galBtn = document.getElementById('galBtn');
-galBtn.addEventListener('touchstart', function(e){
-  // Don't start a new countdown when releasing finger over galBtn
-}, {passive:false});
-galBtn.addEventListener('touchend', function(e){
+  // If long press completed, prevent camera and open gallery instead
+  if (camLongPress) {
+    e.preventDefault();
+    document.getElementById('fileInput').click();
+  }
   endCamPress(e);
   resetLines();
 }, {passive:false});
