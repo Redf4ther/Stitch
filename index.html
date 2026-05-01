@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v262</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v263</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v262</span></div>
+    <div class="title">Скич · Claude <span class="build">v263</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -603,8 +603,16 @@ function endCamPress(e) {
 
 camBtn.addEventListener('touchstart', startCamPress, {passive:false});
 camBtn.addEventListener('touchend', function(e){
+  var wantGallery = camLongPress;
+  if (wantGallery) {
+    e.preventDefault();
+  }
   endCamPress(e);
   resetLines();
+  if (wantGallery) {
+    // Open gallery via existing input (must be in user gesture)
+    document.getElementById('fileInput').click();
+  }
 }, {passive:false});
 function resetLines() {
   camBtn.classList.remove('neon');
