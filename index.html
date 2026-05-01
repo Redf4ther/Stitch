@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v219</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v220</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v219</span></div>
+    <div class="title">Скич · Claude <span class="build">v220</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -547,7 +547,7 @@ function startCamPress(e) {
   var circ = window._circ || (2 * Math.PI * 19);
   var arc = document.getElementById('progressArc');
   if (arc) {
-    arc.style.transition = 'stroke-dasharray .35s cubic-bezier(.5,0,.9,.5)';
+    arc.style.transition = 'stroke-dasharray .7s cubic-bezier(.5,0,.9,.5)';
     arc.getBoundingClientRect();
     arc.setAttribute('stroke-dasharray', circ + ' ' + circ);
   }
@@ -567,11 +567,11 @@ function startCamPress(e) {
             camLongPress = true;
             camBtn.classList.add('neon');
           }
-        }, i * 50);
+        }, i * 100);
         timers.push(t);
       });
     }
-  }, 350);
+  }, 700);
   timers.push(doneT);
   camTimer = { timers: timers, clear: function() { this.timers.forEach(clearTimeout); } };
 }
