@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v246</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v247</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v246</span></div>
+    <div class="title">Скич · Claude <span class="build">v247</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -622,9 +622,17 @@ camBtn.addEventListener('touchcancel', function(){
   camCountdownEl.style.display='none';
   camBtn.classList.remove('neon');
 });
-camBtn.addEventListener('mousedown', startCamPress);
-camBtn.addEventListener('mouseup', endCamPress);
-camBtn.addEventListener('mouseleave', function(){
+camBtn.addEventListener('mousedown', function(e){
+  // Skip if touch is active (iOS fires both touch and mouse)
+  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+  startCamPress(e);
+});
+camBtn.addEventListener('mouseup', function(e){
+  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+  endCamPress(e);
+});
+camBtn.addEventListener('mouseleave', function(e){
+  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
   if(camTimer && camTimer.clear) camTimer.clear();
   camTimer=null;
   resetLines();
