@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v159</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v160</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v159</span></div>
+    <div class="title">Скич · Claude <span class="build">v160</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -130,7 +130,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
         <div id="camCountdown" style="display:none;position:absolute;top:-72px;left:50%;transform:translateX(-50%);width:60px;height:60px;pointer-events:none;filter:brightness(1) !important;isolation:isolate">
           <svg id="camArcs" viewBox="0 0 60 60" width="60" height="60" style="position:absolute;inset:0;transform:rotate(-90deg)"></svg>
           <div id="camIcon" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="#0a4060" stroke="#0a4060" stroke-width="0.5" id="pawIcon" style="transition:fill .25s,stroke .25s,filter .25s">
+            <svg viewBox="0 0 24 24" width="34" height="34" fill="#0a4060" stroke="#0a4060" stroke-width="0.5" id="pawIcon" style="transition:fill .25s,stroke .25s,filter .25s">
               <ellipse cx="6" cy="11" rx="2" ry="2.6"/>
               <ellipse cx="10" cy="7" rx="2" ry="2.6"/>
               <ellipse cx="14" cy="7" rx="2" ry="2.6"/>
@@ -144,13 +144,13 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
     </div>
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
-    <div id="composer" style="width:100%;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:18px;padding:8px;display:flex;flex-direction:column;gap:8px">
-      <div id="photoPreview" style="display:none;width:100%;align-items:flex-start;gap:8px">
+    <div id="composer" style="width:100%;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:12px">
+      <div id="photoPreview" style="display:none;width:100%;align-items:flex-start;gap:12px">
         <div id="photoThumbs" style="display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0"></div>
-        <button onclick="cancelAllPhotos()" style="background:none;border:none;color:#f87171;font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0">✕</button>
+        <button onclick="cancelAllPhotos()" style="background:none;border:none;color:#f87171;font-size:18px;cursor:pointer;padding:0;flex-shrink:0">✕</button>
       </div>
-      <div class="irow" style="gap:8px;align-items:center;width:100%">
-        <input class="inp" id="inp" placeholder="Напечатай вопрос..." autocomplete="off" style="background:transparent;border:none;padding:6px 4px;margin:0"/>
+      <div class="irow" style="gap:12px;align-items:center;width:100%">
+        <input class="inp" id="inp" placeholder="Напечатай вопрос..." autocomplete="off" style="background:transparent;border:none;padding:0;margin:0"/>
         <button class="sbtn" id="sb">➤</button>
       </div>
     </div>
