@@ -35,8 +35,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
-@keyframes shakeIcon{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-1px,-1px) rotate(-4deg)}50%{transform:translate(1px,1px) rotate(4deg)}75%{transform:translate(-1px,1px) rotate(-3deg)}}
-#camIcon.ready{animation:shakeIcon .12s ease-in-out infinite}
+@keyframes dropDown{0%{transform:translateX(-50%) translateY(0) scale(1);opacity:1}100%{transform:translateX(-50%) translateY(72px) scale(0.5);opacity:0}}
+#camCountdown.drop{animation:dropDown .35s ease-in forwards}
+@keyframes neonBtn{0%{background:linear-gradient(135deg,#1a6a2a,#2aa050);box-shadow:0 4px 20px rgba(30,150,80,.4)}100%{background:linear-gradient(135deg,#0066cc,#00ddff);box-shadow:0 0 25px rgba(0,221,255,.6),0 0 12px rgba(0,221,255,.4) inset}}
+#camBtn.neon{animation:neonBtn .35s ease-out forwards}
 .status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1e3050;margin:2px 0}
 .dot{width:6px;height:6px;border-radius:50%;background:#101820;transition:all .3s}
 .dot.y{background:#facc15;box-shadow:0 0 6px #facc15;animation:db .5s infinite}
@@ -71,7 +73,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v148</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v149</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -80,7 +82,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v148</span></div>
+    <div class="title">Скич · Claude <span class="build">v149</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -506,7 +508,6 @@ function startCamPress(e) {
   if (bg2) { bg2.setAttribute('cx','30'); bg2.setAttribute('cy','30'); bg2.setAttribute('r','26'); }
   
   camCountdownEl.style.display = 'block';
-  // Custom timing: arc1 immediate, arc2 +80ms (fast), arc3 +200ms, arc4 +450ms, arc5 +900ms (slowest)
   var delays = [200, 300, 600, 700];
   var timers = [];
   delays.forEach(function(delay, idx) {
@@ -514,10 +515,11 @@ function startCamPress(e) {
       var arc = document.getElementById('arc'+(idx+2));
       if (arc) arc.style.opacity = '1';
       if (idx === 3) {
-        // Last arc lit
+        // Last arc lit — drop down into button + neon glow
         camBtn.setAttribute('for', 'fileInput');
         camLongPress = true;
-        document.getElementById('camIcon').classList.add('ready');
+        camCountdownEl.classList.add('drop');
+        camBtn.classList.add('neon');
       }
     }, delay);
     timers.push(t);
