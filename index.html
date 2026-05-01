@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v273</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v274</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v273</span></div>
+    <div class="title">Скич · Claude <span class="build">v274</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -133,7 +133,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
             <circle cx="12" cy="13" r="4"/>
           </svg>
         </label>
-        <label id="galLabel" for="fileInput" style="position:absolute;inset:0;width:70px;height:70px;border-radius:50%;background:transparent;cursor:pointer;display:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;z-index:5"></label>
+        <label id="galLabel" for="fileInput" style="position:absolute;inset:0;width:70px;height:70px;border-radius:50%;background:transparent;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;z-index:5;pointer-events:none"></label>
         <div id="camCountdown" style="display:none;position:absolute;top:-58px;left:50%;transform:translateX(-50%);width:46px;height:46px;pointer-events:none;filter:brightness(1) !important;isolation:isolate;z-index:4">
           <svg id="camArcs" viewBox="0 0 46 46" width="46" height="46" style="position:absolute;inset:0;transform:rotate(-90deg)"></svg>
           <div id="camIcon" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
@@ -575,11 +575,11 @@ function startCamPress(e) {
       if (a) a.style.opacity = '1';
     }, d));
   });
-  // After all 5 lit - mark long press complete + light lines + show gallery overlay
+  // After all 5 lit - mark long press complete + light lines + enable gallery overlay
   timers.push(setTimeout(function() {
     camLongPress = true;
     camBtn.classList.add('neon');
-    document.getElementById('galLabel').style.display = 'block';
+    document.getElementById('galLabel').style.pointerEvents = 'auto';
     var pic = document.getElementById('pawIcon');
     if (pic) {
       pic.setAttribute('stroke', '#00ddff');
@@ -595,7 +595,7 @@ function endCamPress(e) {
   setTimeout(function() {
     camCountdownEl.style.display = 'none';
     camBtn.classList.remove('neon');
-    document.getElementById('galLabel').style.display = 'none';
+    document.getElementById('galLabel').style.pointerEvents = 'none';
     var pic = document.getElementById('pawIcon');
     if (pic) {
       pic.style.transition = 'stroke .25s, filter .25s';
