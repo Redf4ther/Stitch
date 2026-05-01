@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v171</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v172</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v171</span></div>
+    <div class="title">Скич · Claude <span class="build">v172</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -470,10 +470,18 @@ function handleFiles(files) {
 function resetCamButton() {
   var cb = document.getElementById('camBtn');
   cb.classList.remove('neon');
+  // Force remove neon styles
+  cb.style.background = 'linear-gradient(135deg,#1a6a2a,#2aa050)';
+  cb.style.boxShadow = '0 4px 20px rgba(30,150,80,.4)';
   cb.setAttribute('for', 'fileInputCamera');
   var p=document.getElementById('pawIcon');
   if(p){p.setAttribute('fill','#0a4060');p.setAttribute('stroke','#0a4060');p.style.filter='none';}
   camLongPress = false;
+  // Clear inline styles after a moment so future neon class can work
+  setTimeout(function(){
+    cb.style.removeProperty('background');
+    cb.style.removeProperty('box-shadow');
+  }, 100);
 }
 
 document.getElementById('fileInput').addEventListener('change', function() {
@@ -494,6 +502,10 @@ var countdownVal = 0;
 
 function startCamPress(e) {
   // Don't preventDefault - label needs to work naturally
+  // Reset button to default state
+  camBtn.classList.remove('neon');
+  var p0=document.getElementById('pawIcon');
+  if(p0){p0.setAttribute('fill','#0a4060');p0.setAttribute('stroke','#0a4060');p0.style.filter='none';}
   camLongPress = false;
   // Generate 9 arc segments
   var svg = document.getElementById('camArcs');
