@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v194</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v195</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v194</span></div>
+    <div class="title">Скич · Claude <span class="build">v195</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -553,10 +553,20 @@ function startCamPress(e) {
       var arc = document.getElementById('arc'+(idx+2));
       if (arc) arc.style.opacity = '1';
       if (idx === 3) {
-        // Last arc lit
+        // Last arc lit - now animate menu lines turning neon one by one
         camBtn.setAttribute('for', 'fileInput');
         camLongPress = true;
-        camBtn.classList.add('neon'); var p=document.getElementById('pawIcon'); 
+        camBtn.classList.add('neon');
+        var pic = document.getElementById('pawIcon');
+        if (pic) {
+          var lines = pic.querySelectorAll('line');
+          lines.forEach(function(ln, i) {
+            setTimeout(function() {
+              ln.setAttribute('stroke', '#fff');
+              ln.style.filter = 'drop-shadow(0 0 4px #00ddff)';
+            }, i * 120);
+          });
+        }
       }
     }, delay);
     timers.push(t);
@@ -569,7 +579,15 @@ function endCamPress(e) {
     if (camTimer && camTimer.clear) camTimer.clear(); camTimer = null;
   }
   camCountdownEl.style.display = 'none';
-  camBtn.classList.remove('neon'); var p=document.getElementById('pawIcon'); 
+  camBtn.classList.remove('neon');
+  var pic2 = document.getElementById('pawIcon');
+  if (pic2) {
+    pic2.querySelectorAll('line').forEach(function(ln){
+      ln.setAttribute('stroke', '#008db0');
+      ln.style.filter = 'none';
+    });
+  }
+  var p=document.getElementById('pawIcon'); 
   setTimeout(function() {
     camBtn.setAttribute('for', 'fileInputCamera');
     camLongPress = false;
