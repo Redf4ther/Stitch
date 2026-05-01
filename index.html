@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v267</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v268</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v267</span></div>
+    <div class="title">Скич · Claude <span class="build">v268</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -519,8 +519,15 @@ function startCamPress(e) {
   // Clear any leftover timers from previous press
   if (camTimer && camTimer.clear) camTimer.clear();
   camTimer = null;
-  resetCamButton();
+  // Local reset only - don't touch camCountdownEl display yet
   camBtn.classList.remove('neon');
+  camBtn.style.background = '#008db0';
+  camBtn.style.boxShadow = '';
+  document.getElementById('fileInputCamera').setAttribute('capture', 'environment');
+  var ccR = document.getElementById('centerCam');
+  var cpR = document.getElementById('centerPaw');
+  if (ccR) ccR.style.opacity = '1';
+  if (cpR) cpR.style.opacity = '0';
   camLongPress = false;
   wasLongPress = false;
   // Generate arc segments
