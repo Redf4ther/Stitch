@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v207</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v208</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v207</span></div>
+    <div class="title">Скич · Claude <span class="build">v208</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -548,27 +548,33 @@ function startCamPress(e) {
   var arc = document.getElementById('progressArc');
   if (arc) {
     arc.style.transition = 'stroke-dasharray 1s cubic-bezier(.1,.5,.3,1)';
-    // Force reflow then set target
     arc.getBoundingClientRect();
     arc.setAttribute('stroke-dasharray', circ + ' ' + circ);
   }
   var timers = [];
-  var doneT = setTimeout(function() {
+  // Arm gallery target after circle done (1s)
+  timers.push(setTimeout(function() {
     camBtn.setAttribute('for', 'fileInput');
     camLongPress = true;
+  }, 1000));
+  // Lines progressively slower: 1.4s, 2.0s, 2.7s
+  var lineTimings = [1400, 2000, 2700];
+  lineTimings.forEach(function(delay, i) {
+    timers.push(setTimeout(function() {
+      var pic = document.getElementById('pawIcon');
+      if (pic) {
+        var lns = pic.querySelectorAll('line');
+        if (lns[i]) {
+          lns[i].setAttribute('stroke', '#00ddff');
+          lns[i].style.filter = 'drop-shadow(0 0 4px #00ddff)';
+        }
+      }
+    }, delay));
+  });
+  // Button neon AFTER last line (3.0s total)
+  timers.push(setTimeout(function() {
     camBtn.classList.add('neon');
-    var pic = document.getElementById('pawIcon');
-    if (pic) {
-      var lines = pic.querySelectorAll('line');
-      lines.forEach(function(ln, i) {
-        setTimeout(function() {
-          ln.setAttribute('stroke', '#00ddff');
-          ln.style.filter = 'drop-shadow(0 0 4px #00ddff)';
-        }, i * 120);
-      });
-    }
-  }, 1250);
-  timers.push(doneT);
+  }, 3000));
   camTimer = { timers: timers, clear: function() { this.timers.forEach(clearTimeout); } };
 }
 
