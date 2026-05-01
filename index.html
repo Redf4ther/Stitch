@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v239</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v240</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v239</span></div>
+    <div class="title">Скич · Claude <span class="build">v240</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -481,6 +481,14 @@ function resetCamButton() {
     p.setAttribute('stroke','rgba(0,200,255,.25)');
     p.style.filter = 'none';
   }
+  // Reset progress arc to 0
+  var arc = document.getElementById('progressArc');
+  if (arc) {
+    arc.style.transition = 'none';
+    arc.setAttribute('stroke-dasharray', '0 ' + (window._circ || (2*Math.PI*19)));
+  }
+  // Hide countdown
+  if (camCountdownEl) camCountdownEl.style.display = 'none';
   camLongPress = false;
 }
 
