@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v122</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v123</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -74,7 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v122</span></div>
+    <div class="title">Скич · Claude <span class="build">v123</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -261,7 +261,8 @@ async function askClaude(msg) {
       body: JSON.stringify({model:'gpt-5', max_completion_tokens:300, messages:messages})
     });
     var data = await r.json();
-    if (data.error) throw new Error(data.error.message);
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    if (!data.choices || !data.choices[0]) throw new Error('Нет ответа: ' + JSON.stringify(data));
     var text = data.choices[0].message.content;
     hist.push({role:'assistant', content:text});
 
@@ -421,7 +422,8 @@ async function askWithImage(base64) {
       body:JSON.stringify({model:'gpt-5', max_completion_tokens:400, messages:[{role:'system',content:prompt}].concat(hist)})
     });
     var data = await r.json();
-    if (data.error) throw new Error(data.error.message);
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    if (!data.choices || !data.choices[0]) throw new Error('Нет ответа: ' + JSON.stringify(data));
     var text = data.choices[0].message.content;
     hist.push({role:'assistant', content:text});
 
