@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v216</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v217</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v216</span></div>
+    <div class="title">Скич · Claude <span class="build">v217</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -554,9 +554,6 @@ function startCamPress(e) {
 
   var timers = [];
   var doneT = setTimeout(function() {
-    camBtn.setAttribute('for', 'fileInput');
-    camLongPress = true;
-    camBtn.classList.add('neon');
     var pic = document.getElementById('pawIcon');
     if (pic) {
       var lines = pic.querySelectorAll('line');
@@ -564,6 +561,12 @@ function startCamPress(e) {
         var t = setTimeout(function() {
           ln.setAttribute('stroke', '#00ddff');
           ln.style.filter = 'drop-shadow(0 0 4px #00ddff)';
+          // After LAST line lights up - arm gallery + light button
+          if (i === lines.length - 1) {
+            camBtn.setAttribute('for', 'fileInput');
+            camLongPress = true;
+            camBtn.classList.add('neon');
+          }
         }, i * 120);
         timers.push(t);
       });
