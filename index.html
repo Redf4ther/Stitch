@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Стич · Claude</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8ff;font-family:system-ui,sans-serif}
 #keyScreen{position:fixed;inset:0;background:#0a0e16;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:12px;z-index:10}
 #keyScreen h2{font-size:22px;color:#a0c8f0;text-align:center}
@@ -47,17 +47,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 .bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
 .cur::after{content:'▋';color:#60b0ff;animation:cur .4s steps(1) infinite}
 .err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;position:fixed;bottom:190px;left:0;right:0}
-.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:5;overflow:visible}
-.mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none}
+.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:5}
+.mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a3a8a,#2060d0);box-shadow:0 4px 20px rgba(30,80,200,.4);cursor:pointer;touch-action:none}
 .mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
 .mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
 .mic-hint{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#2a4060}
 .irow{display:flex;gap:8px;width:100%}
-.inp{flex:1;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:22px;color:#b0d0f0;font-size:16px;padding:10px 16px}
+.inp{flex:1;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:22px;color:#b0d0f0;font-size:16px;padding:10px 16px;-webkit-user-select:text;user-select:text}
 .inp:focus{outline:none}
 .inp::placeholder{color:#1a3050}
 .inp:disabled{opacity:.4}
-.sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;cursor:pointer}
 .sbtn:disabled{background:#111a2e;opacity:.35}
 .img-msg{max-width:200px;border-radius:12px;margin-top:4px;display:block}
 </style>
@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v114</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v118</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -74,7 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v114</span></div>
+    <div class="title">Стич · Claude <span class="build">v118</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -110,18 +110,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
   <div class="bottom">
     <div style="display:flex;align-items:center;width:100%;justify-content:center;gap:10px">
       <button class="mic-btn" id="micBtn" style="width:calc(100% - 90px);height:70px;border-radius:35px">🎙️</button>
-      <label for="fileInput" style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#1a6a2a,#2aa050);box-shadow:0 4px 20px rgba(30,150,80,.4);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;cursor:pointer">📷</label>
+      <label for="fileInput" class="mic-btn" style="width:70px;height:70px;background:linear-gradient(135deg,#1a6a2a,#2aa050);box-shadow:0 4px 20px rgba(30,150,80,.4);flex-shrink:0;cursor:pointer">📷</label>
       <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none"/>
     </div>
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
-    <div id="photoPreview" style="display:none;width:100%;align-items:center;gap:8px;padding:6px 4px">
+    <div id="photoPreview" style="display:none;width:100%;align-items:center;gap:8px;padding:6px 0">
       <img id="photoThumb" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0"/>
-      <span style="color:#90b8e0;font-size:13px;flex:1">Фото готово</span>
-      <button onclick="cancelPhoto()" style="background:none;border:none;color:#f87171;font-size:20px;cursor:pointer;padding:0 4px;-webkit-user-select:none;user-select:none">✕</button>
+      <span style="color:#90b8e0;font-size:13px;flex:1">Фото готово к отправке</span>
+      <button onclick="cancelPhoto()" style="background:none;border:none;color:#f87171;font-size:20px;cursor:pointer;padding:0 6px">✕</button>
     </div>
     <div class="irow">
       <input class="inp" id="inp" placeholder="Или напечатай вопрос..." autocomplete="off"/>
-      <button class="sbtn" id="sb" style="-webkit-user-select:none;user-select:none">➤</button>
+      <button class="sbtn" id="sb">➤</button>
     </div>
   </div>
 </div>
@@ -176,7 +176,6 @@ var TOP = document.getElementById('TOP');
 var BOT = document.getElementById('BOT');
 
 var state = 'idle';
-var audioPlaying = false;
 var hist = [];
 var raf = null;
 var mC = 0, lastFlip = 0, isOpen = false, posIdx = 0, shapeIdx = 0;
@@ -245,11 +244,20 @@ async function askClaude(msg) {
   setState('thinking');
   hist.push({role:'user', content:msg});
   try {
-    var messages = [{role:'system',content:prompt}].concat(hist);
+    var prompt = 'Ты — персональный репетитор. Тебя зовут Липо Скич. Имя ученика узнавай и запоминай. Не давай готовые ответы — учи думать. Говори коротко, весело, как инопланетный помощник. Вставки: ха!, хм!, ага!, бум. Фразы: Охана думаем вместе!, Бум нашли зацепку!, Ты почти ещё чуть-чуть!';
+    // Filter out image messages for gpt-4o-mini (text only)
+    var textHist = hist.map(function(m) {
+      if (Array.isArray(m.content)) {
+        var txt = m.content.filter(function(p){return p.type==='text';}).map(function(p){return p.text;}).join(' ');
+        return {role:m.role, content:txt||'[фото]'};
+      }
+      return m;
+    });
+    var messages = [{role:'system',content:prompt}].concat(textHist);
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body: JSON.stringify({model:'gpt-4o-mini', max_tokens:300, messages:messages})
+      body: JSON.stringify({model:'gpt-5', max_tokens:300, messages:messages})
     });
     var data = await r.json();
     if (data.error) throw new Error(data.error.message);
@@ -320,55 +328,41 @@ function getAudioCtx() {
   return gAudioCtx;
 }
 
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+function startListening() {
+  if (state!=='idle') return;
+  if (!SR) { errEl.textContent='Используй Safari'; return; }
+  errEl.textContent=''; setState('listening'); listenStart=Date.now();
+  recog = new SR(); recog.lang='ru-RU'; recog.interimResults=false; recog.continuous=true;
+  recog.onresult = function(e) {
+    var t = Array.from(e.results).map(function(r){return r[0].transcript;}).join('').trim();
+    recog=null; if(t) askClaude(t); else setState('idle');
+  };
+  recog.onerror = function(e) { recog=null; setState('idle'); };
+  recog.onend = function() { recog=null; if(state==='listening') setState('idle'); };
+  recog.start();
+}
+
+function stopListening() {
+  if (state!=='listening') return;
+  var delay = Math.max(0, 600-(Date.now()-listenStart));
+  setTimeout(function(){ if(recog) try{recog.stop();}catch(e){} }, delay);
+}
 
 micBtn.addEventListener('touchstart', function(e) {
   e.preventDefault();
-  if (state !== 'idle') return;
-  if (audioPlaying) {
-    errEl.textContent = 'Подожди...';
-    setTimeout(function(){ errEl.textContent=''; }, 1000);
-    return;
-  }
-  errEl.textContent = '';
-  setState('idle'); // stay idle until mic actually opens
-  listenStart = Date.now();
-  var SRClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SRClass) { errEl.textContent='Используй Safari'; return; }
-  recog = new SRClass();
-  recog.lang = 'ru-RU';
-  recog.interimResults = false;
-  recog.continuous = true;
-  recog.onstart = function() {
-    // Mic is NOW open — show listening
-    setState('listening');
-    listenStart = Date.now();
-  };
-  var lastTranscript = '';
-  recog.onresult = function(e) {
-    lastTranscript = Array.from(e.results).map(function(r){return r[0].transcript;}).join('').trim();
-  };
-  recog.onend = function() {
-    recog = null;
-    if (state === 'listening') {
-      var t = lastTranscript;
-      lastTranscript = '';
-      if (t) askClaude(t); else setState('idle');
-    }
-  };
-  recog.onerror = function() { recog = null; setState('idle'); };
-  try { recog.start(); } catch(ex) { recog=null; setState('idle'); }
+  getAudioCtx(); // unlock on user gesture
+  startListening();
 }, {passive:false});
 
-micBtn.addEventListener('touchend', function(e) {
-  e.preventDefault();
-  if (state !== 'listening') return;
-  // Stop immediately on release - continuous mode captured everything
-  if(recog) try{recog.stop();}catch(ex){}
-}, {passive:false});
+micBtn.addEventListener('touchend', function(e) { e.preventDefault(); stopListening(); }, {passive:false});
+micBtn.addEventListener('touchcancel', stopListening);
 
-micBtn.addEventListener('touchcancel', function() {
-  if(recog) try{recog.stop();}catch(ex){}
+// Fallback for click
+micBtn.addEventListener('click', function() {
+  if (state === 'listening') { stopListening(); }
+  else { startListening(); }
 });
 
 sb.onclick = function() {
@@ -406,18 +400,19 @@ async function askWithImage(base64) {
   setState('thinking');
   hist.push({role:'user', content:[
     {type:'image_url', image_url:{url:base64, detail:'low'}},
-    {type:'text', text:'Посмотри на это домашнее задание и помоги разобраться, но не давай ответ!'}
+    {type:'text', text:'Посмотри на это домашнее задание и помоги разобраться, но не давай ответ — помоги подумать!'}
   ]});
   try {
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body:JSON.stringify({model:'gpt-4o', max_tokens:400, messages:[{role:'system',content:prompt}].concat(hist)})
+      body:JSON.stringify({model:'gpt-5', max_tokens:400, messages:[{role:'system',content:prompt}].concat(hist)})
     });
     var data = await r.json();
     if (data.error) throw new Error(data.error.message);
     var text = data.choices[0].message.content;
     hist.push({role:'assistant', content:text});
+
     var audioBlob = null;
     try {
       var xhr = new XMLHttpRequest();
@@ -431,6 +426,7 @@ async function askWithImage(base64) {
         xhr.send(JSON.stringify({model:'tts-1',input:text,voice:'echo',speed:1.2}));
       });
     } catch(e2) {}
+
     setState('talking');
     var el = addMsg('a','');
     el.classList.add('cur');
@@ -456,7 +452,6 @@ async function askWithImage(base64) {
     stopMouth(); errEl.textContent='Ошибка: '+e.message; setState('idle');
   }
 }
-
 </script>
 
 </body>
