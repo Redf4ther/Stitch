@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v172</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v173</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v172</span></div>
+    <div class="title">Скич · Claude <span class="build">v173</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -483,6 +483,21 @@ function resetCamButton() {
     cb.style.removeProperty('box-shadow');
   }, 100);
 }
+
+// Reset button when page becomes hidden (camera opens) and when it returns
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    // Camera opened - kill any running countdown timers
+    if (camTimer && camTimer.clear) camTimer.clear();
+    camTimer = null;
+    camCountdownEl.style.display = 'none';
+  } else {
+    resetCamButton();
+  }
+});
+window.addEventListener('focus', function() {
+  resetCamButton();
+});
 
 document.getElementById('fileInput').addEventListener('change', function() {
   resetCamButton();
