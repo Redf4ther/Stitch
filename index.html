@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v135</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v136</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -74,7 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v135</span></div>
+    <div class="title">Скич · Claude <span class="build">v136</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -477,12 +477,14 @@ function startCamPress(e) {
     c2.style.cssText = 'filter:drop-shadow(0 0 6px #00ddff);opacity:0;transition:opacity .15s';
     svg.appendChild(c2);
   }
+  // Light first arc immediately
+  setTimeout(function(){ var a1=document.getElementById('arc1'); if(a1) a1.style.opacity='1'; }, 0);
   // background ring
   var bg2 = svg.querySelector('circle');
   if (bg2) { bg2.setAttribute('cx','30'); bg2.setAttribute('cy','30'); bg2.setAttribute('r','26'); }
   
   camCountdownEl.style.display = 'block';
-  var arcIdx = 0;
+  var arcIdx = 1; // arc1 already lit
   camTimer = setInterval(function() {
     arcIdx++;
     var arc = document.getElementById('arc'+arcIdx);
@@ -492,10 +494,12 @@ function startCamPress(e) {
       setTimeout(function() {
         camCountdownEl.style.display = 'none';
         camLongPress = true;
-        document.getElementById('fileInput').click();
-      }, 250);
+        // Force gallery open via click + focus trick for iOS
+        var galleryInput = document.getElementById('fileInput');
+        galleryInput.click();
+      }, 300);
     }
-  }, 600);
+  }, 750);
 }
 
 function endCamPress(e) {
