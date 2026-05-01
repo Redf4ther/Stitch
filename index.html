@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v211</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v212</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v211</span></div>
+    <div class="title">Скич · Claude <span class="build">v212</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -132,6 +132,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
           <circle cx="12" cy="13" r="4"/>
         </svg>
         <div id="camCountdown" style="display:none;position:absolute;top:-58px;left:50%;transform:translateX(-50%);width:46px;height:46px;pointer-events:none;filter:brightness(1) !important;isolation:isolate">
+          <div id="camGlow" style="position:absolute;inset:6px;border-radius:50%;background:radial-gradient(circle,rgba(0,221,255,.25),rgba(0,221,255,0));opacity:0;transition:opacity .3s;pointer-events:none"></div>
           <svg id="camArcs" viewBox="0 0 46 46" width="46" height="46" style="position:absolute;inset:0;transform:rotate(-90deg)"></svg>
           <div id="camIcon" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(0,200,255,.25)" stroke-width="2.5" stroke-linecap="round" id="pawIcon" style="transition:stroke .3s">
@@ -551,6 +552,9 @@ function startCamPress(e) {
     arc.getBoundingClientRect();
     arc.setAttribute('stroke-dasharray', circ + ' ' + circ);
   }
+  // Light up subtle glow inside circle
+  var glow = document.getElementById('camGlow');
+  if (glow) glow.style.opacity = '1';
   var timers = [];
   var doneT = setTimeout(function() {
     camBtn.setAttribute('for', 'fileInput');
@@ -572,8 +576,26 @@ function startCamPress(e) {
 }
 
 function endCamPress(e) {
-  if (camTimer) {
-    if (camTimer && camTimer.clear) camTimer.clear(); camTimer = null;
+  if (camTimer && camTimer.clear) camTimer.clear();
+  camTimer = null;
+  // Turn off inner glow
+  var glow = document.getElementById('camGlow');
+  if (glow) glow.style.opacity = '0';
+  // Reverse: animate arc back to 0
+  var arc2 = document.getElementById('progressArc');
+  var wasShortPress = !camLongPress;
+  if (arc2 && camCountdownEl.style.display === 'block') {
+    arc2.style.transition = 'stroke-dasharray .3s ease-out';
+    arc2.getBoundingClientRect();
+    arc2.setAttribute('stroke-dasharray', '0 ' + (window._circ || (2*Math.PI*19)));
+    setTimeout(function() {
+      camCountdownEl.style.display = 'none';
+      // After reversal complete, open camera (only if it was a short press / no neon)
+      if (wasShortPress) {
+        document.getElementById('fileInputCamera').click();
+      }
+    }, 300);
+    return;
   }
   camCountdownEl.style.display = 'none';
   camBtn.classList.remove('neon');
