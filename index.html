@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v230</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v232</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v230</span></div>
+    <div class="title">Скич · Claude <span class="build">v232</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -131,20 +131,21 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
           <path d="M3 7h3l2-2h8l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
           <circle cx="12" cy="13" r="4"/>
         </svg>
-        <div id="camCountdown" style="display:none;position:absolute;top:-58px;left:50%;transform:translateX(-50%);width:46px;height:46px;pointer-events:none;filter:brightness(1) !important;isolation:isolate">
-          <div id="camGlow" style="position:absolute;inset:4px;border-radius:50%;background:#00ddff;opacity:0;transition:opacity .2s;pointer-events:none"></div>
-          <svg id="camArcs" viewBox="0 0 46 46" width="46" height="46" style="position:absolute;inset:0;transform:rotate(-90deg)"></svg>
-          <div id="camIcon" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(0,200,255,.25)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" id="pawIcon" style="transition:stroke .3s">
-              <g id="camIconG" style="transition:opacity .3s,transform .5s;transform-origin:center">
-                <path d="M3 8h3.5l1.5-2h8l1.5 2h3.5v11H3z"/>
-                <circle cx="12" cy="13" r="3.2"/>
-              </g>
-              <g id="linesIconG" style="opacity:0;transition:opacity .3s">
-                <line x1="6" y1="8" x2="18" y2="8" stroke-width="2.5"/>
-                <line x1="6" y1="12" x2="18" y2="12" stroke-width="2.5"/>
-                <line x1="6" y1="16" x2="18" y2="16" stroke-width="2.5"/>
-              </g>
+        <div id="camCountdown" style="display:none;position:absolute;top:-58px;left:50%;transform:translateX(-50%);width:46px;height:46px;pointer-events:none;isolation:isolate">
+          <svg id="bigCam" viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="#00ddff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;inset:0;filter:drop-shadow(0 0 6px #00ddff);opacity:1;transition:opacity 1.25s, transform 1.25s">
+            <path d="M3 7h3l2-2h8l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="#00ddff" stroke-width="2.5" stroke-linecap="round" id="bigLines" style="position:absolute;inset:0;opacity:0;filter:drop-shadow(0 0 6px #00ddff);transition:opacity 1.25s">
+            <line x1="6" y1="8" x2="18" y2="8"/>
+            <line x1="6" y1="12" x2="18" y2="12"/>
+            <line x1="6" y1="16" x2="18" y2="16"/>
+          </svg>
+          <div id="camIcon" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(0,200,255,.25)" stroke-width="2.5" stroke-linecap="round" id="pawIcon" style="transition:stroke 1s">
+              <line x1="6" y1="8" x2="18" y2="8"/>
+              <line x1="6" y1="12" x2="18" y2="12"/>
+              <line x1="6" y1="16" x2="18" y2="16"/>
             </svg>
           </div>
         </div>
@@ -553,19 +554,24 @@ function startCamPress(e) {
   // Smooth continuous fill over 1.25s with ease-in (slow start, faster end)
   var circ = window._circ || (2 * Math.PI * 19);
   var arc = document.getElementById('progressArc');
-  if (arc) {
-    arc.style.transition = 'stroke-dasharray 1.25s cubic-bezier(.5,0,.9,.5)';
-    arc.getBoundingClientRect();
-    arc.setAttribute('stroke-dasharray', circ + ' ' + circ);
+  // Start camera fade-out and lines fade-in transformation
+  var bigCam = document.getElementById('bigCam');
+  var bigLines = document.getElementById('bigLines');
+  if (bigCam) {
+    bigCam.style.transition = 'opacity 0s, transform 0s';
+    bigCam.style.opacity = '1';
+    bigCam.style.transform = 'scale(1)';
+    bigCam.getBoundingClientRect();
+    bigCam.style.transition = 'opacity 1.25s ease-in, transform 1.25s ease-in';
+    bigCam.style.opacity = '0';
+    bigCam.style.transform = 'scale(0.6)';
   }
-  // Reset glow first, then animate to 20%
-  var glow = document.getElementById('camGlow');
-  if (glow) {
-    glow.style.transition = 'opacity 0s';
-    glow.style.opacity = '0';
-    glow.getBoundingClientRect();
-    glow.style.transition = 'opacity 1.25s cubic-bezier(.5,0,.9,.5)';
-    glow.style.opacity = '0.15';
+  if (bigLines) {
+    bigLines.style.transition = 'opacity 0s';
+    bigLines.style.opacity = '0';
+    bigLines.getBoundingClientRect();
+    bigLines.style.transition = 'opacity 1.25s ease-out';
+    bigLines.style.opacity = '1';
   }
 
   var timers = [];
@@ -578,16 +584,10 @@ function startCamPress(e) {
       glow.style.transition = 'opacity .25s';
       glow.style.opacity = '0.20';
     }
-    // Camera "splits" into 3 horizontal lines
-    var camG = document.getElementById('camIconG');
-    var linesG = document.getElementById('linesIconG');
-    if (camG) {
-      camG.style.transform = 'scaleY(0)';
-      camG.style.opacity = '0';
-    }
-    if (linesG) linesG.style.opacity = '1';
+    // All 3 lines light up gradually together (smooth fade)
     var pic = document.getElementById('pawIcon');
     if (pic) {
+      pic.style.transition = 'stroke 1.25s ease, filter 1.25s ease';
       pic.setAttribute('stroke', '#00ddff');
       pic.style.filter = 'drop-shadow(0 0 4px #00ddff)';
     }
@@ -621,21 +621,18 @@ camBtn.addEventListener('touchend', function(e){
   resetLines();
 }, {passive:false});
 function resetLines() {
-  var p=document.getElementById('pawIcon');
-  if (p) {
-    p.setAttribute('stroke','rgba(0,200,255,.25)');
-    p.style.filter='none';
-  }
-  var camG = document.getElementById('camIconG');
-  var linesG = document.getElementById('linesIconG');
-  if (camG) {
-    camG.style.transform = 'scaleY(1)';
-    camG.style.opacity = '1';
-  }
-  if (linesG) linesG.style.opacity = '0';
   camBtn.classList.remove('neon');
-  var glow = document.getElementById('camGlow');
-  if (glow) glow.style.opacity = '0';
+  var bigCam = document.getElementById('bigCam');
+  var bigLines = document.getElementById('bigLines');
+  if (bigCam) {
+    bigCam.style.transition = 'opacity 0s, transform 0s';
+    bigCam.style.opacity = '1';
+    bigCam.style.transform = 'scale(1)';
+  }
+  if (bigLines) {
+    bigLines.style.transition = 'opacity 0s';
+    bigLines.style.opacity = '0';
+  }
 }
 
 camBtn.addEventListener('touchcancel', function(){
