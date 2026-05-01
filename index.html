@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v164</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v165</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v164</span></div>
+    <div class="title">Скич · Claude <span class="build">v165</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -150,7 +150,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
         <button onclick="cancelAllPhotos()" style="background:none;border:none;color:#f87171;font-size:18px;cursor:pointer;padding:0;flex-shrink:0">✕</button>
       </div>
       <div class="irow" style="gap:12px;align-items:center;width:100%">
-        <input class="inp" id="inp" placeholder="Напечатай вопрос..." autocomplete="off" style="background:transparent;border:none;padding:0;margin:0"/>
+        <textarea class="inp" id="inp" placeholder="Напечатай вопрос..." rows="1" style="background:transparent;border:none;padding:0;margin:0;resize:none;font-family:inherit;line-height:1.4;max-height:120px;overflow-y:auto"></textarea>
         <button class="sbtn" id="sb">➤</button>
       </div>
     </div>
@@ -442,7 +442,13 @@ sb.onclick = function() {
   inp.value=''; askClaude(msg);
 };
 
-inp.onkeydown = function(e) { if(e.key==='Enter') sb.onclick(); };
+inp.onkeydown = function(e) {
+  if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sb.onclick(); }
+};
+inp.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
 
 // Camera - multiple photos with long-press for gallery
 window.pendingPhotos = [];
