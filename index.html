@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v240</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v241</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v240</span></div>
+    <div class="title">Скич · Claude <span class="build">v241</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -565,12 +565,16 @@ function startCamPress(e) {
     arc.getBoundingClientRect();
     arc.setAttribute('stroke-dasharray', circ + ' ' + circ);
   }
-  // Lines stay dim during fill, light up sharply at end
+  // Lines brighten gradually as arc fills
   var pic = document.getElementById('pawIcon');
   if (pic) {
     pic.style.transition = 'stroke 0s, filter 0s';
     pic.setAttribute('stroke', 'rgba(0,200,255,.25)');
     pic.style.filter = 'none';
+    pic.getBoundingClientRect();
+    pic.style.transition = 'stroke 1.25s cubic-bezier(.5,0,.9,.5), filter 1.25s cubic-bezier(.5,0,.9,.5)';
+    pic.setAttribute('stroke', 'rgba(0,221,255,.7)');
+    pic.style.filter = 'drop-shadow(0 0 2px rgba(0,221,255,.5))';
   }
 
   var timers = [];
@@ -578,7 +582,7 @@ function startCamPress(e) {
     camBtn.setAttribute('for', 'fileInput');
     camLongPress = true;
     camBtn.classList.add('neon');
-    // Lines snap to neon at the end
+    // Final pop to full neon
     var p = document.getElementById('pawIcon');
     if (p) {
       p.style.transition = 'stroke .15s, filter .15s';
