@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v227</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v228</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v227</span></div>
+    <div class="title">Скич · Claude <span class="build">v228</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -135,10 +135,16 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
           <div id="camGlow" style="position:absolute;inset:4px;border-radius:50%;background:#00ddff;opacity:0;transition:opacity .2s;pointer-events:none"></div>
           <svg id="camArcs" viewBox="0 0 46 46" width="46" height="46" style="position:absolute;inset:0;transform:rotate(-90deg)"></svg>
           <div id="camIcon" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(0,200,255,.25)" stroke-width="2.5" stroke-linecap="round" id="pawIcon" style="transition:stroke .3s">
-              <line x1="6" y1="8" x2="18" y2="8"/>
-              <line x1="6" y1="12" x2="18" y2="12"/>
-              <line x1="6" y1="16" x2="18" y2="16"/>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(0,200,255,.25)" stroke-width="2" stroke-linecap="round" id="pawIcon" style="transition:stroke .3s">
+              <g id="camGroup" style="transition:opacity .3s">
+                <path d="M3 7h3l2-2h8l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
+                <circle cx="12" cy="13" r="3.5"/>
+              </g>
+              <g id="linesGroup" style="opacity:0;transition:opacity .3s">
+                <line x1="6" y1="8" x2="18" y2="8" stroke-width="2.5"/>
+                <line x1="6" y1="12" x2="18" y2="12" stroke-width="2.5"/>
+                <line x1="6" y1="16" x2="18" y2="16" stroke-width="2.5"/>
+              </g>
             </svg>
           </div>
         </div>
@@ -572,13 +578,15 @@ function startCamPress(e) {
       glow.style.transition = 'opacity .25s';
       glow.style.opacity = '0.20';
     }
-    // Light all 3 lines simultaneously
+    // Cross-fade camera -> lines
+    var camG = document.getElementById('camGroup');
+    var linesG = document.getElementById('linesGroup');
+    if (camG) camG.style.opacity = '0';
+    if (linesG) linesG.style.opacity = '1';
     var pic = document.getElementById('pawIcon');
     if (pic) {
-      pic.querySelectorAll('line').forEach(function(ln){
-        ln.setAttribute('stroke', '#00ddff');
-        ln.style.filter = 'drop-shadow(0 0 4px #00ddff)';
-      });
+      pic.setAttribute('stroke', '#00ddff');
+      pic.style.filter = 'drop-shadow(0 0 4px #00ddff)';
     }
   }, 1250);
   timers.push(doneT);
@@ -611,10 +619,14 @@ camBtn.addEventListener('touchend', function(e){
 }, {passive:false});
 function resetLines() {
   var p=document.getElementById('pawIcon');
-  if (p) p.querySelectorAll('line').forEach(function(ln){
-    ln.setAttribute('stroke','rgba(0,200,255,.25)');
-    ln.style.filter='none';
-  });
+  if (p) {
+    p.setAttribute('stroke','rgba(0,200,255,.25)');
+    p.style.filter='none';
+  }
+  var camG = document.getElementById('camGroup');
+  var linesG = document.getElementById('linesGroup');
+  if (camG) camG.style.opacity = '1';
+  if (linesG) linesG.style.opacity = '0';
   camBtn.classList.remove('neon');
   var glow = document.getElementById('camGlow');
   if (glow) glow.style.opacity = '0';
