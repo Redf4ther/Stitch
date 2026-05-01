@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v168</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v169</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v168</span></div>
+    <div class="title">Скич · Claude <span class="build">v169</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -349,7 +349,7 @@ async function askClaude(msg) {
     // Type text simultaneously
     for (var i=1; i<=text.length; i++) {
       el.textContent = text.slice(0,i);
-      el.scrollIntoView({block:'end',behavior:'instant'});
+      chat.scrollTop = chat.scrollHeight;
       await sleep(55);
     }
     el.classList.remove('cur');
@@ -552,14 +552,16 @@ camBtn.addEventListener('mouseleave', function(){ if(camTimer){clearInterval(cam
 function renderPhotoPreview() {
   var thumbs = document.getElementById('photoThumbs');
   thumbs.innerHTML = '';
-  // Disable camera button if 12 photos
   var cb = document.getElementById('camBtn');
+  // Always reset to default green
+  cb.classList.remove('neon');
+  cb.style.removeProperty('background');
+  cb.style.removeProperty('box-shadow');
   if (window.pendingPhotos.length >= MAX_PHOTOS) {
     cb.style.background = 'linear-gradient(135deg,#0d3010,#155020)';
     cb.style.opacity = '0.5';
     cb.style.pointerEvents = 'none';
   } else {
-    cb.style.background = '';
     cb.style.opacity = '';
     cb.style.pointerEvents = '';
   }
@@ -641,7 +643,7 @@ async function askWithImages(photos, userText) {
     }
     for (var i=1;i<=text.length;i++) {
       el.textContent=text.slice(0,i);
-      el.scrollIntoView({block:'end',behavior:'instant'});
+      chat.scrollTop = chat.scrollHeight;
       await sleep(55);
     }
     el.classList.remove('cur');
