@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v155</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v156</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -79,7 +79,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v155</span></div>
+    <div class="title">Скич · Claude <span class="build">v156</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -142,13 +142,13 @@ label.mic-btn:active{background:linear-gradient(135deg,#0d4a18,#1a7035) !importa
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
     </div>
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
-    <div id="composer" style="width:100%;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:18px;padding:8px;display:flex;flex-direction:column;gap:6px">
-      <div id="photoPreview" style="display:none;width:100%;align-items:flex-start;gap:6px">
+    <div id="composer" style="width:100%;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:10px">
+      <div id="photoPreview" style="display:none;width:100%;align-items:flex-start;gap:8px">
         <div id="photoThumbs" style="display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0"></div>
-        <button onclick="cancelAllPhotos()" style="background:none;border:none;color:#f87171;font-size:18px;cursor:pointer;padding:4px;flex-shrink:0">✕</button>
+        <button onclick="cancelAllPhotos()" style="background:none;border:none;color:#f87171;font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0">✕</button>
       </div>
-      <div class="irow" style="gap:6px">
-        <input class="inp" id="inp" placeholder="Напечатай вопрос..." autocomplete="off" style="background:transparent;border:none"/>
+      <div class="irow" style="gap:8px;align-items:center">
+        <input class="inp" id="inp" placeholder="Напечатай вопрос..." autocomplete="off" style="background:transparent;border:none;padding:4px 8px"/>
         <button class="sbtn" id="sb">➤</button>
       </div>
     </div>
