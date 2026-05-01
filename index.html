@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v113</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v114</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -74,7 +74,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v113</span></div>
+    <div class="title">Стич · Claude <span class="build">v114</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -378,6 +378,85 @@ sb.onclick = function() {
 };
 
 inp.onkeydown = function(e) { if(e.key==='Enter') sb.onclick(); };
+
+// Camera
+var pendingPhoto = null;
+
+document.getElementById('fileInput').addEventListener('change', function() {
+  var file = this.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    pendingPhoto = ev.target.result;
+    document.getElementById('photoThumb').src = pendingPhoto;
+    document.getElementById('photoPreview').style.display = 'flex';
+  };
+  reader.readAsDataURL(file);
+  this.value = '';
+});
+
+function cancelPhoto() {
+  pendingPhoto = null;
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoThumb').src = '';
+}
+
+async function askWithImage(base64) {
+  errEl.textContent = '';
+  setState('thinking');
+  hist.push({role:'user', content:[
+    {type:'image_url', image_url:{url:base64, detail:'low'}},
+    {type:'text', text:'Посмотри на это домашнее задание и помоги разобраться, но не давай ответ!'}
+  ]});
+  try {
+    var r = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+      body:JSON.stringify({model:'gpt-4o', max_tokens:400, messages:[{role:'system',content:prompt}].concat(hist)})
+    });
+    var data = await r.json();
+    if (data.error) throw new Error(data.error.message);
+    var text = data.choices[0].message.content;
+    hist.push({role:'assistant', content:text});
+    var audioBlob = null;
+    try {
+      var xhr = new XMLHttpRequest();
+      audioBlob = await new Promise(function(resolve) {
+        xhr.open('POST','https://api.openai.com/v1/audio/speech');
+        xhr.setRequestHeader('Content-Type','application/json');
+        xhr.setRequestHeader('Authorization','Bearer '+apiKey);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function(){ resolve(xhr.status===200?xhr.response:null); };
+        xhr.onerror = function(){ resolve(null); };
+        xhr.send(JSON.stringify({model:'tts-1',input:text,voice:'echo',speed:1.2}));
+      });
+    } catch(e2) {}
+    setState('talking');
+    var el = addMsg('a','');
+    el.classList.add('cur');
+    startMouth();
+    if (audioBlob) {
+      var blob2 = new Blob([audioBlob],{type:'audio/mpeg'});
+      var url = URL.createObjectURL(blob2);
+      var audio = new Audio(url);
+      audioPlaying = true;
+      audio.onended = function(){ audioPlaying=false; URL.revokeObjectURL(url); audio.src=''; audio.load(); };
+      audio.onerror = function(){ audioPlaying=false; };
+      audio.play().catch(function(){audioPlaying=false;});
+    }
+    for (var i=1;i<=text.length;i++) {
+      el.textContent=text.slice(0,i);
+      el.scrollIntoView({block:'end',behavior:'instant'});
+      await sleep(55);
+    }
+    el.classList.remove('cur');
+    stopMouth();
+    setState('idle');
+  } catch(e) {
+    stopMouth(); errEl.textContent='Ошибка: '+e.message; setState('idle');
+  }
+}
+
 </script>
 
 </body>
