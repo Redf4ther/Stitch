@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v245</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v246</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v245</span></div>
+    <div class="title">Скич · Claude <span class="build">v246</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -520,11 +520,11 @@ function startCamPress(e) {
   // Don't preventDefault - label needs to work naturally
   // Reset button to default state
   camBtn.classList.remove('neon');
-  // Reset center icons
+  // Force reset center icons - use setProperty to override
   var ccR = document.getElementById('centerCam');
   var cpR = document.getElementById('centerPaw');
-  if (ccR) ccR.style.opacity = '1';
-  if (cpR) cpR.style.opacity = '0';
+  if (ccR) { ccR.style.transition = 'none'; ccR.style.opacity = '1'; ccR.offsetHeight; ccR.style.transition = 'opacity .2s'; }
+  if (cpR) { cpR.style.transition = 'none'; cpR.style.opacity = '0'; cpR.offsetHeight; cpR.style.transition = 'opacity .2s'; }
   camLongPress = false;
   // Generate arc segments
   var svg = document.getElementById('camArcs');
