@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v274</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v275</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v274</span></div>
+    <div class="title">Скич · Claude <span class="build">v275</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -486,17 +486,13 @@ function resetCamButton() {
   camLongPress = false;
 }
 
-// Reset button when page regains focus (after camera/gallery closes)
+// Reset only when page becomes hidden (camera/gallery opened) - don't touch state otherwise
 document.addEventListener('visibilitychange', function() {
-  // Only reset when page becomes visible (camera closed) AND we're not actively pressing
-  if (!document.hidden && !camTimer) {
-    resetCamButton();
+  if (document.hidden) {
+    if (camTimer && camTimer.clear) camTimer.clear();
+    camTimer = null;
   }
 });
-window.addEventListener('focus', function() {
-  resetCamButton();
-});
-
 document.getElementById('fileInput').addEventListener('change', function() {
   resetCamButton();
   handleFiles(this.files); this.value = '';
@@ -620,31 +616,6 @@ galLabel.addEventListener('touchend', function(e){
 function resetLines() {
   camBtn.classList.remove('neon');
 }
-
-camBtn.addEventListener('touchcancel', function(){
-  if(camTimer && camTimer.clear) camTimer.clear();
-  camTimer=null;
-  resetLines();
-  camCountdownEl.style.display='none';
-  camBtn.classList.remove('neon');
-});
-camBtn.addEventListener('mousedown', function(e){
-  // Skip if touch is active (iOS fires both touch and mouse)
-  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
-  startCamPress(e);
-});
-camBtn.addEventListener('mouseup', function(e){
-  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
-  endCamPress(e);
-});
-camBtn.addEventListener('mouseleave', function(e){
-  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
-  if(camTimer && camTimer.clear) camTimer.clear();
-  camTimer=null;
-  resetLines();
-  camCountdownEl.style.display='none';
-  camBtn.classList.remove('neon');
-});
 
 function renderPhotoPreview() {
   var thumbs = document.getElementById('photoThumbs');
