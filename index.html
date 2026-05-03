@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v277</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v278</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,7 +83,14 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Скич · Claude <span class="build">v277</span></div>
+    <button id="logoutBtn" style="position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:50%;background:rgba(40,90,180,.15);border:1px solid rgba(40,90,180,.3);color:#90b8e0;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:6">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
+    <div class="title">Скич · Claude <span class="build">v278</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -192,6 +199,15 @@ document.getElementById('keyBtn').onclick = function() {
 
 document.getElementById('keyInp').onkeydown = function(e) {
   if (e.key === 'Enter') document.getElementById('keyBtn').onclick();
+};
+
+// Logout - clear key and return to key screen
+document.getElementById('logoutBtn').onclick = function() {
+  if (!confirm('Выйти и удалить API ключ?')) return;
+  localStorage.removeItem(KEY_SK);
+  apiKey = '';
+  hist = [];
+  location.reload();
 };
 
 // ── App logic ──
