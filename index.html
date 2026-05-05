@@ -90,7 +90,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
-    <div class="title">Скич · Claude <span class="build">v278</span></div>
+    <div class="title">Скич · Claude <span class="build">v279</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -424,11 +424,17 @@ micBtn.addEventListener('touchstart', function(e) {
 micBtn.addEventListener('touchend', function(e) { e.preventDefault(); stopListening(); }, {passive:false});
 micBtn.addEventListener('touchcancel', stopListening);
 
-// Fallback for click
-micBtn.addEventListener('click', function() {
-  if (state === 'listening') { stopListening(); }
-  else { startListening(); }
+// Desktop push-to-talk (mouse): hold to record, release to stop
+micBtn.addEventListener('mousedown', function(e) {
+  if (e.button !== 0) return;
+  e.preventDefault();
+  getAudioCtx();
+  startListening();
 });
+micBtn.addEventListener('mouseup', function(e) { e.preventDefault(); stopListening(); });
+micBtn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+window.addEventListener('mouseup', function(){ if (state==='listening') stopListening(); });
+window.addEventListener('blur', function(){ if (state==='listening') stopListening(); });
 
 sb.onclick = function() {
   if (state !== 'idle') return;
