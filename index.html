@@ -90,7 +90,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
-    <div class="title">Скич · Claude <span class="build">v279</span></div>
+    <div class="title">Скич · Claude <span class="build">v280</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -415,25 +415,23 @@ function stopListening() {
   setTimeout(function(){ if(recog) try{recog.stop();}catch(e){} }, delay);
 }
 
-micBtn.addEventListener('touchstart', function(e) {
+// Push-to-talk: pointer events unify mouse + touch + pen, and setPointerCapture
+// guarantees pointerup fires on the button even if Telegram's WebView would
+// otherwise steal mouseup events (e.g. window-drag handler on desktop).
+micBtn.addEventListener('pointerdown', function(e) {
+  if (e.button !== undefined && e.button !== 0) return;
   e.preventDefault();
+  if (micBtn.setPointerCapture) { try { micBtn.setPointerCapture(e.pointerId); } catch(_){} }
   getAudioCtx(); // unlock on user gesture
   startListening();
-}, {passive:false});
-
-micBtn.addEventListener('touchend', function(e) { e.preventDefault(); stopListening(); }, {passive:false});
-micBtn.addEventListener('touchcancel', stopListening);
-
-// Desktop push-to-talk (mouse): hold to record, release to stop
-micBtn.addEventListener('mousedown', function(e) {
-  if (e.button !== 0) return;
-  e.preventDefault();
-  getAudioCtx();
-  startListening();
 });
-micBtn.addEventListener('mouseup', function(e) { e.preventDefault(); stopListening(); });
+micBtn.addEventListener('pointerup', function(e) { e.preventDefault(); stopListening(); });
+micBtn.addEventListener('pointercancel', function(){ stopListening(); });
 micBtn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+// Safety nets in case the pointerup is swallowed by the host (Telegram WebView).
+window.addEventListener('pointerup', function(){ if (state==='listening') stopListening(); });
 window.addEventListener('mouseup', function(){ if (state==='listening') stopListening(); });
+window.addEventListener('touchend', function(){ if (state==='listening') stopListening(); });
 window.addEventListener('blur', function(){ if (state==='listening') stopListening(); });
 
 sb.onclick = function() {
