@@ -69,7 +69,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v302</span></div>
+    <div class="title">Стич · Claude <span class="build">v303</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -177,6 +177,39 @@ document.addEventListener('pointerdown', function(e) {
   var a = document.activeElement;
   if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
 }, {passive:true});
+
+// Telegram physically lifts the entire WebView when the keyboard opens,
+// so Stitch rides up with everything else. Counter-translate just the
+// .top panel by however much it has drifted from screen-y=0 each frame
+// while an input is focused. The chat below it slides naturally.
+var pinTopEl = null, pinRaf = null, pinY = 0;
+function pinTopFrame() {
+  if (!pinTopEl) pinTopEl = document.querySelector('.top');
+  if (pinTopEl) {
+    var rect = pinTopEl.getBoundingClientRect();
+    if (Math.abs(rect.top) > 0.5) {
+      pinY -= rect.top;
+      pinTopEl.style.transform = 'translate3d(0,' + pinY + 'px,0)';
+    }
+  }
+  pinRaf = requestAnimationFrame(pinTopFrame);
+}
+function startPinTop() { if (pinRaf == null) pinRaf = requestAnimationFrame(pinTopFrame); }
+function stopPinTop() {
+  if (pinRaf != null) { cancelAnimationFrame(pinRaf); pinRaf = null; }
+  if (pinTopEl) pinTopEl.style.transform = '';
+  pinY = 0;
+}
+function isFocusableInput(t) {
+  return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA');
+}
+document.addEventListener('focusin', function(e) { if (isFocusableInput(e.target)) startPinTop(); });
+document.addEventListener('touchstart', function(e) { if (isFocusableInput(e.target)) startPinTop(); }, {passive:true});
+document.addEventListener('focusout', function() {
+  setTimeout(function() {
+    if (!isFocusableInput(document.activeElement)) stopPinTop();
+  }, 400);
+});
 
 var KEY_SK = 'sk';
 var apiKey = localStorage.getItem(KEY_SK) || '';
