@@ -78,7 +78,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v332</span></div>
+    <div class="title">Стич · Claude <span class="build">v333</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -220,7 +220,7 @@ document.addEventListener('pointerdown', function(e) {
     try { if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); } catch(_){}
     getAudioCtx();
     startListening();
-  }, 2000);
+  }, 1000);
 }, {passive:true});
 document.addEventListener('pointermove', function(e) {
   if (!chatTap) return;
