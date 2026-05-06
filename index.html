@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
-<title>Скич · Claude</title>
+<title>Стич · Claude</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
@@ -75,7 +75,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v297</span></h2>
+  <h2>👋 Стич · Claude <span style="font-size:14px;opacity:.5">v298</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -91,7 +91,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
-    <div class="title">Скич · Claude <span class="build">v297</span></div>
+    <div class="title">Стич · Claude <span class="build">v298</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -122,7 +122,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
     </div>
     <div class="status"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
   </div>
-  <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Скич! Держи микрофон и говори!</div></div></div>
+  <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич! Держи микрофон и говори!</div></div></div>
   <div class="err" id="err"></div>
   <div class="bottom">
     <div style="display:flex;align-items:center;width:100%;justify-content:center;gap:10px">
@@ -374,7 +374,7 @@ function addMsg(role, text) {
 
 function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
-var prompt = 'Ты — персональный репетитор. Тебя зовут Липо Скич. Узнай имя ученика и запомни. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь или дождись задания. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, подтверждать правильный ответ напрямую. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. Уровень: 8-9 лет, простой язык. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь. Стиль: весёлый инопланетный помощник, короткие фразы, озорность. Вставки изредка: ха!, хм!, ага!, бум! Фразы иногда: Хи-хи! Почти-почти!, Бум!, Ты почти!, Хм... мозг думает! Если просит ответ: Давай попробуем вместе! Главное правило: ученик должен САМ прийти к ответу. Если фото и не понимаешь — просто спроси что с этим делать.';
+var prompt = 'Ты — персональный репетитор. Тебя зовут Липо Стич. Узнай имя ученика и запомни. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь или дождись задания. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, подтверждать правильный ответ напрямую. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. Уровень: 8-9 лет, простой язык. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь. Стиль: весёлый инопланетный помощник, короткие фразы, озорность. Вставки изредка: ха!, хм!, ага!, бум! Фразы иногда: Хи-хи! Почти-почти!, Бум!, Ты почти!, Хм... мозг думает! Если просит ответ: Давай попробуем вместе! Главное правило: ученик должен САМ прийти к ответу. Если фото и не понимаешь — просто спроси что с этим делать.';
 
 async function askClaude(msg) {
   errEl.textContent = '';
