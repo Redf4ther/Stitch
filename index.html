@@ -85,7 +85,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
       </svg>
     </button>
-    <div class="title">Стич · Claude <span class="build">v368</span></div>
+    <div class="title">Стич · Claude <span class="build">v369</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -298,6 +298,35 @@ function cycleVoice() {
   currentVoice = VOICES[(i + 1) % VOICES.length];
   localStorage.setItem(KEY_VOICE, currentVoice);
   showVoiceToast(currentVoice);
+  previewVoice(currentVoice);
+}
+function previewVoice(voice) {
+  if (!apiKey) return;
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.openai.com/v1/audio/speech');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + apiKey);
+    xhr.responseType = 'arraybuffer';
+    xhr.onload = function() {
+      if (xhr.status !== 200) return;
+      var blob = new Blob([xhr.response], {type: 'audio/mpeg'});
+      var url = URL.createObjectURL(blob);
+      var audio = new Audio();
+      audio.setAttribute('playsinline', '');
+      audio.src = url;
+      audio.onended = function(){ URL.revokeObjectURL(url); };
+      pumpKeepalive();
+      nudgeOutputToSpeaker();
+      audio.play().catch(function(){});
+    };
+    xhr.send(JSON.stringify({
+      model: 'gpt-4o-mini-tts',
+      input: 'Привет! Я Стич, теперь буду говорить вот так.',
+      voice: voice,
+      speed: 1.2
+    }));
+  } catch(_) {}
 }
 var voiceToastTimer = null;
 function showVoiceToast(name) {
