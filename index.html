@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v346</span></div>
+    <div class="title">Стич · Claude <span class="build">v347</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -610,6 +610,33 @@ var audioRec = null;
 var audioChunks = null;
 var audioStream = null;
 var pendingStop = false;
+// Whisper tends to hallucinate stock YouTube phrases on silence — filter
+// the most common Russian ones plus short punctuation-only transcripts.
+var WHISPER_HALLUCINATIONS = [
+  /^[\s\.,!?…\-—]+$/,
+  /^спасибо за (просмотр|внимание)/i,
+  /^подписывайтесь на канал/i,
+  /^субтитры (подготовил|сделал)/i,
+  /^продолжение следует/i,
+  /^до (новых )?встреч/i,
+  /^приятного просмотра/i,
+  /^всем пока/i,
+  /^музыка (играет|звучит)/i,
+  /^\(.*\)$/,
+  /^\[.*\]$/,
+  /^титры/i,
+  /^редактор субтитров/i,
+  /^корректор/i,
+  /^продолжение в следующей серии/i
+];
+function isWhisperHallucination(t) {
+  var s = String(t || '').trim();
+  if (!s || s.length < 2) return true;
+  for (var i = 0; i < WHISPER_HALLUCINATIONS.length; i++) {
+    if (WHISPER_HALLUCINATIONS[i].test(s)) return true;
+  }
+  return false;
+}
 function pickAudioMime() {
   var candidates = ['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus'];
   for (var i=0; i<candidates.length; i++) {
@@ -682,6 +709,8 @@ async function startListening() {
       fd.append('file', blob, 'audio.' + ext);
       fd.append('model', 'whisper-1');
       fd.append('language', 'ru');
+      fd.append('temperature', '0');
+      fd.append('prompt', 'Ребёнок задаёт вопрос репетитору Стичу или решает школьную задачу.');
       var r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
         headers: {'Authorization': 'Bearer ' + apiKey},
@@ -693,7 +722,7 @@ async function startListening() {
       if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
       var t = ((data.text || '') + '').trim();
       setState('idle');
-      if (!t) return;
+      if (!t || isWhisperHallucination(t)) return;
       if (window.pendingPhotos && window.pendingPhotos.length) {
         sendPhotosWith(window.pendingPhotos.slice(), t);
         cancelAllPhotos();
