@@ -8,9 +8,9 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{width:100%;height:100%;overflow:hidden;background:#dff1ff;color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#ececec;color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none}
 #app{display:contents}
-.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:#dff1ff;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
+.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:#ececec;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
 .below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#7c5cff}
 .build{font-size:10px;opacity:.6;margin-left:4px}
@@ -43,10 +43,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#dff1ff;color:#2d224
 .cur::after{content:‘▋’;color:#7c5cff;animation:cur .4s steps(1) infinite}
 .err{flex-shrink:0;font-size:11px;color:#e84a5f;padding:0 14px;text-align:center}
 .err:not(:empty){padding:2px 14px}
-.bottom{flex-shrink:0;position:relative;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:#dff1ff;display:flex;flex-direction:column;gap:6px;align-items:center}
+.bottom{flex-shrink:0;position:relative;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:#ececec;display:flex;flex-direction:column;gap:6px;align-items:center}
 .mic-btn{width:54px;height:54px;border-radius:50%;border:none;font-size:24px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3ec97a,#5be09b);box-shadow:0 3px 14px rgba(62,201,122,.4);cursor:pointer;touch-action:none}
 .mic-btn.listening{background:linear-gradient(135deg,#ff5577,#cc3050);animation:micP .8s ease infinite;box-shadow:0 4px 20px rgba(255,80,120,.5)}
 .mic-btn.disabled{background:#d8cce8;box-shadow:none;opacity:.5}
+.mic-btn.busy{background:linear-gradient(135deg,#ff9043,#ff5577);box-shadow:0 3px 14px rgba(255,90,110,.4)}
 .mic-btn{transition:background .1s}
 #camBtn{transition:background .15s}
 #camBtn:active{background:#006580!important}
@@ -70,7 +71,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v316</span></div>
+    <div class="title">Стич · Claude <span class="build">v317</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -282,13 +283,15 @@ function setState(s) {
   head.className = 'head'+(s==='talking'?' talk':s==='listening'?' listen':'');
   glow.className = 'glow'+(s==='talking'?' on':'');
   var busy = s==='thinking'||s==='talking';
-  micBtn.className = 'mic-btn'+(s==='listening'?' listening':busy?' disabled':'');
+  micBtn.className = 'mic-btn'+(s==='listening'?' listening':busy?' busy':'');
   if (s === 'listening') {
     micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="32" height="32" fill="#fff"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+  } else if (busy) {
+    micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
   } else {
     micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
   }
-  micHint.textContent = s==='listening'?'ОТПУСТИ...':busy?'...':'ДЕРЖИ И ГОВОРИ';
+  micHint.textContent = s==='listening'?'ОТПУСТИ...':busy?'НАЖМИ ЧТОБЫ ОСТАНОВИТЬ':'ДЕРЖИ И ГОВОРИ';
   inp.disabled = busy;
   sb.disabled = busy;
 }
@@ -325,10 +328,13 @@ async function askClaude(msg) {
       return m;
     });
     var messages = [{role:'system',content:prompt}].concat(textHist);
+    typingCancel = false;
+    currentAbort = new AbortController();
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body: JSON.stringify({model:'gpt-4o', max_tokens:2000, messages:messages})
+      body: JSON.stringify({model:'gpt-4o', max_tokens:2000, messages:messages}),
+      signal: currentAbort.signal
     });
     var data = await r.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
@@ -344,17 +350,21 @@ async function askClaude(msg) {
     // STEP 1: Download audio (still showing "Думает...")
     var audioBlob = null;
     try {
-      var xhr = new XMLHttpRequest();
+      var ttsXhr = new XMLHttpRequest();
+      currentAbort = { abort: function(){ try { ttsXhr.abort(); } catch(_){} } };
       audioBlob = await new Promise(function(resolve) {
-        xhr.open('POST','https://api.openai.com/v1/audio/speech');
-        xhr.setRequestHeader('Content-Type','application/json');
-        xhr.setRequestHeader('Authorization','Bearer '+apiKey);
-        xhr.responseType = 'arraybuffer';
-        xhr.onload = function(){ resolve(xhr.status===200 ? xhr.response : null); };
-        xhr.onerror = function(){ resolve(null); };
-        xhr.send(JSON.stringify({model:'tts-1',input:text,voice:'echo',speed:1.2}));
+        ttsXhr.open('POST','https://api.openai.com/v1/audio/speech');
+        ttsXhr.setRequestHeader('Content-Type','application/json');
+        ttsXhr.setRequestHeader('Authorization','Bearer '+apiKey);
+        ttsXhr.responseType = 'arraybuffer';
+        ttsXhr.onload = function(){ resolve(ttsXhr.status===200 ? ttsXhr.response : null); };
+        ttsXhr.onerror = function(){ resolve(null); };
+        ttsXhr.onabort = function(){ resolve(null); };
+        ttsXhr.send(JSON.stringify({model:'tts-1',input:text,voice:'echo',speed:1.2}));
       });
     } catch(e2) { audioBlob = null; }
+    currentAbort = null;
+    if (typingCancel) return;
 
     // STEP 3: switch to "Говорит", start audio (HTML Audio works on iOS WebView), type text
     setState('talking');
@@ -366,23 +376,26 @@ async function askClaude(msg) {
       var blob2 = new Blob([audioBlob], {type:'audio/mpeg'});
       var url = URL.createObjectURL(blob2);
       var audio = new Audio(url);
-      audio.onended = function(){ URL.revokeObjectURL(url); audio.src=''; audio.load(); };
-      audio.onerror = function(){ URL.revokeObjectURL(url); };
+      currentAudio = audio;
+      audio.onended = function(){ URL.revokeObjectURL(url); audio.src=''; audio.load(); if(currentAudio===audio) currentAudio=null; };
+      audio.onerror = function(){ URL.revokeObjectURL(url); if(currentAudio===audio) currentAudio=null; };
       audio.play().catch(function(err){ errEl.textContent = 'Звук: '+(err&&err.message||err); });
     }
 
     // Type text simultaneously
     for (var i=1; i<=text.length; i++) {
+      if (typingCancel) break;
       el.textContent = text.slice(0,i);
       chat.scrollTop = chat.scrollHeight;
       await sleep(55);
     }
     el.classList.remove('cur');
     stopMouth();
+    if (typingCancel) return;
     setState('idle');
   } catch(e) {
     stopMouth();
-    errEl.textContent = 'Ошибка: '+e.message;
+    if (e && e.name !== 'AbortError') errEl.textContent = 'Ошибка: '+e.message;
     setState('idle');
   }
 }
@@ -422,12 +435,32 @@ function stopListening() {
   if (recog) try { recog.stop(); } catch(e){}
 }
 
+// Cancel in-flight thinking / talking — abort fetch, stop audio, exit
+// the typing loop, return to idle.
+var currentAbort = null;
+var currentAudio = null;
+var typingCancel = false;
+function cancelThinking() {
+  if (currentAbort) { try { currentAbort.abort(); } catch(_){} currentAbort = null; }
+  if (currentAudio) {
+    try { currentAudio.pause(); } catch(_){}
+    try { currentAudio.src = ''; currentAudio.load(); } catch(_){}
+    currentAudio = null;
+  }
+  typingCancel = true;
+  stopMouth();
+  errEl.textContent = '';
+  setState('idle');
+}
+
 // Push-to-talk: pointer events unify mouse + touch + pen, and setPointerCapture
 // guarantees pointerup fires on the button even if Telegram's WebView would
-// otherwise steal mouseup events (e.g. window-drag handler on desktop).
+// otherwise steal mouseup events (e.g. window-drag handler on desktop). Tap
+// while busy = cancel the current thinking/talking.
 micBtn.addEventListener('pointerdown', function(e) {
   if (e.button !== undefined && e.button !== 0) return;
   e.preventDefault();
+  if (state === 'thinking' || state === 'talking') { cancelThinking(); return; }
   if (micBtn.setPointerCapture) { try { micBtn.setPointerCapture(e.pointerId); } catch(_){} }
   getAudioCtx(); // unlock on user gesture
   startListening();
@@ -701,10 +734,13 @@ async function askWithImages(photos, userText) {
   content.push({type:'text', text:imgText});
   hist.push({role:'user', content:content});
   try {
+    typingCancel = false;
+    currentAbort = new AbortController();
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body:JSON.stringify({model:'gpt-4o', max_tokens:2000, messages:[{role:'system',content:prompt}].concat(hist)})
+      body:JSON.stringify({model:'gpt-4o', max_tokens:2000, messages:[{role:'system',content:prompt}].concat(hist)}),
+      signal: currentAbort.signal
     });
     var data = await r.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
@@ -719,17 +755,21 @@ async function askWithImages(photos, userText) {
 
     var audioBlob = null;
     try {
-      var xhr = new XMLHttpRequest();
+      var ttsXhr2 = new XMLHttpRequest();
+      currentAbort = { abort: function(){ try { ttsXhr2.abort(); } catch(_){} } };
       audioBlob = await new Promise(function(resolve) {
-        xhr.open('POST','https://api.openai.com/v1/audio/speech');
-        xhr.setRequestHeader('Content-Type','application/json');
-        xhr.setRequestHeader('Authorization','Bearer '+apiKey);
-        xhr.responseType = 'arraybuffer';
-        xhr.onload = function(){ resolve(xhr.status===200?xhr.response:null); };
-        xhr.onerror = function(){ resolve(null); };
-        xhr.send(JSON.stringify({model:'tts-1',input:text,voice:'echo',speed:1.2}));
+        ttsXhr2.open('POST','https://api.openai.com/v1/audio/speech');
+        ttsXhr2.setRequestHeader('Content-Type','application/json');
+        ttsXhr2.setRequestHeader('Authorization','Bearer '+apiKey);
+        ttsXhr2.responseType = 'arraybuffer';
+        ttsXhr2.onload = function(){ resolve(ttsXhr2.status===200?ttsXhr2.response:null); };
+        ttsXhr2.onerror = function(){ resolve(null); };
+        ttsXhr2.onabort = function(){ resolve(null); };
+        ttsXhr2.send(JSON.stringify({model:'tts-1',input:text,voice:'echo',speed:1.2}));
       });
     } catch(e2) {}
+    currentAbort = null;
+    if (typingCancel) return;
 
     setState('talking');
     var el = addMsg('a','');
@@ -740,21 +780,24 @@ async function askWithImages(photos, userText) {
       var url = URL.createObjectURL(blob2);
       var audio = new Audio(url);
       currentAudio = audio;
-      audioPlaying = true;
-      audio.onended = function(){ audioPlaying=false; URL.revokeObjectURL(url); audio.src=''; audio.load(); };
-      audio.onerror = function(){ audioPlaying=false; };
-      audio.play().catch(function(){audioPlaying=false;});
+      audio.onended = function(){ URL.revokeObjectURL(url); audio.src=''; audio.load(); if(currentAudio===audio) currentAudio=null; };
+      audio.onerror = function(){ if(currentAudio===audio) currentAudio=null; };
+      audio.play().catch(function(){});
     }
     for (var i=1;i<=text.length;i++) {
+      if (typingCancel) break;
       el.textContent=text.slice(0,i);
       chat.scrollTop = chat.scrollHeight;
       await sleep(55);
     }
     el.classList.remove('cur');
     stopMouth();
+    if (typingCancel) return;
     setState('idle');
   } catch(e) {
-    stopMouth(); errEl.textContent='Ошибка: '+e.message; setState('idle');
+    stopMouth();
+    if (e && e.name !== 'AbortError') errEl.textContent='Ошибка: '+e.message;
+    setState('idle');
   }
 }
 </script>
