@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v348</span></div>
+    <div class="title">Стич · Claude <span class="build">v349</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -482,7 +482,7 @@ async function askClaude(msg) {
         ttsXhr.onload = function(){ resolve(ttsXhr.status===200 ? ttsXhr.response : null); };
         ttsXhr.onerror = function(){ resolve(null); };
         ttsXhr.onabort = function(){ resolve(null); };
-        ttsXhr.send(JSON.stringify({model:'tts-1',input:text,voice:'echo',speed:1.2}));
+        ttsXhr.send(JSON.stringify({model:'tts-1',input:text,voice:'coral',speed:1.2}));
       });
     } catch(e2) { audioBlob = null; }
     currentAbort = null;
@@ -1130,7 +1130,7 @@ async function askWithImages(photos, userText) {
         ttsXhr2.onload = function(){ resolve(ttsXhr2.status===200?ttsXhr2.response:null); };
         ttsXhr2.onerror = function(){ resolve(null); };
         ttsXhr2.onabort = function(){ resolve(null); };
-        ttsXhr2.send(JSON.stringify({model:'tts-1',input:text,voice:'echo',speed:1.2}));
+        ttsXhr2.send(JSON.stringify({model:'tts-1',input:text,voice:'coral',speed:1.2}));
       });
     } catch(e2) {}
     currentAbort = null;
