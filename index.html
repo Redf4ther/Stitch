@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v349</span></div>
+    <div class="title">Стич · Claude <span class="build">v350</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -195,14 +195,15 @@ function showHoldRing(x, y) {
   holdRing.className = 'hold-ring';
   holdRing.style.left = x + 'px';
   holdRing.style.top = y + 'px';
-  holdRing.style.setProperty('--ring-op', '0');
-  holdRing.style.setProperty('--ring-scale', '0.7');
+  // Disable transition for the initial paint so the ring appears at full
+  // size/opacity instantly. Re-enable transitions next frame for fade/scale.
+  holdRing.style.transition = 'none';
+  holdRing.style.setProperty('--ring-op', '0.55');
+  holdRing.style.setProperty('--ring-scale', '1');
   document.body.appendChild(holdRing);
-  // Fade in next frame
   requestAnimationFrame(function() {
     if (!holdRing) return;
-    holdRing.style.setProperty('--ring-op', '0.55');
-    holdRing.style.setProperty('--ring-scale', '1');
+    holdRing.style.transition = '';
   });
 }
 function fadeRing(ratio) {
