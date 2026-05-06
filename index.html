@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v345</span></div>
+    <div class="title">Стич · Claude <span class="build">v346</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -230,12 +230,7 @@ document.addEventListener('pointerdown', function(e) {
   // recording continues; once it leaves, we abort.
   var a = document.activeElement;
   if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
-  // Defer the ring by 500 ms so a quick tap doesn't show it.
-  clearRingTimer();
-  ringTimer = setTimeout(function() {
-    ringTimer = null;
-    if (chatTap && !chatTap.cancelled) showHoldRing(chatTap.x, chatTap.y);
-  }, 500);
+  showHoldRing(e.clientX, e.clientY);
   getAudioCtx();
   startListening();
 }, {passive:true});
