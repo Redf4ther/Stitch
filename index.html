@@ -76,7 +76,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v359</span></div>
+    <div class="title">Стич · Claude <span class="build">v360</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -697,6 +697,33 @@ var audioRec = null;
 var audioChunks = null;
 var audioStream = null;
 var pendingStop = false;
+var vadAnalyser = null;
+var vadInterval = null;
+var vadMaxLevel = 0;
+var VAD_THRESHOLD = 14; // average byte-frequency above which we treat audio as actual speech
+function startVAD(stream) {
+  try {
+    var ctx = getAudioCtx();
+    var source = ctx.createMediaStreamSource(stream);
+    vadAnalyser = ctx.createAnalyser();
+    vadAnalyser.fftSize = 256;
+    source.connect(vadAnalyser);
+    vadMaxLevel = 0;
+    var data = new Uint8Array(vadAnalyser.frequencyBinCount);
+    vadInterval = setInterval(function() {
+      if (!vadAnalyser) return;
+      vadAnalyser.getByteFrequencyData(data);
+      var sum = 0;
+      for (var i = 0; i < data.length; i++) sum += data[i];
+      var avg = sum / data.length;
+      if (avg > vadMaxLevel) vadMaxLevel = avg;
+    }, 80);
+  } catch(_) {}
+}
+function stopVAD() {
+  if (vadInterval) { clearInterval(vadInterval); vadInterval = null; }
+  if (vadAnalyser) { try { vadAnalyser.disconnect(); } catch(_){} vadAnalyser = null; }
+}
 // Whisper tends to hallucinate stock YouTube phrases on silence — filter
 // the most common Russian ones plus short punctuation-only transcripts.
 var WHISPER_HALLUCINATIONS = [
@@ -779,13 +806,15 @@ async function startListening() {
   audioRec.onstop = async function() {
     var rec = audioRec;
     var chunks = audioChunks || [];
+    var loudEnough = vadMaxLevel >= VAD_THRESHOLD;
     audioRec = null;
     audioChunks = null;
+    stopVAD();
     releaseMicStream();
     pumpKeepalive();
     nudgeOutputToSpeaker();
     var duration = Date.now() - listenStart;
-    if (listenAborted || duration < 300 || !chunks.length) { setState('idle'); return; }
+    if (listenAborted || duration < 300 || !chunks.length || !loudEnough) { setState('idle'); return; }
     var blobType = (rec && rec.mimeType) || mime || 'audio/webm';
     var blob = new Blob(chunks, {type: blobType});
     var ext = blobType.indexOf('mp4') >= 0 ? 'm4a' : blobType.indexOf('ogg') >= 0 ? 'ogg' : 'webm';
@@ -823,8 +852,12 @@ async function startListening() {
       setState('idle');
     }
   };
-  try { audioRec.start(); } catch(e) {
+  try {
+    audioRec.start();
+    startVAD(audioStream);
+  } catch(e) {
     errEl.textContent = 'Recorder start: '+e.message;
+    stopVAD();
     releaseMicStream();
     audioRec = null;
     setState('idle');
