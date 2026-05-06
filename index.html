@@ -33,7 +33,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#ececec;color:#2d224
 @keyframes saluteSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes holdRingPop{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}60%{transform:translate(-50%,-50%) scale(1.15);opacity:.65}100%{transform:translate(-50%,-50%) scale(1);opacity:.45}}
 @keyframes holdRingFade{from{opacity:.45;transform:translate(-50%,-50%) scale(1)}to{opacity:0;transform:translate(-50%,-50%) scale(1.3)}}
-.hold-ring{position:fixed;width:168px;height:168px;border-radius:50%;background:rgba(124,92,255,.22);border:2px solid rgba(124,92,255,.55);pointer-events:none;z-index:50;will-change:transform,opacity}
+.hold-ring{position:fixed;width:200px;height:200px;border-radius:50%;background:rgba(124,92,255,.22);border:2px solid rgba(124,92,255,.55);pointer-events:none;z-index:50;will-change:transform,opacity}
 .hold-ring.pop{animation:holdRingPop .35s ease-out forwards}
 .hold-ring.fade{animation:holdRingFade .25s ease-out forwards}
 
@@ -78,7 +78,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v333</span></div>
+    <div class="title">Стич · Claude <span class="build">v334</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -181,16 +181,13 @@ try {
   }
 } catch(_) {}
 
-// Chat-area gestures:
-//   Quick tap (<300ms, no drag) -> dismiss the keyboard.
-//   Hold 2s on one spot -> show a translucent ring at the touch point and
-//     start the microphone. Releasing stops listening.
+// Press-and-hold anywhere in the chat to push-to-talk, exactly like the
+// mic button. A translucent ring appears at the touch point on press and
+// fades when released. Quick taps (under 300ms) get treated as accidental
+// by the SR layer and produce no transcript, so the same gesture also
+// "dismisses" the keyboard if it was open.
 var chatTap = null;
-var chatHoldTimer = null;
 var holdRing = null;
-function clearHoldTimer() {
-  if (chatHoldTimer != null) { clearTimeout(chatHoldTimer); chatHoldTimer = null; }
-}
 function showHoldRing(x, y) {
   if (holdRing) { try { holdRing.remove(); } catch(_){} }
   holdRing = document.createElement('div');
@@ -209,52 +206,35 @@ function hideHoldRing() {
 }
 document.addEventListener('pointerdown', function(e) {
   var chat = document.querySelector('.chat');
-  if (!chat || !chat.contains(e.target)) { chatTap = null; clearHoldTimer(); return; }
-  chatTap = { t: Date.now(), x: e.clientX, y: e.clientY, hold: false };
-  clearHoldTimer();
-  chatHoldTimer = setTimeout(function() {
-    chatHoldTimer = null;
-    if (!chatTap || state !== 'idle') return;
-    chatTap.hold = true;
-    showHoldRing(chatTap.x, chatTap.y);
-    try { if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); } catch(_){}
-    getAudioCtx();
-    startListening();
-  }, 1000);
+  if (!chat || !chat.contains(e.target)) { chatTap = null; return; }
+  if (state !== 'idle') { chatTap = null; return; }
+  chatTap = { t: Date.now(), x: e.clientX, y: e.clientY };
+  // Close the keyboard if it was up so the chat area is fully visible.
+  var a = document.activeElement;
+  if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
+  showHoldRing(e.clientX, e.clientY);
+  getAudioCtx();
+  startListening();
 }, {passive:true});
 document.addEventListener('pointermove', function(e) {
   if (!chatTap) return;
-  if (Math.abs(e.clientX - chatTap.x) > 16 || Math.abs(e.clientY - chatTap.y) > 16) {
-    clearHoldTimer();
-    if (chatTap.hold) {
-      chatTap.hold = false;
-      hideHoldRing();
-      if (state === 'listening') stopListening();
-    }
+  if (Math.abs(e.clientX - chatTap.x) > 24 || Math.abs(e.clientY - chatTap.y) > 24) {
     chatTap = null;
-  }
-}, {passive:true});
-document.addEventListener('pointerup', function(e) {
-  clearHoldTimer();
-  var t = chatTap;
-  chatTap = null;
-  if (!t) return;
-  if (t.hold) {
     hideHoldRing();
     if (state === 'listening') stopListening();
-    return;
   }
-  var chat = document.querySelector('.chat');
-  if (!chat || !chat.contains(e.target)) return;
-  if (Date.now() - t.t > 300) return;
-  if (Math.abs(e.clientX - t.x) > 8 || Math.abs(e.clientY - t.y) > 8) return;
-  var a = document.activeElement;
-  if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
+}, {passive:true});
+document.addEventListener('pointerup', function() {
+  if (!chatTap) return;
+  chatTap = null;
+  hideHoldRing();
+  if (state === 'listening') stopListening();
 }, {passive:true});
 document.addEventListener('pointercancel', function() {
-  clearHoldTimer();
-  if (chatTap && chatTap.hold) { hideHoldRing(); if (state === 'listening') stopListening(); }
+  if (!chatTap) return;
   chatTap = null;
+  hideHoldRing();
+  if (state === 'listening') stopListening();
 }, {passive:true});
 
 
