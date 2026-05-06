@@ -75,7 +75,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v354</span></div>
+    <div class="title">Стич · Claude <span class="build">v355</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -584,6 +584,7 @@ async function askClaude(msg) {
     maybeCelebrate(text);
 
     if (audioBlob) {
+      pumpKeepalive();
       nudgeOutputToSpeaker();
       var blob2 = new Blob([audioBlob], {type:'audio/mpeg'});
       var url = URL.createObjectURL(blob2);
@@ -688,6 +689,18 @@ function ensureLoudOutput() {
     bgKeepalive.play().catch(function(){});
   } catch(_) {}
 }
+// Force iOS to flip the audio session back to Playback by stopping the
+// keepalive, seeking to the start and playing it again. After getUserMedia,
+// just keeping it playing isn't enough — we need a fresh play() call.
+function pumpKeepalive() {
+  if (!bgKeepalive) { ensureLoudOutput(); return; }
+  try {
+    bgKeepalive.pause();
+    bgKeepalive.currentTime = 0;
+    var p = bgKeepalive.play();
+    if (p && p.catch) p.catch(function(){});
+  } catch(_) {}
+}
 
 // MediaRecorder + Whisper API — much smarter than the built-in
 // SpeechRecognition. We capture the raw mic stream while the user holds,
@@ -783,6 +796,7 @@ async function startListening() {
     audioRec = null;
     audioChunks = null;
     releaseMicStream();
+    pumpKeepalive();
     nudgeOutputToSpeaker();
     var duration = Date.now() - listenStart;
     if (listenAborted || duration < 300 || !chunks.length) { setState('idle'); return; }
@@ -1232,6 +1246,7 @@ async function askWithImages(photos, userText) {
     startMouth();
     maybeCelebrate(text);
     if (audioBlob) {
+      pumpKeepalive();
       nudgeOutputToSpeaker();
       var blob2 = new Blob([audioBlob],{type:'audio/mpeg'});
       var url = URL.createObjectURL(blob2);
