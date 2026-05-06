@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v342</span></div>
+    <div class="title">Стич · Claude <span class="build">v343</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -318,7 +318,7 @@ var state = 'idle';
 var hist = [];
 var raf = null;
 var mC = 0, lastFlip = 0, isOpen = false, posIdx = 0, shapeIdx = 0;
-var recog = null, listenStart = 0;
+var listenStart = 0;
 var currentShape = 'normal';
 var shapes = ['normal','normal','wide','normal','tube','normal','wide','tube','normal'];
 var openPos = [0.3,0.5,0.7,0.9,0.4,0.75,0.55];
@@ -598,66 +598,133 @@ function ensureLoudOutput() {
   } catch(_) {}
 }
 
-var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
+// MediaRecorder + Whisper API — much smarter than the built-in
+// SpeechRecognition. We capture the raw mic stream while the user holds,
+// then on release send the blob to /v1/audio/transcriptions and pipe the
+// returned text into the existing askClaude / sendPhotosWith flow.
 var listenAborted = false;
-function startListening() {
-  if (state!=='idle') return;
-  if (!SR) { errEl.textContent='Используй Safari'; return; }
-  // Defensive: a previous recognition session might still be lingering
-  // (onend not yet fired). Strip its handlers and tear it down before
-  // creating a new one — if we don't, iOS WebKit fires onerror immediately
-  // on the new instance and the mic flashes red for a frame.
-  if (recog) {
-    var stale = recog;
-    recog = null;
-    stale.onresult = null;
-    stale.onerror = null;
-    stale.onend = null;
-    try { stale.abort(); } catch(_){}
+var audioRec = null;
+var audioChunks = null;
+var audioStream = null;
+var pendingStop = false;
+function pickAudioMime() {
+  var candidates = ['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus'];
+  for (var i=0; i<candidates.length; i++) {
+    try { if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i]; } catch(_){}
   }
-  errEl.textContent=''; setState('listening'); listenStart=Date.now();
+  return '';
+}
+function releaseMicStream() {
+  if (!audioStream) return;
+  try { audioStream.getTracks().forEach(function(t){ try { t.stop(); } catch(_){} }); } catch(_){}
+  audioStream = null;
+}
+async function startListening() {
+  if (state !== 'idle') return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
+    errEl.textContent = 'Запись не поддерживается этим браузером';
+    return;
+  }
+  if (!apiKey) {
+    addMsg('a', 'Сначала отправь мне твой OpenAI API ключ (начинается с sk-) — я его запомню.');
+    return;
+  }
+  errEl.textContent = '';
+  setState('listening'); listenStart = Date.now();
   listenAborted = false;
-  recog = new SR(); recog.lang='ru-RU'; recog.interimResults=false; recog.continuous=true;
-  recog.onresult = function(e) {
-    var t = Array.from(e.results).map(function(r){return r[0].transcript;}).join('').trim();
-    recog=null;
-    // If the user aborted the mic (tap or very short press), don't send
-    // anything to the LLM — even if recog managed to capture something.
-    var duration = Date.now() - listenStart;
-    if (listenAborted || duration < 300 || !t) { setState('idle'); return; }
-    // If photos are pending, send them along with the voice transcript so
-    // Stitch can analyze the picture together with what the kid said.
-    if (window.pendingPhotos && window.pendingPhotos.length) {
-      sendPhotosWith(window.pendingPhotos.slice(), t);
-      cancelAllPhotos();
-      return;
-    }
-    askClaude(t);
+  pendingStop = false;
+  audioChunks = [];
+  try {
+    audioStream = await navigator.mediaDevices.getUserMedia({audio:true});
+  } catch(e) {
+    errEl.textContent = 'Нет доступа к микрофону';
+    setState('idle');
+    return;
+  }
+  // User released before getUserMedia resolved — abort.
+  if (pendingStop) {
+    releaseMicStream();
+    setState('idle');
+    return;
+  }
+  var mime = pickAudioMime();
+  try {
+    audioRec = new MediaRecorder(audioStream, mime ? {mimeType: mime} : undefined);
+  } catch(e) {
+    errEl.textContent = 'MediaRecorder: '+e.message;
+    releaseMicStream();
+    setState('idle');
+    return;
+  }
+  audioRec.ondataavailable = function(ev) {
+    if (ev.data && ev.data.size > 0) audioChunks.push(ev.data);
   };
-  recog.onerror = function(e) { recog=null; setState('idle'); nudgeOutputToSpeaker(); };
-  recog.onend = function() { recog=null; if(state==='listening') setState('idle'); nudgeOutputToSpeaker(); };
-  recog.start();
+  audioRec.onstop = async function() {
+    var rec = audioRec;
+    var chunks = audioChunks || [];
+    audioRec = null;
+    audioChunks = null;
+    releaseMicStream();
+    nudgeOutputToSpeaker();
+    var duration = Date.now() - listenStart;
+    if (listenAborted || duration < 300 || !chunks.length) { setState('idle'); return; }
+    var blobType = (rec && rec.mimeType) || mime || 'audio/webm';
+    var blob = new Blob(chunks, {type: blobType});
+    var ext = blobType.indexOf('mp4') >= 0 ? 'm4a' : blobType.indexOf('ogg') >= 0 ? 'ogg' : 'webm';
+    setState('thinking');
+    try {
+      typingCancel = false;
+      currentAbort = new AbortController();
+      var fd = new FormData();
+      fd.append('file', blob, 'audio.' + ext);
+      fd.append('model', 'whisper-1');
+      fd.append('language', 'ru');
+      var r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {'Authorization': 'Bearer ' + apiKey},
+        body: fd,
+        signal: currentAbort.signal
+      });
+      currentAbort = null;
+      var data = await r.json();
+      if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+      var t = ((data.text || '') + '').trim();
+      setState('idle');
+      if (!t) return;
+      if (window.pendingPhotos && window.pendingPhotos.length) {
+        sendPhotosWith(window.pendingPhotos.slice(), t);
+        cancelAllPhotos();
+      } else {
+        askClaude(t);
+      }
+    } catch(err) {
+      currentAbort = null;
+      if (err && err.name !== 'AbortError') errEl.textContent = 'Whisper: ' + err.message;
+      setState('idle');
+    }
+  };
+  try { audioRec.start(); } catch(e) {
+    errEl.textContent = 'Recorder start: '+e.message;
+    releaseMicStream();
+    audioRec = null;
+    setState('idle');
+  }
 }
 
 function stopListening() {
-  if (state!=='listening') return;
-  // Decide whether this stop is a real release (send transcript) or a
-  // bail-out (ignore whatever recog produces). Anything shorter than 300ms
-  // is treated as an accidental tap.
+  if (state !== 'listening') return;
   var duration = Date.now() - listenStart;
   if (duration < 300) listenAborted = true;
-  // Instant visual feedback: release the button look immediately, even though
-  // recog.stop() may take a moment to deliver the final transcript.
   micBtn.classList.remove('listening');
   micBtn.classList.add('disabled');
   micBtn.textContent = '🎙️';
   micHint.textContent = '...';
-  if (recog) {
-    try {
-      if (listenAborted && typeof recog.abort === 'function') recog.abort();
-      else recog.stop();
-    } catch(e){}
+  if (audioRec && audioRec.state === 'recording') {
+    try { audioRec.stop(); } catch(_){}
+  } else {
+    // getUserMedia hasn't resolved yet — flag it so the resolve handler
+    // tears down without recording.
+    pendingStop = true;
   }
 }
 
