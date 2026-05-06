@@ -11,7 +11,7 @@
 html,body{width:100%;height:100%;overflow:hidden;background:linear-gradient(180deg,#cfeaff 0%,#ffeec4 100%);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none}
 #app{display:contents}
 .top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#cfeaff 0%,#dff1ff 100%);z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
-.below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4;transform:translateY(var(--kb-shift,0));transition:transform .28s cubic-bezier(.25,.1,.25,1);will-change:transform}
+.below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#7c5cff}
 .build{font-size:10px;opacity:.6;margin-left:4px}
 .stage{position:relative;width:160px;height:160px;margin-top:2px}
@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v312</span></div>
+    <div class="title">Стич · Claude <span class="build">v313</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -172,48 +172,6 @@ try {
     }
   }
 } catch(_) {}
-
-// Lift the .below wrapper (chat + composer) in sync with the iOS keyboard.
-// iOS keyboard slides up over ~280ms; .below has a matching CSS transition.
-// We start the lift immediately on focusin with an estimated keyboard height
-// (so the panel rises alongside the keyboard, not after it), then snap to
-// the exact value once Telegram's viewportChanged fires.
-var KB_GUESS = 296; // typical iPhone keyboard height incl. predictive bar
-function setKbShift(px) {
-  document.documentElement.style.setProperty('--kb-shift', px ? '-' + px + 'px' : '0px');
-}
-function isInputEl(t) { return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'); }
-var belowEl = null;
-function getBelow() { if (!belowEl) belowEl = document.querySelector('.below'); return belowEl; }
-function setKbShiftInstant(px) {
-  var b = getBelow();
-  if (!b) { setKbShift(px); return; }
-  b.style.transition = 'none';
-  setKbShift(px);
-  // Re-enable transition next frame so the next change animates again.
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() { b.style.transition = ''; });
-  });
-}
-document.addEventListener('focusin', function(e) {
-  if (isInputEl(e.target)) setKbShift(KB_GUESS);
-});
-document.addEventListener('focusout', function() {
-  setTimeout(function() {
-    if (!isInputEl(document.activeElement)) setKbShift(0);
-  }, 50);
-});
-// When Telegram starts its own webview adjustment, drop our transform
-// instantly. Telegram's resize already lifts .below into the right slot,
-// and skipping the transition prevents a "double climb" at the end.
-if (tg && typeof tg.onEvent === 'function') {
-  tg.onEvent('viewportChanged', function() {
-    var stable = tg.viewportStableHeight || 0;
-    var cur = tg.viewportHeight || 0;
-    var kb = stable && cur ? Math.max(0, stable - cur) : 0;
-    if (kb > 0) setKbShiftInstant(0);
-  });
-}
 
 // Tap inside the chat area dismisses the keyboard. Stitch's top panel is
 // reserved for its own future tap action, so we don't blur there.
