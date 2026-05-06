@@ -76,7 +76,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v360</span></div>
+    <div class="title">Стич · Claude <span class="build">v361</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -385,11 +385,21 @@ function setState(s) {
   }
 }
 
+function isChatAtBottom() {
+  return (chat.scrollHeight - chat.scrollTop - chat.clientHeight) < 60;
+}
+function autoScrollChat() {
+  // Don't yank the scroll position if the user is actively touching the
+  // chat (holding for the mic ring) or has scrolled up to read.
+  if (chatTap) return;
+  chat.scrollTop = chat.scrollHeight;
+}
 function addMsg(role, text) {
+  var follow = isChatAtBottom() && !chatTap;
   var w = document.createElement('div'); w.className = 'bbl'+(role==='u'?' u':'');
   var b = document.createElement('div'); b.className = 'bi'; b.textContent = text;
   w.appendChild(b); chat.appendChild(w);
-  chat.scrollTop = chat.scrollHeight;
+  if (follow) chat.scrollTop = chat.scrollHeight;
   return b;
 }
 
@@ -585,7 +595,7 @@ async function askClaude(msg) {
     for (var i=1; i<=text.length; i++) {
       if (typingCancel) break;
       el.textContent = text.slice(0,i);
-      chat.scrollTop = chat.scrollHeight;
+      autoScrollChat();
       await sleep(55);
     }
     el.classList.remove('cur');
@@ -1278,7 +1288,7 @@ async function askWithImages(photos, userText) {
     for (var i=1;i<=text.length;i++) {
       if (typingCancel) break;
       el.textContent=text.slice(0,i);
-      chat.scrollTop = chat.scrollHeight;
+      autoScrollChat();
       await sleep(55);
     }
     el.classList.remove('cur');
