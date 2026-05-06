@@ -71,7 +71,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v321</span></div>
+    <div class="title">Стич · Claude <span class="build">v322</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -553,10 +553,9 @@ function sendPhotosWith(photos, userText) {
   askWithImages(photos, userText);
 }
 
-sb.onclick = function() {
+function doSend() {
   if (state !== 'idle') return;
   getAudioCtx(); // unlock Web Audio on user gesture (typing path)
-  // Intercept an OpenAI key pasted into the chat: save it and confirm.
   var rawMsg = inp.value.trim();
   if (saveKeyFromMessage(rawMsg)) {
     inp.value = '';
@@ -573,10 +572,29 @@ sb.onclick = function() {
   }
   var msg = inp.value.trim(); if(!msg) return;
   inp.value=''; askClaude(msg);
-};
+}
+
+// Pointer-based send: if the user presses the button and then slides their
+// finger off before releasing, the send is cancelled. Only a release that
+// stays inside the button bounds actually sends.
+var sbDown = false;
+sb.addEventListener('pointerdown', function(e) {
+  if (e.button !== undefined && e.button !== 0) return;
+  if (sb.disabled) return;
+  sbDown = true;
+});
+sb.addEventListener('pointerleave', function() { sbDown = false; });
+sb.addEventListener('pointercancel', function() { sbDown = false; });
+sb.addEventListener('pointerup', function(e) {
+  if (!sbDown) return;
+  sbDown = false;
+  var r = sb.getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
+  doSend();
+});
 
 inp.onkeydown = function(e) {
-  if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sb.onclick(); }
+  if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); doSend(); }
 };
 inp.addEventListener('input', function() {
   this.style.height = 'auto';
