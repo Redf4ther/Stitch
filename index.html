@@ -7,18 +7,18 @@
 <title>Скич · Claude</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8ff;font-family:system-ui,sans-serif}
-#keyScreen{position:fixed;inset:0;background:#0a0e16;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:12px;z-index:10}
-#keyScreen h2{font-size:22px;color:#a0c8f0;text-align:center}
-#keyScreen p{font-size:13px;color:#4a7090;text-align:center;line-height:1.6}
-.key-lbl{font-size:11px;color:#3a6090;align-self:flex-start;letter-spacing:1px;text-transform:uppercase}
-.key-inp{width:100%;background:#060c14;border:1px solid rgba(40,90,180,.4);border-radius:14px;color:#b0d0f0;font-size:15px;padding:12px 16px}
-.key-inp:focus{outline:none}
-.key-inp::placeholder{color:#1a3050}
-.key-btn{width:100%;background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer}
+html,body{width:100%;height:100%;overflow:hidden;background:linear-gradient(180deg,#cfeaff 0%,#ffeec4 100%);color:#2d2240;font-family:system-ui,sans-serif}
+#keyScreen{position:fixed;inset:0;background:linear-gradient(180deg,#cfeaff 0%,#ffeec4 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:12px;z-index:10}
+#keyScreen h2{font-size:22px;color:#7c5cff;text-align:center}
+#keyScreen p{font-size:13px;color:#8475a8;text-align:center;line-height:1.6}
+.key-lbl{font-size:11px;color:#7c5cff;align-self:flex-start;letter-spacing:1px;text-transform:uppercase}
+.key-inp{width:100%;background:#ffffff;border:2px solid #e8d8ff;border-radius:14px;color:#2d2240;font-size:15px;padding:12px 16px}
+.key-inp:focus{outline:none;border-color:#7c5cff}
+.key-inp::placeholder{color:#b8a8d8}
+.key-btn{width:100%;background:linear-gradient(135deg,#ff9043,#ff5577);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,80,120,.3)}
 #app{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
-.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:#0a0e16;z-index:5;padding-bottom:4px}
-.title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#4a80b0}
+.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#cfeaff 0%,#dff1ff 100%);z-index:5;padding-bottom:4px}
+.title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#7c5cff}
 .build{font-size:10px;opacity:.6;margin-left:4px}
 .stage{position:relative;width:160px;height:160px;margin-top:2px}
 .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(30,90,180,.3) 0%,transparent 68%);animation:gI 3s ease-in-out infinite}
@@ -36,37 +36,37 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e16;color:#d0e8f
 @keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
 
-.status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1e3050;margin:2px 0}
-.dot{width:6px;height:6px;border-radius:50%;background:#101820;transition:all .3s}
-.dot.y{background:#facc15;box-shadow:0 0 6px #facc15;animation:db .5s infinite}
-.dot.g{background:#4ade80;box-shadow:0 0 6px #4ade80;animation:db 1s infinite}
-.dot.b{background:#60a5fa;box-shadow:0 0 6px #60a5fa;animation:db .4s infinite}
+.status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8475a8;margin:2px 0}
+.dot{width:6px;height:6px;border-radius:50%;background:#d8cce8;transition:all .3s}
+.dot.y{background:#ffd84d;box-shadow:0 0 8px #ffd84d;animation:db .5s infinite}
+.dot.g{background:#5be09b;box-shadow:0 0 8px #5be09b;animation:db 1s infinite}
+.dot.b{background:#7c5cff;box-shadow:0 0 8px #7c5cff;animation:db .4s infinite}
 .chat{position:fixed;left:0;right:0;top:215px;bottom:185px;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
-.bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#0a1624;border:1px solid rgba(40,90,180,.2);color:#90b8e0}
-.bbl.u .bi{background:linear-gradient(135deg,#112e6a,#1550a0);border:none;color:#e0f0ff;border-radius:16px 16px 4px 16px}
-.cur::after{content:‘▋’;color:#60b0ff;animation:cur .4s steps(1) infinite}
-.err{font-size:11px;color:#f87171;padding:2px 14px;text-align:center;position:fixed;bottom:190px;left:0;right:0}
-.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:#0a0e16;border-top:1px solid rgba(40,90,180,.1);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:5}
-.mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a6a2a,#2aa050);box-shadow:0 4px 20px rgba(30,150,80,.4);cursor:pointer;touch-action:none}
-.mic-btn.listening{background:linear-gradient(135deg,#8a1a1a,#cc3030);animation:micP .8s ease infinite}
-.mic-btn.disabled{background:#111a2e;box-shadow:none;opacity:.4}
+.bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#ffffff;border:2px solid #e8d8ff;color:#2d2240;box-shadow:0 2px 8px rgba(124,92,255,.08)}
+.bbl.u .bi{background:linear-gradient(135deg,#ff7eb6,#7c5cff);border:none;color:#ffffff;border-radius:16px 16px 4px 16px;box-shadow:0 2px 10px rgba(255,126,182,.3)}
+.cur::after{content:‘▋’;color:#7c5cff;animation:cur .4s steps(1) infinite}
+.err{font-size:11px;color:#e84a5f;padding:2px 14px;text-align:center;position:fixed;bottom:190px;left:0;right:0}
+.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:linear-gradient(180deg,#fff3d8 0%,#ffeec4 100%);border-top:2px solid #ffd84d;display:flex;flex-direction:column;gap:8px;align-items:center;z-index:5}
+.mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3ec97a,#5be09b);box-shadow:0 4px 20px rgba(62,201,122,.45);cursor:pointer;touch-action:none}
+.mic-btn.listening{background:linear-gradient(135deg,#ff5577,#cc3050);animation:micP .8s ease infinite;box-shadow:0 4px 20px rgba(255,80,120,.5)}
+.mic-btn.disabled{background:#d8cce8;box-shadow:none;opacity:.5}
 .mic-btn{transition:background .1s}
 #camBtn{transition:background .15s}
 #camBtn:active{background:#006580!important}
 #camBtn.neon{background:#00ddff!important;box-shadow:0 0 6px #00ddff,0 0 16px rgba(0,221,255,.7)!important}
 .mic-btn:active{filter:none}
-button.mic-btn:active:not(.listening){background:linear-gradient(135deg,#0d4a18,#1a7035)}
-label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !important}
-.mic-hint{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#2a4060}
+button.mic-btn:active:not(.listening){background:linear-gradient(135deg,#2ba85f,#4ad080)}
+label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !important}
+.mic-hint{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#8475a8;font-weight:600}
 .irow{display:flex;gap:8px;width:100%}
-.inp{flex:1;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:22px;color:#b0d0f0;font-size:16px;padding:10px 16px;-webkit-user-select:text;user-select:text}
-.inp:focus{outline:none}
-.inp::placeholder{color:#1a3050}
-.inp:disabled{opacity:.4}
-.sbtn{background:linear-gradient(135deg,#112e6a,#1555b0);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;cursor:pointer}
-.sbtn:disabled{background:#111a2e;opacity:.35}
+.inp{flex:1;background:#ffffff;border:2px solid #ffd84d;border-radius:22px;color:#2d2240;font-size:16px;padding:10px 16px;-webkit-user-select:text;user-select:text}
+.inp:focus{outline:none;border-color:#7c5cff}
+.inp::placeholder{color:#b8a8d8}
+.inp:disabled{opacity:.5}
+.sbtn{background:linear-gradient(135deg,#ff9043,#ff5577);border:none;border-radius:50%;color:#fff;font-size:18px;width:46px;height:46px;cursor:pointer;box-shadow:0 3px 10px rgba(255,90,110,.35)}
+.sbtn:disabled{background:#d8cce8;opacity:.5;box-shadow:none}
 .img-msg{max-width:200px;border-radius:12px;margin-top:4px;display:block}
 </style>
 
@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v278</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v282</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -83,14 +83,14 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
 
 <div id="app">
   <div class="top">
-    <button id="logoutBtn" style="position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:50%;background:rgba(40,90,180,.15);border:1px solid rgba(40,90,180,.3);color:#90b8e0;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:6">
+    <button id="logoutBtn" style="position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:50%;background:rgba(124,92,255,.15);border:1px solid rgba(124,92,255,.4);color:#7c5cff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:6">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
         <polyline points="16 17 21 12 16 7"/>
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
-    <div class="title">Скич · Claude <span class="build">v281</span></div>
+    <div class="title">Скич · Claude <span class="build">v282</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -158,7 +158,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#003344,#005577) !importa
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
     </div>
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
-    <div id="composer" style="width:100%;background:#060c14;border:1px solid rgba(40,90,180,.3);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:12px">
+    <div id="composer" style="width:100%;background:#ffffff;border:2px solid #ffd84d;border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:12px;box-shadow:0 2px 10px rgba(255,180,80,.2)">
       <div id="photoPreview" style="display:none;width:100%;align-items:flex-start;gap:12px">
         <div id="photoThumbs" style="display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0"></div>
         <button onclick="cancelAllPhotos()" style="background:none;border:none;color:#f87171;font-size:18px;cursor:pointer;padding:0;flex-shrink:0">✕</button>
@@ -316,7 +316,7 @@ async function askClaude(msg) {
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body: JSON.stringify({model:'gpt-5', max_completion_tokens:2000, messages:messages})
+      body: JSON.stringify({model:'gpt-4o', max_tokens:2000, messages:messages})
     });
     var data = await r.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
@@ -689,7 +689,7 @@ async function askWithImages(photos, userText) {
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body:JSON.stringify({model:'gpt-5', max_completion_tokens:2000, messages:[{role:'system',content:prompt}].concat(hist)})
+      body:JSON.stringify({model:'gpt-4o', max_tokens:2000, messages:[{role:'system',content:prompt}].concat(hist)})
     });
     var data = await r.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
