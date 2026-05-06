@@ -72,7 +72,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v323</span></div>
+    <div class="title">Стич · Claude <span class="build">v324</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -370,7 +370,6 @@ async function askClaude(msg) {
     else if (msg0.refusal) text = msg0.refusal;
     if (!text) throw new Error('Empty: ' + JSON.stringify(data.choices[0]).slice(0,300));
     hist.push({role:'assistant', content:text});
-    maybeCelebrate(text);
 
     // STEP 1: Download audio (still showing "Думает...")
     var audioBlob = null;
@@ -396,6 +395,7 @@ async function askClaude(msg) {
     var el = addMsg('a', '');
     el.classList.add('cur');
     startMouth();
+    maybeCelebrate(text);
 
     if (audioBlob) {
       var blob2 = new Blob([audioBlob], {type:'audio/mpeg'});
@@ -853,7 +853,6 @@ async function askWithImages(photos, userText) {
     else if (msg0.refusal) text = msg0.refusal;
     if (!text) throw new Error('Empty: ' + JSON.stringify(data.choices[0]).slice(0,300));
     hist.push({role:'assistant', content:text});
-    maybeCelebrate(text);
 
     var audioBlob = null;
     try {
@@ -877,6 +876,7 @@ async function askWithImages(photos, userText) {
     var el = addMsg('a','');
     el.classList.add('cur');
     startMouth();
+    maybeCelebrate(text);
     if (audioBlob) {
       var blob2 = new Blob([audioBlob],{type:'audio/mpeg'});
       var url = URL.createObjectURL(blob2);
