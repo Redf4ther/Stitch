@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v339</span></div>
+    <div class="title">Стич · Claude <span class="build">v340</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -527,6 +527,7 @@ var gAudioCtx = null;
 function getAudioCtx() {
   if (!gAudioCtx) gAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (gAudioCtx.state === 'suspended') gAudioCtx.resume();
+  ensureLoudOutput();
   return gAudioCtx;
 }
 
@@ -572,16 +573,29 @@ function nudgeOutputToSpeaker() {
     src.start();
     src.stop(ctx.currentTime + 0.05);
   } catch(_) {}
-  // HTML Audio nudge — actually flips the iOS session back to Playback.
+}
+
+// Persistent silent loop. Once started on a user gesture, it keeps the
+// iOS audio session pinned to the Playback category for the rest of the
+// session, so even after SpeechRecognition the next TTS routes through
+// the loud bottom speaker instead of the quiet earpiece.
+var bgKeepalive = null;
+function ensureLoudOutput() {
+  if (bgKeepalive) {
+    if (bgKeepalive.paused) {
+      try { bgKeepalive.play().catch(function(){}); } catch(_){}
+    }
+    return;
+  }
   try {
     var url = getSilentWavUrl();
     if (!url) return;
-    var a = new Audio();
-    a.setAttribute('playsinline', '');
-    a.volume = 1.0;
-    a.src = url;
-    a.play().catch(function(){});
-    setTimeout(function(){ try { a.pause(); a.src=''; a.load(); } catch(_){} }, 250);
+    bgKeepalive = new Audio();
+    bgKeepalive.setAttribute('playsinline', '');
+    bgKeepalive.loop = true;
+    bgKeepalive.volume = 1.0; // silent content, full vol so iOS counts it as playback
+    bgKeepalive.src = url;
+    bgKeepalive.play().catch(function(){});
   } catch(_) {}
 }
 
