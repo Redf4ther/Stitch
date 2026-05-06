@@ -71,7 +71,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v320</span></div>
+    <div class="title">Стич · Claude <span class="build">v321</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -414,6 +414,18 @@ var listenAborted = false;
 function startListening() {
   if (state!=='idle') return;
   if (!SR) { errEl.textContent='Используй Safari'; return; }
+  // Defensive: a previous recognition session might still be lingering
+  // (onend not yet fired). Strip its handlers and tear it down before
+  // creating a new one — if we don't, iOS WebKit fires onerror immediately
+  // on the new instance and the mic flashes red for a frame.
+  if (recog) {
+    var stale = recog;
+    recog = null;
+    stale.onresult = null;
+    stale.onerror = null;
+    stale.onend = null;
+    try { stale.abort(); } catch(_){}
+  }
   errEl.textContent=''; setState('listening'); listenStart=Date.now();
   listenAborted = false;
   recog = new SR(); recog.lang='ru-RU'; recog.interimResults=false; recog.continuous=true;
