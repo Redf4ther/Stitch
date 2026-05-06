@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v343</span></div>
+    <div class="title">Стич · Claude <span class="build">v344</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -218,29 +218,22 @@ function hideHoldRing() {
 document.addEventListener('pointerdown', function(e) {
   var chat = document.querySelector('.chat');
   if (!chat || !chat.contains(e.target)) { chatTap = null; return; }
-  // Don't react to chat taps while Stitch is thinking/talking — only the
-  // mic button cancels the in-flight call.
   if (state !== 'idle') { chatTap = null; return; }
   chatTap = { t: Date.now(), x: e.clientX, y: e.clientY, cancelled: false };
-  // Disable chat scrolling for the duration of the press so a finger-drag
-  // is interpreted as drag-to-cancel (not as a scroll, which would fire
-  // pointercancel and abort the recording instantly).
-  chat.style.touchAction = 'none';
-  // Close the keyboard if it was up so the chat area is fully visible.
+  // Don't lock chat scrolling — the user can scroll the messages while
+  // holding. Movement tracking is done from the original touch point: as
+  // long as the finger stays within FADE_DIST of where the ring is, the
+  // recording continues; once it leaves, we abort.
   var a = document.activeElement;
   if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
   showHoldRing(e.clientX, e.clientY);
   getAudioCtx();
   startListening();
 }, {passive:true});
-function restoreChatScroll() {
-  var chat = document.querySelector('.chat');
-  if (chat) chat.style.touchAction = '';
-}
-document.addEventListener('pointermove', function(e) {
+function trackChatPointer(x, y) {
   if (!chatTap || chatTap.cancelled) return;
-  var dx = e.clientX - chatTap.x;
-  var dy = e.clientY - chatTap.y;
+  var dx = x - chatTap.x;
+  var dy = y - chatTap.y;
   var dist = Math.sqrt(dx * dx + dy * dy);
   var ratio = Math.min(1, dist / FADE_DIST);
   fadeRing(ratio);
@@ -252,25 +245,29 @@ document.addEventListener('pointermove', function(e) {
       stopListening();
     }
   }
-}, {passive:true});
-document.addEventListener('pointerup', function() {
+}
+function finalizeChatRelease() {
   if (!chatTap) return;
   var wasCancelled = chatTap.cancelled;
   chatTap = null;
-  restoreChatScroll();
   hideHoldRing();
   if (state === 'listening') {
     if (wasCancelled) listenAborted = true;
     stopListening();
   }
+}
+// Pointer events handle desktop mouse. Touch events keep firing on iOS even
+// when the chat is being scrolled (pointermove stops once browser takes over
+// for scroll, but touchmove continues), so we listen to both.
+document.addEventListener('pointermove', function(e) { trackChatPointer(e.clientX, e.clientY); }, {passive:true});
+document.addEventListener('touchmove', function(e) {
+  if (!chatTap || !e.touches || !e.touches.length) return;
+  var t = e.touches[0];
+  trackChatPointer(t.clientX, t.clientY);
 }, {passive:true});
-document.addEventListener('pointercancel', function() {
-  if (!chatTap) return;
-  chatTap = null;
-  restoreChatScroll();
-  hideHoldRing();
-  if (state === 'listening') { listenAborted = true; stopListening(); }
-}, {passive:true});
+document.addEventListener('pointerup', finalizeChatRelease, {passive:true});
+document.addEventListener('touchend', finalizeChatRelease, {passive:true});
+document.addEventListener('touchcancel', finalizeChatRelease, {passive:true});
 
 
 var KEY_SK = 'sk';
