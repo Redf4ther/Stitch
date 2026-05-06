@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v338</span></div>
+    <div class="title">Стич · Claude <span class="build">v339</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -219,13 +219,8 @@ function hideHoldRing() {
 document.addEventListener('pointerdown', function(e) {
   var chat = document.querySelector('.chat');
   if (!chat || !chat.contains(e.target)) { chatTap = null; return; }
-  // Tap during thinking/talking cancels the LLM call and returns to idle —
-  // matches the mic-button behaviour.
-  if (state === 'thinking' || state === 'talking') {
-    cancelThinking();
-    chatTap = null;
-    return;
-  }
+  // Don't react to chat taps while Stitch is thinking/talking — only the
+  // mic button cancels the in-flight call.
   if (state !== 'idle') { chatTap = null; return; }
   chatTap = { t: Date.now(), x: e.clientX, y: e.clientY, cancelled: false };
   // Disable chat scrolling for the duration of the press so a finger-drag
