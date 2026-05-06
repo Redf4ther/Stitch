@@ -76,7 +76,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v290</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v291</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -92,7 +92,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
-    <div class="title">Скич · Claude <span class="build">v290</span></div>
+    <div class="title">Скич · Claude <span class="build">v291</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -206,12 +206,20 @@ try {
 // the natural scroll.
 var pinTopEl = null;
 var pinRaf = null;
+var pinY = 0;
 function pinTopFrame() {
   if (!pinTopEl) pinTopEl = document.querySelector('.top');
   if (pinTopEl) {
-    var off = (window.pageYOffset || window.scrollY || 0);
-    if (window.visualViewport) off += (window.visualViewport.offsetTop || 0);
-    pinTopEl.style.transform = off ? 'translate3d(0,' + off + 'px,0)' : '';
+    // Measure where .top actually appears on screen with the current
+    // transform applied. iOS Telegram physically shifts the webview frame
+    // during the keyboard animation, so pageYOffset/visualViewport.offsetTop
+    // both stay 0 — the only signal that picks the drift up is the actual
+    // bounding rect.
+    var rect = pinTopEl.getBoundingClientRect();
+    if (Math.abs(rect.top) > 0.5) {
+      pinY -= rect.top;
+      pinTopEl.style.transform = 'translate3d(0,' + pinY + 'px,0)';
+    }
   }
   pinRaf = requestAnimationFrame(pinTopFrame);
 }
@@ -219,11 +227,18 @@ function startPinTop() { if (pinRaf == null) pinRaf = requestAnimationFrame(pinT
 function stopPinTop() {
   if (pinRaf != null) { cancelAnimationFrame(pinRaf); pinRaf = null; }
   if (pinTopEl) pinTopEl.style.transform = '';
+  pinY = 0;
 }
 document.addEventListener('focusin', function(e) {
   var t = e.target;
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) startPinTop();
 });
+// Defensive: kick off pinning on the very first touch of the textarea —
+// focusin can fire after iOS has already started its keyboard animation.
+document.addEventListener('touchstart', function(e) {
+  var t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) startPinTop();
+}, {passive:true});
 document.addEventListener('focusout', function() {
   setTimeout(function() {
     if (!document.activeElement ||
