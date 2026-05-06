@@ -73,7 +73,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v329</span></div>
+    <div class="title">Стич · Claude <span class="build">v330</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -342,10 +342,10 @@ function maybeCelebrate(text) {
   // Light haptic — Telegram's HapticFeedback if available, else
   // navigator.vibrate as a fallback.
   try {
-    if (tg && tg.HapticFeedback && typeof tg.HapticFeedback.notificationOccurred === 'function') {
-      tg.HapticFeedback.notificationOccurred('success');
+    if (tg && tg.HapticFeedback && typeof tg.HapticFeedback.impactOccurred === 'function') {
+      tg.HapticFeedback.impactOccurred('light');
     } else if (navigator.vibrate) {
-      navigator.vibrate([40, 30, 40]);
+      navigator.vibrate(60);
     }
   } catch(_) {}
 }
