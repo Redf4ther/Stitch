@@ -3,7 +3,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Стич · Claude</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v311</span></div>
+    <div class="title">Стич · Claude <span class="build">v312</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -183,6 +183,18 @@ function setKbShift(px) {
   document.documentElement.style.setProperty('--kb-shift', px ? '-' + px + 'px' : '0px');
 }
 function isInputEl(t) { return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'); }
+var belowEl = null;
+function getBelow() { if (!belowEl) belowEl = document.querySelector('.below'); return belowEl; }
+function setKbShiftInstant(px) {
+  var b = getBelow();
+  if (!b) { setKbShift(px); return; }
+  b.style.transition = 'none';
+  setKbShift(px);
+  // Re-enable transition next frame so the next change animates again.
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() { b.style.transition = ''; });
+  });
+}
 document.addEventListener('focusin', function(e) {
   if (isInputEl(e.target)) setKbShift(KB_GUESS);
 });
@@ -191,14 +203,15 @@ document.addEventListener('focusout', function() {
     if (!isInputEl(document.activeElement)) setKbShift(0);
   }, 50);
 });
+// When Telegram starts its own webview adjustment, drop our transform
+// instantly. Telegram's resize already lifts .below into the right slot,
+// and skipping the transition prevents a "double climb" at the end.
 if (tg && typeof tg.onEvent === 'function') {
   tg.onEvent('viewportChanged', function() {
     var stable = tg.viewportStableHeight || 0;
     var cur = tg.viewportHeight || 0;
     var kb = stable && cur ? Math.max(0, stable - cur) : 0;
-    if (stable && kb > stable * 0.7) kb = 0;
-    // Only honor Telegram's value while an input is focused; on close it'll be 0.
-    if (kb > 0 || !isInputEl(document.activeElement)) setKbShift(kb);
+    if (kb > 0) setKbShiftInstant(0);
   });
 }
 
