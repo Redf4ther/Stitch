@@ -75,7 +75,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v355</span></div>
+    <div class="title">Стич · Claude <span class="build">v356</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -389,13 +389,10 @@ function setState(s) {
   micHint.textContent = s==='listening'?'ОТПУСТИ...':busy?'НАЖМИ ЧТОБЫ ОСТАНОВИТЬ':'ДЕРЖИ И ГОВОРИ';
   inp.disabled = busy;
   sb.disabled = busy;
-  // If a finger is held in chat while Stitch was busy, transition the
-  // ring from busy (orange) to listening (purple) and start the mic.
-  if (s === 'idle' && chatTap && chatTap.waiting && !chatTap.cancelled) {
-    chatTap.waiting = false;
-    if (holdRing) holdRing.classList.remove('busy');
-    getAudioCtx();
-    startListening();
+  // If a wait-ring was shown during busy, drop it once Stitch is done.
+  if (s === 'idle' && chatTap && chatTap.waiting) {
+    chatTap = null;
+    hideHoldRing();
   }
 }
 
