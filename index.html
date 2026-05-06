@@ -71,7 +71,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v318</span></div>
+    <div class="title">Стич · Claude <span class="build">v319</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -410,14 +410,21 @@ function getAudioCtx() {
 
 var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+var listenAborted = false;
 function startListening() {
   if (state!=='idle') return;
   if (!SR) { errEl.textContent='Используй Safari'; return; }
   errEl.textContent=''; setState('listening'); listenStart=Date.now();
+  listenAborted = false;
   recog = new SR(); recog.lang='ru-RU'; recog.interimResults=false; recog.continuous=true;
   recog.onresult = function(e) {
     var t = Array.from(e.results).map(function(r){return r[0].transcript;}).join('').trim();
-    recog=null; if(t) askClaude(t); else setState('idle');
+    recog=null;
+    // If the user aborted the mic (tap or very short press), don't send
+    // anything to the LLM — even if recog managed to capture something.
+    var duration = Date.now() - listenStart;
+    if (listenAborted || duration < 300 || !t) { setState('idle'); return; }
+    askClaude(t);
   };
   recog.onerror = function(e) { recog=null; setState('idle'); };
   recog.onend = function() { recog=null; if(state==='listening') setState('idle'); };
@@ -426,13 +433,23 @@ function startListening() {
 
 function stopListening() {
   if (state!=='listening') return;
+  // Decide whether this stop is a real release (send transcript) or a
+  // bail-out (ignore whatever recog produces). Anything shorter than 300ms
+  // is treated as an accidental tap.
+  var duration = Date.now() - listenStart;
+  if (duration < 300) listenAborted = true;
   // Instant visual feedback: release the button look immediately, even though
   // recog.stop() may take a moment to deliver the final transcript.
   micBtn.classList.remove('listening');
   micBtn.classList.add('disabled');
   micBtn.textContent = '🎙️';
   micHint.textContent = '...';
-  if (recog) try { recog.stop(); } catch(e){}
+  if (recog) {
+    try {
+      if (listenAborted && typeof recog.abort === 'function') recog.abort();
+      else recog.stop();
+    } catch(e){}
+  }
 }
 
 // Cancel in-flight thinking / talking — abort fetch, stop audio, exit
