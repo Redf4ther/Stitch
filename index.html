@@ -87,7 +87,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
       </svg>
     </button>
-    <div class="title">Стич · Claude <span class="build">v370</span></div>
+    <div class="title">Стич · Claude <span class="build">v371</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -337,8 +337,21 @@ function playPreviewUrl(url) {
   var audio = new Audio();
   audio.setAttribute('playsinline', '');
   audio.src = url;
-  audio.onended = function(){ URL.revokeObjectURL(url); };
-  audio.play().catch(function(){});
+  function endPreview() {
+    try { URL.revokeObjectURL(url); } catch(_){}
+    head.className = 'head';
+    glow.className = 'glow';
+    stopMouth();
+    if (currentAudio === audio) currentAudio = null;
+  }
+  audio.onended = endPreview;
+  audio.onerror = endPreview;
+  // Trigger the talking animation while the sample plays.
+  head.className = 'head talk';
+  glow.className = 'glow on';
+  startMouth();
+  currentAudio = audio;
+  audio.play().catch(endPreview);
 }
 function runCountdown(steps, onDone) {
   var el = document.getElementById('voiceCountdown');
