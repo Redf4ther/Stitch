@@ -33,6 +33,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#ebe7dc;color:#2d224
 @keyframes saluteSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .hold-ring{position:fixed;width:200px;height:200px;border-radius:50%;background:rgba(124,92,255,.22);border:2px solid rgba(124,92,255,.55);pointer-events:none;z-index:50;transform:translate(-50%,-50%) scale(var(--ring-scale,1));opacity:var(--ring-op,.55);transition:opacity .12s linear,transform .15s linear,background-color .2s linear,border-color .2s linear;will-change:transform,opacity;animation:ringPop .22s cubic-bezier(.16,.7,.3,1)}
 .hold-ring.busy{background:rgba(255,144,67,.25);border-color:rgba(255,90,110,.6)}
+#voiceToast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.78);color:#fff;padding:10px 18px;border-radius:14px;font-size:15px;font-weight:500;z-index:200;opacity:0;transition:opacity .25s ease;pointer-events:none;letter-spacing:.5px}
+#voiceToast.show{opacity:1}
 @keyframes ringPop{from{transform:translate(-50%,-50%) scale(.55);opacity:0}}
 
 .status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8475a8;margin:2px 0}
@@ -76,7 +78,14 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v365</span></div>
+    <button id="voiceBtn" style="position:absolute;top:calc(64px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));right:8px;width:28px;height:28px;border-radius:50%;background:rgba(124,92,255,.15);border:1px solid rgba(124,92,255,.4);color:#7c5cff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:6">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg>
+    </button>
+    <div class="title">Стич · Claude <span class="build">v366</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -279,8 +288,46 @@ document.addEventListener('touchcancel', finalizeChatRelease, {passive:true});
 
 var KEY_SK = 'sk';
 var KEY_HIST = 'stitch_hist';
+var KEY_VOICE = 'stitch_voice';
 var HIST_LIMIT = 60; // keep last ~30 turns
+var VOICES = ['alloy','echo','fable','onyx','nova','shimmer','ash','ballad','coral','sage','verse'];
 var apiKey = localStorage.getItem(KEY_SK) || '';
+var currentVoice = localStorage.getItem(KEY_VOICE) || 'sage';
+function cycleVoice() {
+  var i = VOICES.indexOf(currentVoice);
+  currentVoice = VOICES[(i + 1) % VOICES.length];
+  localStorage.setItem(KEY_VOICE, currentVoice);
+  showVoiceToast(currentVoice);
+}
+var voiceToastTimer = null;
+function showVoiceToast(name) {
+  var t = document.getElementById('voiceToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'voiceToast';
+    document.body.appendChild(t);
+  }
+  t.textContent = 'Голос: ' + name;
+  // Force reflow before adding class so transition kicks in.
+  void t.offsetHeight;
+  t.classList.add('show');
+  if (voiceToastTimer) clearTimeout(voiceToastTimer);
+  voiceToastTimer = setTimeout(function() {
+    t.classList.remove('show');
+  }, 5000);
+}
+document.addEventListener('DOMContentLoaded', function(){
+  var vb = document.getElementById('voiceBtn');
+  if (vb) vb.addEventListener('click', cycleVoice);
+});
+// In case DOMContentLoaded already fired (script runs after the element).
+(function(){
+  var vb = document.getElementById('voiceBtn');
+  if (vb && !vb._wired) {
+    vb._wired = true;
+    vb.addEventListener('click', cycleVoice);
+  }
+})();
 
 // If no key yet, replace the welcome bubble with a request to send one in
 // chat. The user pastes/types an sk-... message and saveKeyFromMessage
@@ -566,7 +613,7 @@ async function askClaude(msg) {
         ttsXhr.onload = function(){ resolve(ttsXhr.status===200 ? ttsXhr.response : null); };
         ttsXhr.onerror = function(){ resolve(null); };
         ttsXhr.onabort = function(){ resolve(null); };
-        ttsXhr.send(JSON.stringify({model:'tts-1',input:text,voice:'sage',speed:1.2}));
+        ttsXhr.send(JSON.stringify({model:'tts-1',input:text,voice:currentVoice,speed:1.2}));
       });
     } catch(e2) { audioBlob = null; }
     currentAbort = null;
@@ -1267,7 +1314,7 @@ async function askWithImages(photos, userText) {
         ttsXhr2.onload = function(){ resolve(ttsXhr2.status===200?ttsXhr2.response:null); };
         ttsXhr2.onerror = function(){ resolve(null); };
         ttsXhr2.onabort = function(){ resolve(null); };
-        ttsXhr2.send(JSON.stringify({model:'tts-1',input:text,voice:'sage',speed:1.2}));
+        ttsXhr2.send(JSON.stringify({model:'tts-1',input:text,voice:currentVoice,speed:1.2}));
       });
     } catch(e2) {}
     currentAbort = null;
