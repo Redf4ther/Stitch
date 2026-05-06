@@ -70,7 +70,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v313</span></div>
+    <div class="title">Стич · Claude <span class="build">v314</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -173,14 +173,26 @@ try {
   }
 } catch(_) {}
 
-// Tap inside the chat area dismisses the keyboard. Stitch's top panel is
-// reserved for its own future tap action, so we don't blur there.
+// Quick tap inside the chat area dismisses the keyboard. Holds and
+// scrolls are ignored so the user can read/scroll without losing focus.
+var chatTap = null;
 document.addEventListener('pointerdown', function(e) {
   var chat = document.querySelector('.chat');
+  if (!chat || !chat.contains(e.target)) { chatTap = null; return; }
+  chatTap = { t: Date.now(), x: e.clientX, y: e.clientY };
+}, {passive:true});
+document.addEventListener('pointerup', function(e) {
+  var t = chatTap;
+  chatTap = null;
+  if (!t) return;
+  var chat = document.querySelector('.chat');
   if (!chat || !chat.contains(e.target)) return;
+  if (Date.now() - t.t > 300) return; // long press
+  if (Math.abs(e.clientX - t.x) > 8 || Math.abs(e.clientY - t.y) > 8) return; // dragged
   var a = document.activeElement;
   if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
 }, {passive:true});
+document.addEventListener('pointercancel', function() { chatTap = null; }, {passive:true});
 
 
 var KEY_SK = 'sk';
