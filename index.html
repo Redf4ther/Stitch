@@ -75,7 +75,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v294</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v295</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -91,7 +91,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
-    <div class="title">Скич · Claude <span class="build">v294</span></div>
+    <div class="title">Скич · Claude <span class="build">v295</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -226,6 +226,14 @@ document.addEventListener('focusin', function(e) {
   var t = e.target;
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) startPinTop();
 });
+// Tap anywhere above the bottom composer (mic / camera / input panel) to
+// dismiss the keyboard by blurring the focused field.
+document.addEventListener('pointerdown', function(e) {
+  var bottom = document.querySelector('.bottom');
+  if (!bottom || bottom.contains(e.target)) return;
+  var a = document.activeElement;
+  if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
+}, {passive:true});
 // Defensive: kick off pinning on the very first touch of the textarea —
 // focusin can fire after iOS has already started its keyboard animation.
 document.addEventListener('touchstart', function(e) {
