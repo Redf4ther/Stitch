@@ -76,7 +76,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v364</span></div>
+    <div class="title">Стич · Claude <span class="build">v365</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -783,6 +783,9 @@ async function startListening() {
     addMsg('a', 'Сначала отправь мне твой OpenAI API ключ (начинается с sk-) — я его запомню.');
     return;
   }
+  // If a previous Whisper transcription is still in-flight, abort it so
+  // the new recording supersedes it cleanly.
+  if (currentAbort) { try { currentAbort.abort(); } catch(_){} currentAbort = null; }
   errEl.textContent = '';
   setState('listening'); listenStart = Date.now();
   listenAborted = false;
@@ -828,7 +831,10 @@ async function startListening() {
     var blobType = (rec && rec.mimeType) || mime || 'audio/webm';
     var blob = new Blob(chunks, {type: blobType});
     var ext = blobType.indexOf('mp4') >= 0 ? 'm4a' : blobType.indexOf('ogg') >= 0 ? 'ogg' : 'webm';
-    setState('thinking');
+    // Stay in idle visually while Whisper transcribes — the "Думаю" status
+    // only kicks in once askClaude/askWithImages actually starts the LLM
+    // call. The user can press mic again at any time to start a new
+    // recording; that aborts this Whisper request.
     try {
       typingCancel = false;
       currentAbort = new AbortController();
@@ -848,7 +854,6 @@ async function startListening() {
       var data = await r.json();
       if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
       var t = ((data.text || '') + '').trim();
-      setState('idle');
       if (!t || isWhisperHallucination(t)) return;
       if (window.pendingPhotos && window.pendingPhotos.length) {
         sendPhotosWith(window.pendingPhotos.slice(), t);
@@ -859,7 +864,6 @@ async function startListening() {
     } catch(err) {
       currentAbort = null;
       if (err && err.name !== 'AbortError') errEl.textContent = 'Whisper: ' + err.message;
-      setState('idle');
     }
   };
   try {
