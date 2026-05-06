@@ -76,7 +76,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v363</span></div>
+    <div class="title">Стич · Claude <span class="build">v364</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -878,13 +878,10 @@ function stopListening() {
   if (state !== 'listening') return;
   var duration = Date.now() - listenStart;
   if (duration < 300) listenAborted = true;
-  // Snap back to the green idle look immediately on release. setState will
-  // repaint the button once audioRec.onstop kicks the state into thinking
-  // or back to idle.
-  micBtn.classList.remove('listening');
-  micBtn.classList.remove('disabled');
-  micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
-  micHint.textContent = 'ДЕРЖИ И ГОВОРИ';
+  // Snap the whole UI back to idle on release — no "Слушаю..." status
+  // hanging around. audioRec.onstop will bump the state to 'thinking'
+  // shortly if there's an actual transcript to process.
+  setState('idle');
   if (audioRec && audioRec.state === 'recording') {
     try { audioRec.stop(); } catch(_){}
   } else {
