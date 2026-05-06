@@ -72,7 +72,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v324</span></div>
+    <div class="title">Стич · Claude <span class="build">v325</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -398,6 +398,7 @@ async function askClaude(msg) {
     maybeCelebrate(text);
 
     if (audioBlob) {
+      nudgeOutputToSpeaker();
       var blob2 = new Blob([audioBlob], {type:'audio/mpeg'});
       var url = URL.createObjectURL(blob2);
       var audio = new Audio(url);
@@ -431,6 +432,23 @@ function getAudioCtx() {
   if (!gAudioCtx) gAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (gAudioCtx.state === 'suspended') gAudioCtx.resume();
   return gAudioCtx;
+}
+
+// After SpeechRecognition runs, iOS keeps the audio session in PlayAndRecord
+// mode and routes playback through the quiet earpiece speaker. Pushing a
+// short silent buffer through the AudioContext nudges the session back to
+// Playback so the next TTS plays at full volume.
+function nudgeOutputToSpeaker() {
+  try {
+    var ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    var buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.05), ctx.sampleRate);
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start();
+    src.stop(ctx.currentTime + 0.05);
+  } catch(_) {}
 }
 
 var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -470,8 +488,8 @@ function startListening() {
     }
     askClaude(t);
   };
-  recog.onerror = function(e) { recog=null; setState('idle'); };
-  recog.onend = function() { recog=null; if(state==='listening') setState('idle'); };
+  recog.onerror = function(e) { recog=null; setState('idle'); nudgeOutputToSpeaker(); };
+  recog.onend = function() { recog=null; if(state==='listening') setState('idle'); nudgeOutputToSpeaker(); };
   recog.start();
 }
 
@@ -878,6 +896,7 @@ async function askWithImages(photos, userText) {
     startMouth();
     maybeCelebrate(text);
     if (audioBlob) {
+      nudgeOutputToSpeaker();
       var blob2 = new Blob([audioBlob],{type:'audio/mpeg'});
       var url = URL.createObjectURL(blob2);
       var audio = new Audio(url);
