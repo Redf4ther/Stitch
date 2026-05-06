@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v352</span></div>
+    <div class="title">Стич · Claude <span class="build">v353</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -198,11 +198,17 @@ function showHoldRing(x, y) {
   holdRing.style.setProperty('--ring-op', '0');
   holdRing.style.setProperty('--ring-scale', '0.7');
   document.body.appendChild(holdRing);
-  // Animate to full size+opacity next frame.
+  // Force a reflow so the initial values get committed, then double-rAF
+  // before changing them — this reliably starts the CSS transition. A
+  // single rAF sometimes runs before first paint and the browser collapses
+  // both states into one frame, so the animation never plays.
+  void holdRing.offsetHeight;
   requestAnimationFrame(function() {
-    if (!holdRing) return;
-    holdRing.style.setProperty('--ring-op', '0.55');
-    holdRing.style.setProperty('--ring-scale', '1');
+    requestAnimationFrame(function() {
+      if (!holdRing) return;
+      holdRing.style.setProperty('--ring-op', '0.55');
+      holdRing.style.setProperty('--ring-scale', '1');
+    });
   });
 }
 function fadeRing(ratio) {
