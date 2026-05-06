@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v341</span></div>
+    <div class="title">Стич · Claude <span class="build">v342</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -203,9 +203,9 @@ function showHoldRing(x, y) {
 }
 function fadeRing(ratio) {
   if (!holdRing) return;
-  // Ring expands and fades out as the finger drags away.
+  // Ring slightly expands (up to 1.2x) and fades out as the finger drags away.
   holdRing.style.setProperty('--ring-op', String((1 - ratio) * 0.55));
-  holdRing.style.setProperty('--ring-scale', String(1 + ratio * 0.6));
+  holdRing.style.setProperty('--ring-scale', String(1 + ratio * 0.2));
 }
 function hideHoldRing() {
   if (!holdRing) return;
