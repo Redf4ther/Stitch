@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v351</span></div>
+    <div class="title">Стич · Claude <span class="build">v352</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -277,6 +277,8 @@ document.addEventListener('touchcancel', finalizeChatRelease, {passive:true});
 
 
 var KEY_SK = 'sk';
+var KEY_HIST = 'stitch_hist';
+var HIST_LIMIT = 60; // keep last ~30 turns
 var apiKey = localStorage.getItem(KEY_SK) || '';
 
 // If no key yet, replace the welcome bubble with a request to send one in
@@ -314,8 +316,9 @@ var TG = document.getElementById('TG');
 var TOP = document.getElementById('TOP');
 var BOT = document.getElementById('BOT');
 
-// Replace the canned welcome with a key request when no key is stored.
-ensureKeyPrompt();
+// Restore prior conversation if any. If nothing saved, fall back to the
+// canned welcome (or the key request when no API key is stored yet).
+if (!loadHist()) ensureKeyPrompt();
 
 var state = 'idle';
 var hist = [];
@@ -384,6 +387,69 @@ function addMsg(role, text) {
   return b;
 }
 
+function appendUserPhotosBubble(photos) {
+  var pw = document.createElement('div'); pw.className = 'bbl u';
+  var grid = document.createElement('div');
+  grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;max-width:240px;justify-content:flex-end';
+  photos.forEach(function(p) {
+    var im = document.createElement('img');
+    im.src = p;
+    im.style.cssText = (photos.length===1 ? 'width:100%;max-width:200px' : 'width:78px;height:78px;object-fit:cover')+';border-radius:12px';
+    grid.appendChild(im);
+  });
+  pw.appendChild(grid);
+  chat.appendChild(pw);
+}
+
+function saveHist() {
+  if (hist.length > HIST_LIMIT) hist = hist.slice(-HIST_LIMIT);
+  try {
+    localStorage.setItem(KEY_HIST, JSON.stringify(hist));
+  } catch(e) {
+    // Quota — drop oldest entries until it fits.
+    while (hist.length > 4) {
+      hist.shift();
+      try { localStorage.setItem(KEY_HIST, JSON.stringify(hist)); return; } catch(_){}
+    }
+  }
+}
+
+function renderHistInChat() {
+  // Wipe whatever's in the chat (welcome bubble) and replay the saved hist.
+  chat.innerHTML = '';
+  hist.forEach(function(m) {
+    if (m.role === 'user') {
+      if (Array.isArray(m.content)) {
+        var photos = [];
+        var text = '';
+        m.content.forEach(function(p) {
+          if (p.type === 'image_url' && p.image_url && p.image_url.url) photos.push(p.image_url.url);
+          else if (p.type === 'text' && p.text) text += (text ? ' ' : '') + p.text;
+        });
+        if (photos.length) appendUserPhotosBubble(photos);
+        if (text && text !== 'Посмотри на фото и помоги разобраться!') addMsg('u', text);
+      } else {
+        addMsg('u', m.content);
+      }
+    } else if (m.role === 'assistant') {
+      addMsg('a', m.content);
+    }
+  });
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function loadHist() {
+  try {
+    var raw = localStorage.getItem(KEY_HIST);
+    if (!raw) return false;
+    var parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || !parsed.length) return false;
+    hist = parsed;
+    renderHistInChat();
+    return true;
+  } catch(_) { return false; }
+}
+
 function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
 // Burst of colored confetti when Stitch confirms a correct answer ("Бум!"),
@@ -440,6 +506,7 @@ async function askClaude(msg) {
   }
   setState('thinking');
   hist.push({role:'user', content:msg});
+  saveHist();
   try {
     // Filter out image messages for gpt-4o-mini (text only)
     var textHist = hist.map(function(m) {
@@ -468,6 +535,7 @@ async function askClaude(msg) {
     else if (msg0.refusal) text = msg0.refusal;
     if (!text) throw new Error('Empty: ' + JSON.stringify(data.choices[0]).slice(0,300));
     hist.push({role:'assistant', content:text});
+    saveHist();
 
     // STEP 1: Download audio (still showing "Думает...")
     var audioBlob = null;
@@ -1098,6 +1166,7 @@ async function askWithImages(photos, userText) {
   });
   content.push({type:'text', text:imgText});
   hist.push({role:'user', content:content});
+  saveHist();
   try {
     typingCancel = false;
     currentAbort = new AbortController();
@@ -1117,6 +1186,7 @@ async function askWithImages(photos, userText) {
     else if (msg0.refusal) text = msg0.refusal;
     if (!text) throw new Error('Empty: ' + JSON.stringify(data.choices[0]).slice(0,300));
     hist.push({role:'assistant', content:text});
+    saveHist();
 
     var audioBlob = null;
     try {
