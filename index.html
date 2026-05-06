@@ -76,7 +76,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v289</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v290</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -92,7 +92,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
-    <div class="title">Скич · Claude <span class="build">v289</span></div>
+    <div class="title">Скич · Claude <span class="build">v290</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -198,31 +198,40 @@ try {
   }
 } catch(_) {}
 
-// Lock the Stitch top panel in place even when iOS / Telegram scroll the
-// layout or visual viewport on input focus. Counter-translate .top by the
-// total scroll offset so it stays glued to the screen top while the chat
-// and composer slide up naturally beneath it.
-function lockTop() {
-  var topEl = document.querySelector('.top');
-  if (!topEl) return;
-  var off = (window.pageYOffset || window.scrollY || 0);
-  if (window.visualViewport) off += (window.visualViewport.offsetTop || 0);
-  topEl.style.transform = off ? 'translateY(' + off + 'px)' : '';
+// Keep the Stitch top panel glued to the screen top even when iOS or
+// Telegram scroll the page on input focus. Event-based pinning missed
+// some movement, so run a requestAnimationFrame loop while any input is
+// focused: every frame, counter-translate .top by whatever scroll offset
+// the page has accumulated. The chat and composer below ride along with
+// the natural scroll.
+var pinTopEl = null;
+var pinRaf = null;
+function pinTopFrame() {
+  if (!pinTopEl) pinTopEl = document.querySelector('.top');
+  if (pinTopEl) {
+    var off = (window.pageYOffset || window.scrollY || 0);
+    if (window.visualViewport) off += (window.visualViewport.offsetTop || 0);
+    pinTopEl.style.transform = off ? 'translate3d(0,' + off + 'px,0)' : '';
+  }
+  pinRaf = requestAnimationFrame(pinTopFrame);
 }
-window.addEventListener('scroll', lockTop, {passive:true});
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('scroll', lockTop);
-  window.visualViewport.addEventListener('resize', lockTop);
+function startPinTop() { if (pinRaf == null) pinRaf = requestAnimationFrame(pinTopFrame); }
+function stopPinTop() {
+  if (pinRaf != null) { cancelAnimationFrame(pinRaf); pinRaf = null; }
+  if (pinTopEl) pinTopEl.style.transform = '';
 }
-document.addEventListener('focusin', function() {
-  lockTop();
-  setTimeout(lockTop, 50);
-  setTimeout(lockTop, 200);
-  setTimeout(lockTop, 500);
+document.addEventListener('focusin', function(e) {
+  var t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) startPinTop();
 });
 document.addEventListener('focusout', function() {
-  setTimeout(lockTop, 50);
-  setTimeout(lockTop, 300);
+  setTimeout(function() {
+    if (!document.activeElement ||
+        (document.activeElement.tagName !== 'INPUT' &&
+         document.activeElement.tagName !== 'TEXTAREA')) {
+      stopPinTop();
+    }
+  }, 400);
 });
 
 var KEY_SK = 'sk';
