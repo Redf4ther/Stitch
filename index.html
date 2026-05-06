@@ -8,9 +8,9 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{width:100%;height:100dvh;min-height:100%;overflow:hidden;background:linear-gradient(180deg,#cfeaff 0%,#ffeec4 100%);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none}
-#app{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center}
-.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#cfeaff 0%,#dff1ff 100%);z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px}
+html,body{width:100%;height:100dvh;overflow:hidden;background:linear-gradient(180deg,#cfeaff 0%,#ffeec4 100%);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none}
+#app{width:100%;height:100%;display:flex;flex-direction:column}
+.top{flex-shrink:0;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#cfeaff 0%,#dff1ff 100%);padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#7c5cff}
 .build{font-size:10px;opacity:.6;margin-left:4px}
 .stage{position:relative;width:160px;height:160px;margin-top:2px}
@@ -34,14 +34,15 @@ html,body{width:100%;height:100dvh;min-height:100%;overflow:hidden;background:li
 .dot.y{background:#ffd84d;box-shadow:0 0 8px #ffd84d;animation:db .5s infinite}
 .dot.g{background:#5be09b;box-shadow:0 0 8px #5be09b;animation:db 1s infinite}
 .dot.b{background:#7c5cff;box-shadow:0 0 8px #7c5cff;animation:db .4s infinite}
-.chat{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:185px;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px}
+.chat{flex:1;min-height:0;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#ffffff;border:2px solid #e8d8ff;color:#2d2240;box-shadow:0 2px 8px rgba(124,92,255,.08)}
 .bbl.u .bi{background:linear-gradient(135deg,#ff7eb6,#7c5cff);border:none;color:#ffffff;border-radius:16px 16px 4px 16px;box-shadow:0 2px 10px rgba(255,126,182,.3)}
 .cur::after{content:‘▋’;color:#7c5cff;animation:cur .4s steps(1) infinite}
-.err{font-size:11px;color:#e84a5f;padding:2px 14px;text-align:center;position:fixed;bottom:190px;left:0;right:0}
-.bottom{position:fixed;bottom:0;left:0;right:0;padding:8px 14px 30px;background:linear-gradient(180deg,#fff3d8 0%,#ffeec4 100%);border-top:2px solid #ffd84d;display:flex;flex-direction:column;gap:8px;align-items:center;z-index:5}
+.err{flex-shrink:0;font-size:11px;color:#e84a5f;padding:0 14px;text-align:center;min-height:0}
+.err:not(:empty){padding:2px 14px}
+.bottom{flex-shrink:0;position:relative;padding:8px 14px calc(30px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,#fff3d8 0%,#ffeec4 100%);border-top:2px solid #ffd84d;display:flex;flex-direction:column;gap:8px;align-items:center;z-index:5}
 .mic-btn{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3ec97a,#5be09b);box-shadow:0 4px 20px rgba(62,201,122,.45);cursor:pointer;touch-action:none}
 .mic-btn.listening{background:linear-gradient(135deg,#ff5577,#cc3050);animation:micP .8s ease infinite;box-shadow:0 4px 20px rgba(255,80,120,.5)}
 .mic-btn.disabled{background:#d8cce8;box-shadow:none;opacity:.5}
@@ -68,7 +69,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v301</span></div>
+    <div class="title">Стич · Claude <span class="build">v302</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -168,41 +169,6 @@ try {
   }
 } catch(_) {}
 
-// Keep the Stitch top panel glued to the screen top even when iOS or
-// Telegram scroll the page on input focus. Event-based pinning missed
-// some movement, so run a requestAnimationFrame loop while any input is
-// focused: every frame, counter-translate .top by whatever scroll offset
-// the page has accumulated. The chat and composer below ride along with
-// the natural scroll.
-var pinTopEl = null;
-var pinRaf = null;
-var pinY = 0;
-function pinTopFrame() {
-  if (!pinTopEl) pinTopEl = document.querySelector('.top');
-  if (pinTopEl) {
-    // Measure where .top actually appears on screen with the current
-    // transform applied. iOS Telegram physically shifts the webview frame
-    // during the keyboard animation, so pageYOffset/visualViewport.offsetTop
-    // both stay 0 — the only signal that picks the drift up is the actual
-    // bounding rect.
-    var rect = pinTopEl.getBoundingClientRect();
-    if (Math.abs(rect.top) > 0.5) {
-      pinY -= rect.top;
-      pinTopEl.style.transform = 'translate3d(0,' + pinY + 'px,0)';
-    }
-  }
-  pinRaf = requestAnimationFrame(pinTopFrame);
-}
-function startPinTop() { if (pinRaf == null) pinRaf = requestAnimationFrame(pinTopFrame); }
-function stopPinTop() {
-  if (pinRaf != null) { cancelAnimationFrame(pinRaf); pinRaf = null; }
-  if (pinTopEl) pinTopEl.style.transform = '';
-  pinY = 0;
-}
-document.addEventListener('focusin', function(e) {
-  var t = e.target;
-  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) startPinTop();
-});
 // Tap inside the chat area dismisses the keyboard. Stitch's top panel is
 // reserved for its own future tap action, so we don't blur there.
 document.addEventListener('pointerdown', function(e) {
@@ -211,21 +177,6 @@ document.addEventListener('pointerdown', function(e) {
   var a = document.activeElement;
   if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
 }, {passive:true});
-// Defensive: kick off pinning on the very first touch of the textarea —
-// focusin can fire after iOS has already started its keyboard animation.
-document.addEventListener('touchstart', function(e) {
-  var t = e.target;
-  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) startPinTop();
-}, {passive:true});
-document.addEventListener('focusout', function() {
-  setTimeout(function() {
-    if (!document.activeElement ||
-        (document.activeElement.tagName !== 'INPUT' &&
-         document.activeElement.tagName !== 'TEXTAREA')) {
-      stopPinTop();
-    }
-  }, 400);
-});
 
 var KEY_SK = 'sk';
 var apiKey = localStorage.getItem(KEY_SK) || '';
