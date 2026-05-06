@@ -29,6 +29,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#ececec;color:#2d224
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
+@keyframes salute{0%{transform:translate(-50%,-50%) rotate(0deg);opacity:1}80%{opacity:1}100%{transform:translate(calc(-50% + var(--dx,0)),calc(-50% + var(--dy,-300px))) rotate(var(--rot,720deg));opacity:0}}
 
 .status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8475a8;margin:2px 0}
 .dot{width:6px;height:6px;border-radius:50%;background:#d8cce8;transition:all .3s}
@@ -71,7 +72,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v322</span></div>
+    <div class="title">Стич · Claude <span class="build">v323</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -306,6 +307,29 @@ function addMsg(role, text) {
 
 function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
+// Burst of colored confetti when Stitch confirms a correct answer ("Бум!"),
+// styled like Telegram's quiz salute.
+function celebrate() {
+  var colors = ['#ff5577','#ff9043','#ffd84d','#5be09b','#7c5cff','#00b8d4','#ff7eb6','#ffffff'];
+  for (var i = 0; i < 40; i++) {
+    var p = document.createElement('div');
+    var color = colors[Math.floor(Math.random()*colors.length)];
+    var size = 6 + Math.random()*8;
+    var ang = -Math.PI/2 + (Math.random() - 0.5) * Math.PI * 1.4;
+    var dist = 160 + Math.random() * 320;
+    var dx = Math.cos(ang) * dist;
+    var dy = Math.sin(ang) * dist;
+    var rot = (Math.random()-0.5) * 1440;
+    var dur = 1.3 + Math.random() * 0.9;
+    p.style.cssText = 'position:fixed;left:50%;top:55%;width:'+size+'px;height:'+(size*1.5)+'px;background:'+color+';border-radius:2px;pointer-events:none;z-index:1000;will-change:transform,opacity;animation:salute '+dur+'s cubic-bezier(.18,.7,.45,1) forwards;--dx:'+dx+'px;--dy:'+dy+'px;--rot:'+rot+'deg';
+    document.body.appendChild(p);
+    (function(node, ms){ setTimeout(function(){ try{ node.remove(); }catch(_){} }, ms); })(p, dur*1000+300);
+  }
+}
+function maybeCelebrate(text) {
+  if (text && /^\s*Бум/i.test(text)) celebrate();
+}
+
 var prompt = 'Ты — персональный репетитор. Узнай имя ученика и запомни. Не представляйся первым — не называй своё имя, не говори кто ты, не описывай себя по своей инициативе. ИСКЛЮЧЕНИЕ: если ученик САМ спросит "как тебя зовут?", "кто ты?" или похожее — ответь коротко: тебя зовут Липо Стич, ты инопланетный помощник-репетитор. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, представляться без вопроса. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. СТИЛЬ: общайся как обычный ChatGPT-репетитор — спокойно, ясно, по-человечески. НЕ называй ученика "зверёк", "малыш" и подобными словечками. НЕ вставляй "хи-хи", "бум", "ха", "ага" в каждый ответ. Просто понятные фразы простым языком для 8-9 лет. ИСКЛЮЧЕНИЕ: КОГДА РЕБЁНОК САМ НАЗВАЛ ВЕРНЫЙ ОТВЕТ — обязательно начни ответ со слова "Бум!" и подтверди (например: "Бум! Точно так!", "Бум! Ты угадал!", "Бум! Молодец, верно!"). Если ответ неверный — не говори "Бум", мягко направь наводящим вопросом без лишних междометий. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь, верный ответ — Бум-подтверждение. Если просит ответ: предложи разобрать вместе. Главное правило: ученик должен САМ прийти к ответу, а ты подтвердить через "Бум!". Если фото и не понимаешь — просто спроси что с этим делать.';
 
 async function askClaude(msg) {
@@ -346,6 +370,7 @@ async function askClaude(msg) {
     else if (msg0.refusal) text = msg0.refusal;
     if (!text) throw new Error('Empty: ' + JSON.stringify(data.choices[0]).slice(0,300));
     hist.push({role:'assistant', content:text});
+    maybeCelebrate(text);
 
     // STEP 1: Download audio (still showing "Думает...")
     var audioBlob = null;
@@ -828,6 +853,7 @@ async function askWithImages(photos, userText) {
     else if (msg0.refusal) text = msg0.refusal;
     if (!text) throw new Error('Empty: ' + JSON.stringify(data.choices[0]).slice(0,300));
     hist.push({role:'assistant', content:text});
+    maybeCelebrate(text);
 
     var audioBlob = null;
     try {
