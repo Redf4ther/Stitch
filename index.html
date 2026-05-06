@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v283</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v284</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -90,7 +90,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
-    <div class="title">Скич · Claude <span class="build">v283</span></div>
+    <div class="title">Скич · Claude <span class="build">v284</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -344,30 +344,19 @@ async function askClaude(msg) {
       });
     } catch(e2) { audioBlob = null; }
 
-    // STEP 2: Decode audio (still "Думает...")
-    var audioBuf = null;
-    if (audioBlob) {
-      try {
-        var ctx = getAudioCtx();
-        audioBuf = await new Promise(function(resolve, reject) {
-          ctx.decodeAudioData(audioBlob, resolve, reject);
-        });
-      } catch(e3) { audioBuf = null; }
-    }
-
-    // STEP 3: Audio ready — start playing, switch to "Говорит", type text
+    // STEP 3: switch to "Говорит", start audio (HTML Audio works on iOS WebView), type text
     setState('talking');
     var el = addMsg('a', '');
     el.classList.add('cur');
     startMouth();
 
-    if (audioBuf) {
-      var ctx2 = getAudioCtx();
-      if (ctx2.state === 'suspended') { try { await ctx2.resume(); } catch(_){} }
-      var src = ctx2.createBufferSource();
-      src.buffer = audioBuf;
-      src.connect(ctx2.destination);
-      src.start(0);
+    if (audioBlob) {
+      var blob2 = new Blob([audioBlob], {type:'audio/mpeg'});
+      var url = URL.createObjectURL(blob2);
+      var audio = new Audio(url);
+      audio.onended = function(){ URL.revokeObjectURL(url); audio.src=''; audio.load(); };
+      audio.onerror = function(){ URL.revokeObjectURL(url); };
+      audio.play().catch(function(err){ errEl.textContent = 'Звук: '+(err&&err.message||err); });
     }
 
     // Type text simultaneously
