@@ -74,7 +74,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v344</span></div>
+    <div class="title">Стич · Claude <span class="build">v345</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -184,7 +184,11 @@ try {
 // "dismisses" the keyboard if it was open.
 var chatTap = null;
 var holdRing = null;
+var ringTimer = null;
 var FADE_DIST = 110; // distance in px at which the ring is fully gone
+function clearRingTimer() {
+  if (ringTimer != null) { clearTimeout(ringTimer); ringTimer = null; }
+}
 function showHoldRing(x, y) {
   if (holdRing) { try { holdRing.remove(); } catch(_){} }
   holdRing = document.createElement('div');
@@ -226,7 +230,12 @@ document.addEventListener('pointerdown', function(e) {
   // recording continues; once it leaves, we abort.
   var a = document.activeElement;
   if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
-  showHoldRing(e.clientX, e.clientY);
+  // Defer the ring by 500 ms so a quick tap doesn't show it.
+  clearRingTimer();
+  ringTimer = setTimeout(function() {
+    ringTimer = null;
+    if (chatTap && !chatTap.cancelled) showHoldRing(chatTap.x, chatTap.y);
+  }, 500);
   getAudioCtx();
   startListening();
 }, {passive:true});
@@ -236,9 +245,10 @@ function trackChatPointer(x, y) {
   var dy = y - chatTap.y;
   var dist = Math.sqrt(dx * dx + dy * dy);
   var ratio = Math.min(1, dist / FADE_DIST);
-  fadeRing(ratio);
+  if (holdRing) fadeRing(ratio);
   if (ratio >= 1) {
     chatTap.cancelled = true;
+    clearRingTimer();
     hideHoldRing();
     if (state === 'listening') {
       listenAborted = true;
@@ -250,6 +260,7 @@ function finalizeChatRelease() {
   if (!chatTap) return;
   var wasCancelled = chatTap.cancelled;
   chatTap = null;
+  clearRingTimer();
   hideHoldRing();
   if (state === 'listening') {
     if (wasCancelled) listenAborted = true;
