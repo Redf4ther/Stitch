@@ -73,7 +73,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v327</span></div>
+    <div class="title">Стич · Claude <span class="build">v328</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -445,10 +445,37 @@ function getAudioCtx() {
 }
 
 // After SpeechRecognition runs, iOS keeps the audio session in PlayAndRecord
-// mode and routes playback through the quiet earpiece speaker. Pushing a
-// short silent buffer through the AudioContext nudges the session back to
-// Playback so the next TTS plays at full volume.
+// mode and routes playback through the quiet earpiece speaker. The fix that
+// reliably reroutes back to the loud speaker on iOS WKWebView is to play
+// a short HTML <audio> file with playsinline — this resets the session
+// category to Playback. AudioContext alone wasn't enough.
+var silentWavUrl = null;
+function getSilentWavUrl() {
+  if (silentWavUrl) return silentWavUrl;
+  try {
+    var sampleRate = 8000;
+    var samples = Math.floor(sampleRate * 0.25); // 250ms silence
+    var buffer = new ArrayBuffer(44 + samples * 2);
+    var view = new DataView(buffer);
+    view.setUint32(0, 0x52494646, false);              // "RIFF"
+    view.setUint32(4, 36 + samples * 2, true);
+    view.setUint32(8, 0x57415645, false);              // "WAVE"
+    view.setUint32(12, 0x666d7420, false);             // "fmt "
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);                       // PCM
+    view.setUint16(22, 1, true);                       // mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    view.setUint32(36, 0x64617461, false);             // "data"
+    view.setUint32(40, samples * 2, true);
+    silentWavUrl = URL.createObjectURL(new Blob([buffer], {type:'audio/wav'}));
+  } catch(_) { silentWavUrl = null; }
+  return silentWavUrl;
+}
 function nudgeOutputToSpeaker() {
+  // Web Audio nudge — first line of defense, also unlocks the context.
   try {
     var ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
@@ -458,6 +485,17 @@ function nudgeOutputToSpeaker() {
     src.connect(ctx.destination);
     src.start();
     src.stop(ctx.currentTime + 0.05);
+  } catch(_) {}
+  // HTML Audio nudge — actually flips the iOS session back to Playback.
+  try {
+    var url = getSilentWavUrl();
+    if (!url) return;
+    var a = new Audio();
+    a.setAttribute('playsinline', '');
+    a.volume = 1.0;
+    a.src = url;
+    a.play().catch(function(){});
+    setTimeout(function(){ try { a.pause(); a.src=''; a.load(); } catch(_){} }, 250);
   } catch(_) {}
 }
 
