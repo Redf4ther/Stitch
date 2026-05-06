@@ -76,7 +76,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 <body>
 
 <div id="keyScreen">
-  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v287</span></h2>
+  <h2>👋 Скич · Claude <span style="font-size:14px;opacity:.5">v288</span></h2>
   <p>Введи API ключ OpenAI — сохранится в телефоне</p>
   <div class="key-lbl">OpenAI API ключ</div>
   <input class="key-inp" id="keyInp" type="password" placeholder="sk-proj-..."/>
@@ -92,7 +92,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
-    <div class="title">Скич · Claude <span class="build">v287</span></div>
+    <div class="title">Скич · Claude <span class="build">v288</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -197,6 +197,25 @@ try {
     syncKB();
   }
 } catch(_) {}
+
+// iOS WKWebView auto-scrolls the layout viewport when an input is focused
+// so the focused field rises above the keyboard. We already lift our own
+// composer panel via --kb, so this auto-scroll just drags Stitch and the
+// chat upward for no reason. Pin window/body scroll back to 0 whenever the
+// browser tries to move them, and force a reset right after focus events.
+function pinScroll() {
+  if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
+  if (document.body.scrollTop) document.body.scrollTop = 0;
+  if (document.documentElement.scrollTop) document.documentElement.scrollTop = 0;
+}
+window.addEventListener('scroll', pinScroll, {passive:true, capture:true});
+document.addEventListener('focusin', function() {
+  pinScroll();
+  setTimeout(pinScroll, 0);
+  setTimeout(pinScroll, 100);
+  setTimeout(pinScroll, 300);
+  setTimeout(pinScroll, 600);
+});
 
 var KEY_SK = 'sk';
 var apiKey = localStorage.getItem(KEY_SK) || '';
