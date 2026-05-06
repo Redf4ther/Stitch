@@ -71,7 +71,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 
 <div id="app">
   <div class="top">
-    <div class="title">Стич · Claude <span class="build">v317</span></div>
+    <div class="title">Стич · Claude <span class="build">v318</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -453,26 +453,43 @@ function cancelThinking() {
   setState('idle');
 }
 
-// Push-to-talk: pointer events unify mouse + touch + pen, and setPointerCapture
-// guarantees pointerup fires on the button even if Telegram's WebView would
-// otherwise steal mouseup events (e.g. window-drag handler on desktop). Tap
-// while busy = cancel the current thinking/talking.
+// Push-to-talk + cancel-on-tap. While busy: pointerdown cancels the current
+// thinking/talking. If the finger keeps holding past 250 ms, we slide into
+// recording — the user can immediately keep speaking. A quick release stays
+// "just a cancel" without flashing the listening UI.
+var pendingListen = null;
+function cancelPendingListen() {
+  if (pendingListen != null) { clearTimeout(pendingListen); pendingListen = null; }
+}
 micBtn.addEventListener('pointerdown', function(e) {
   if (e.button !== undefined && e.button !== 0) return;
   e.preventDefault();
-  if (state === 'thinking' || state === 'talking') { cancelThinking(); return; }
   if (micBtn.setPointerCapture) { try { micBtn.setPointerCapture(e.pointerId); } catch(_){} }
-  getAudioCtx(); // unlock on user gesture
+  if (state === 'thinking' || state === 'talking') {
+    cancelThinking();
+    cancelPendingListen();
+    pendingListen = setTimeout(function() {
+      pendingListen = null;
+      getAudioCtx();
+      startListening();
+    }, 250);
+    return;
+  }
+  getAudioCtx();
   startListening();
 });
-micBtn.addEventListener('pointerup', function(e) { e.preventDefault(); stopListening(); });
-micBtn.addEventListener('pointercancel', function(){ stopListening(); });
+micBtn.addEventListener('pointerup', function(e) {
+  e.preventDefault();
+  if (pendingListen != null) { cancelPendingListen(); return; }
+  stopListening();
+});
+micBtn.addEventListener('pointercancel', function(){ cancelPendingListen(); stopListening(); });
 micBtn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 // Safety nets in case the pointerup is swallowed by the host (Telegram WebView).
-window.addEventListener('pointerup', function(){ if (state==='listening') stopListening(); });
-window.addEventListener('mouseup', function(){ if (state==='listening') stopListening(); });
-window.addEventListener('touchend', function(){ if (state==='listening') stopListening(); });
-window.addEventListener('blur', function(){ if (state==='listening') stopListening(); });
+window.addEventListener('pointerup', function(){ cancelPendingListen(); if (state==='listening') stopListening(); });
+window.addEventListener('mouseup', function(){ cancelPendingListen(); if (state==='listening') stopListening(); });
+window.addEventListener('touchend', function(){ cancelPendingListen(); if (state==='listening') stopListening(); });
+window.addEventListener('blur', function(){ cancelPendingListen(); if (state==='listening') stopListening(); });
 
 sb.onclick = function() {
   if (state !== 'idle') return;
