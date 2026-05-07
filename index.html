@@ -37,6 +37,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
 #voiceToast.show{opacity:1}
 #voiceCountdown{position:fixed;top:38%;left:50%;width:92px;height:92px;border-radius:50%;background:rgba(124,92,255,.85);color:#fff;display:flex;align-items:center;justify-content:center;font-size:46px;font-weight:700;z-index:201;pointer-events:none;box-shadow:0 6px 24px rgba(124,92,255,.45);transform:translate(-50%,-50%) scale(.6);opacity:0;transition:transform .15s ease,opacity .15s ease}
 #voiceCountdown.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#recCircle{position:fixed;top:50%;left:50%;width:140px;height:140px;border-radius:50%;background:rgba(124,92,255,.85);box-shadow:0 6px 32px rgba(124,92,255,.55);transform:translate(-50%,-50%) scale(.6);opacity:0;transition:transform .18s ease,opacity .18s ease;z-index:200;pointer-events:none}
+#recCircle.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#recCircle::after{content:"";position:absolute;inset:0;border-radius:50%;background:rgba(124,92,255,.45);animation:recPulse 1.4s ease-out infinite}
+@keyframes recPulse{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.45);opacity:0}}
+#recCamIcon{position:fixed;top:calc(50% - 130px);left:50%;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.12);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.28);box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28);transform:translate(-50%,-50%) scale(.6);opacity:0;transition:transform .18s ease,opacity .18s ease,background .15s,border-color .15s,box-shadow .15s;z-index:201;pointer-events:none;display:flex;align-items:center;justify-content:center}
+#recCamIcon.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#recCamIcon.armed{background:rgba(0,221,255,.35);border-color:rgba(0,221,255,.9);box-shadow:0 6px 28px rgba(0,221,255,.75),inset 0 1px 0 rgba(255,255,255,.28);transform:translate(-50%,-50%) scale(1.18)}
 @keyframes ringPop{from{transform:translate(-50%,-50%) scale(.55);opacity:0}}
 
 .status{display:flex;align-items:center;justify-content:center;margin:6px 0 2px}
@@ -83,7 +90,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v404</span></div>
+<div class="title">Стич · Claude <span class="build">v405</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -119,7 +126,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
   <div class="err" id="err"></div>
   <div class="bottom">
     <div style="display:flex;align-items:center;width:100%;justify-content:center;gap:8px">
-      <button class="mic-btn" id="micBtn" style="display:none;width:calc(100% - 70px);height:54px;border-radius:27px;align-items:center;justify-content:center">
+      <button class="mic-btn" id="micBtn">
         <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="8.5" y="2.5" width="7" height="13" rx="3.5"/>
           <path d="M19 11a7 7 0 0 1-14 0"/>
@@ -149,6 +156,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
       </div>
       <input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="display:none"/>
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
+      <div id="recCircle"></div>
+      <div id="recCamIcon">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="3.5"/>
+          <circle cx="12" cy="12" r="4"/>
+        </svg>
+      </div>
     </div>
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
     <div id="composer" style="width:100%;background:rgba(255,255,255,.08);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:8px 10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.22)">
@@ -539,6 +553,16 @@ function setState(s) {
   glow.className = 'glow'+(s==='talking'?' on':'');
   var busy = s==='thinking'||s==='talking';
   micBtn.className = 'mic-btn'+(s==='listening'?' listening':busy?' busy':'');
+  var rc = document.getElementById('recCircle');
+  var rci = document.getElementById('recCamIcon');
+  if (s === 'listening') {
+    if (rc) rc.classList.add('show');
+    if (rci) rci.classList.add('show');
+  } else {
+    if (rc) rc.classList.remove('show');
+    if (rci) { rci.classList.remove('show'); rci.classList.remove('armed'); }
+    camSwitchArmed = false;
+  }
   if (s === 'listening') {
     micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="32" height="32" fill="#fff"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
   } else if (busy) {
@@ -1167,8 +1191,39 @@ micBtn.addEventListener('pointerdown', function(e) {
 // raw touchend/touchcancel directly on the button — Telegram's WebView
 // occasionally drops one or two of these on iOS, so we listen to the lot
 // and short-circuit the second/third firing via the state guard.
+// Slide-up gesture: while holding mic, finger drag onto the floating camera
+// icon (above the central rec circle) cancels Whisper and opens the camera.
+var camSwitchArmed = false;
+function checkCamSwitch(x, y) {
+  var rci = document.getElementById('recCamIcon');
+  if (!rci || !rci.classList.contains('show')) { camSwitchArmed = false; return; }
+  var r = rci.getBoundingClientRect();
+  var cx = r.left + r.width/2, cy = r.top + r.height/2;
+  var dx = x - cx, dy = y - cy;
+  // Generous hit zone — full icon width as radius for finger sloppiness.
+  var hit = (dx*dx + dy*dy) < (r.width * r.width);
+  if (hit && !camSwitchArmed) { camSwitchArmed = true; rci.classList.add('armed'); try{haptic();}catch(_){} }
+  else if (!hit && camSwitchArmed) { camSwitchArmed = false; rci.classList.remove('armed'); }
+}
+micBtn.addEventListener('pointermove', function(e) {
+  if (state !== 'listening') return;
+  checkCamSwitch(e.clientX, e.clientY);
+});
+micBtn.addEventListener('touchmove', function(e) {
+  if (state !== 'listening' || !e.touches || !e.touches.length) return;
+  checkCamSwitch(e.touches[0].clientX, e.touches[0].clientY);
+}, {passive:true});
 function micRelease(e){
   try { if (e && e.pointerId != null && micBtn.releasePointerCapture) micBtn.releasePointerCapture(e.pointerId); } catch(_){}
+  var armed = camSwitchArmed;
+  if (armed && state === 'listening') {
+    // Abort Whisper path so the recording is dropped, then open camera.
+    listenAborted = true;
+    stopListening();
+    var fic = document.getElementById('fileInputCamera');
+    if (fic) { try { fic.click(); } catch(_){} }
+    return;
+  }
   if (state === 'listening') stopListening();
 }
 micBtn.addEventListener('pointerup', function(e){ e.preventDefault(); micRelease(e); });
