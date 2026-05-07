@@ -103,7 +103,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v418</span></div>
+<div class="title">Стич · Claude <span class="build">v419</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -300,18 +300,19 @@ function hideHoldRing() {
   if (!holdRing) return;
   var r = holdRing;
   holdRing = null;
-  r.style.setProperty('--ring-op', '0');
-  r.style.setProperty('--ring-scale', '1.2');
-  setTimeout(function(){ try { r.remove(); } catch(_){} }, 200);
+  try { r.remove(); } catch(_){}
 }
 document.addEventListener('pointerdown', function(e) {
   var chat = document.querySelector('.chat');
   if (!chat || !chat.contains(e.target)) { chatTap = null; return; }
-  // No mic permission → no ring, no listening flip, no anything. If we've
-  // never asked, fire the system prompt now; nothing changes in the UI
-  // until the user taps again after granting.
+  // Ring + haptic FIRST, before any state/permission checks — visual and
+  // tactile feedback land in the same frame as the touch. Whatever check
+  // fails below tears the ring back down immediately via hideHoldRing.
+  showHoldRing(e.clientX, e.clientY);
+  haptic();
   if (typeof micPermission !== 'undefined' && micPermission !== 'granted') {
     chatTap = null;
+    hideHoldRing();
     if (micPermission === 'denied') {
       errEl.textContent = 'Разреши доступ к микрофону в настройках';
     } else {
@@ -319,26 +320,17 @@ document.addEventListener('pointerdown', function(e) {
     }
     return;
   }
-  // If Stitch is thinking/talking, show an orange "wait" ring and don't
-  // start the mic yet. As soon as state goes idle (handled in setState),
-  // the ring switches to purple and listening starts automatically.
   if (state === 'thinking' || state === 'talking') {
     chatTap = { t: Date.now(), x: e.clientX, y: e.clientY, cancelled: false, waiting: true, pointerId: e.pointerId };
-    showHoldRing(e.clientX, e.clientY);
     if (holdRing) holdRing.classList.add('busy');
-    haptic();
     return;
   }
-  if (state !== 'idle') { chatTap = null; return; }
+  if (state !== 'idle') { chatTap = null; hideHoldRing(); return; }
   chatTap = { t: Date.now(), x: e.clientX, y: e.clientY, cancelled: false, waiting: false, pointerId: e.pointerId };
   var a = document.activeElement;
   if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
-  // Render the ring synchronously and fire the haptic immediately so the
-  // user gets visual + tactile feedback in the same frame as the touch.
-  // AudioContext + MediaRecorder setup get deferred — those can cost a
-  // few frames on first use and would otherwise block the paint.
-  showHoldRing(e.clientX, e.clientY);
-  haptic();
+  // Heavy work (AudioContext / MediaRecorder setup) deferred so it doesn't
+  // block the first paint of the ring.
   setTimeout(function(){
     if (!chatTap) return;
     getAudioCtx();
