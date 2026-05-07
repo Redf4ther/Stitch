@@ -9,8 +9,9 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#ebe7dc;color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none}
+body::before{content:'';position:fixed;inset:-10%;z-index:-1;pointer-events:none;background:radial-gradient(40% 30% at 18% 12%,rgba(255,126,182,.55),transparent 70%),radial-gradient(45% 35% at 82% 28%,rgba(124,92,255,.5),transparent 70%),radial-gradient(50% 40% at 50% 95%,rgba(91,224,155,.45),transparent 70%),radial-gradient(35% 30% at 90% 80%,rgba(255,180,80,.45),transparent 70%),#ebe7dc}
 #app{display:contents}
-.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:#ebe7dc;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
+.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:rgba(235,231,220,.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.35);z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
 .below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#7c5cff}
 .build{font-size:10px;opacity:.6;margin-left:4px}
@@ -47,13 +48,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#ebe7dc;color:#2d224
 .chat{flex:1;min-height:0;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
-.bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.65;background:#ffffff;border:2px solid #e8d8ff;color:#2d2240;box-shadow:0 2px 8px rgba(124,92,255,.08)}
-.bbl.u .bi{background:linear-gradient(135deg,#ff7eb6,#7c5cff);border:none;color:#ffffff;border-radius:16px 16px 4px 16px;box-shadow:0 2px 10px rgba(255,126,182,.3)}
+.bi{max-width:84%;border-radius:18px 18px 18px 6px;padding:10px 14px;font-size:15px;line-height:1.65;background:rgba(255,255,255,.45);backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);border:1px solid rgba(255,255,255,.65);color:#2d2240;box-shadow:0 6px 20px rgba(124,92,255,.12),inset 0 1px 0 rgba(255,255,255,.7)}
+.bbl.u .bi{background:linear-gradient(135deg,rgba(255,126,182,.78),rgba(124,92,255,.78));backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);border:1px solid rgba(255,255,255,.45);color:#ffffff;border-radius:18px 18px 6px 18px;box-shadow:0 6px 20px rgba(255,126,182,.28),inset 0 1px 0 rgba(255,255,255,.4)}
 .cur::after{content:‘▋’;color:#7c5cff;animation:cur .4s steps(1) infinite}
 .err{flex-shrink:0;font-size:11px;color:#e84a5f;padding:0 14px;text-align:center}
 .err:not(:empty){padding:2px 14px}
-.bottom{flex-shrink:0;position:relative;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:#ebe7dc;display:flex;flex-direction:column;gap:6px;align-items:center}
-.mic-btn{width:54px;height:54px;border-radius:50%;border:none;font-size:24px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3ec97a,#5be09b);box-shadow:0 3px 14px rgba(62,201,122,.4);cursor:pointer;touch-action:none}
+.bottom{flex-shrink:0;position:relative;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:rgba(235,231,220,.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border-top:1px solid rgba(255,255,255,.35);display:flex;flex-direction:column;gap:6px;align-items:center}
+.mic-btn{width:54px;height:54px;border-radius:50%;border:1px solid rgba(255,255,255,.4);font-size:24px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(62,201,122,.85),rgba(91,224,155,.85));backdrop-filter:blur(8px) saturate(160%);-webkit-backdrop-filter:blur(8px) saturate(160%);box-shadow:0 6px 18px rgba(62,201,122,.4),inset 0 1px 0 rgba(255,255,255,.55);cursor:pointer;touch-action:none}
 .mic-btn.listening{background:linear-gradient(135deg,#ff5577,#cc3050);animation:micP .8s ease infinite;box-shadow:0 4px 20px rgba(255,80,120,.5)}
 .mic-btn.disabled{background:#d8cce8;box-shadow:none;opacity:.5}
 .mic-btn.busy{background:linear-gradient(135deg,#ff9043,#ff5577);box-shadow:0 3px 14px rgba(255,90,110,.4)}
@@ -70,7 +71,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
 .inp:focus{outline:none;border-color:#7c5cff}
 .inp::placeholder{color:#b8a8d8}
 .inp:disabled{opacity:.5}
-.sbtn{background:linear-gradient(135deg,#ff9043,#ff5577);border:none;border-radius:50%;color:#fff;font-size:15px;width:36px;height:36px;cursor:pointer;box-shadow:0 2px 8px rgba(255,90,110,.3)}
+.sbtn{background:linear-gradient(135deg,rgba(255,144,67,.85),rgba(255,85,119,.85));backdrop-filter:blur(8px) saturate(160%);-webkit-backdrop-filter:blur(8px) saturate(160%);border:1px solid rgba(255,255,255,.4);border-radius:50%;color:#fff;font-size:15px;width:36px;height:36px;cursor:pointer;box-shadow:0 4px 14px rgba(255,90,110,.35),inset 0 1px 0 rgba(255,255,255,.5)}
 .sbtn:disabled{background:#d8cce8;opacity:.5;box-shadow:none}
 .img-msg{max-width:200px;border-radius:12px;margin-top:4px;display:block}
 </style>
@@ -87,7 +88,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
       </svg>
     </button>
-    <div class="title">Стич · Claude <span class="build">v372</span></div>
+    <div class="title">Стич · Claude <span class="build">v373</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -96,10 +97,6 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
             <radialGradient id="bg" cx="42%" cy="30%" r="65%"><stop offset="0%" stop-color="#a8dff0"/><stop offset="35%" stop-color="#72b8e0"/><stop offset="70%" stop-color="#4a8ec8"/><stop offset="100%" stop-color="#2a5a9a"/></radialGradient>
             <radialGradient id="eg" cx="40%" cy="25%" r="65%"><stop offset="0%" stop-color="#7ac0d8"/><stop offset="100%" stop-color="#3060a0"/></radialGradient>
             <radialGradient id="ng" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#4a68b0"/><stop offset="100%" stop-color="#1a2858"/></radialGradient>
-            <radialGradient id="lgIris" cx="42%" cy="38%" r="68%"><stop offset="0%" stop-color="#1c2a4a"/><stop offset="55%" stop-color="#080c18"/><stop offset="100%" stop-color="#01030a"/></radialGradient>
-            <radialGradient id="lgScl" cx="38%" cy="30%" r="75%"><stop offset="0%" stop-color="#f6fbff"/><stop offset="60%" stop-color="#dceaff"/><stop offset="100%" stop-color="#9cb8e0"/></radialGradient>
-            <linearGradient id="lgChroma" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff9ad6" stop-opacity=".55"/><stop offset="50%" stop-color="#8cc8ff" stop-opacity="0"/><stop offset="100%" stop-color="#a8ffd0" stop-opacity=".55"/></linearGradient>
-            <radialGradient id="lgRim" cx="50%" cy="50%" r="50%"><stop offset="78%" stop-color="#ffffff" stop-opacity="0"/><stop offset="92%" stop-color="#bee1ff" stop-opacity=".55"/><stop offset="100%" stop-color="#ffffff" stop-opacity=".9"/></radialGradient>
           </defs>
           <g transform="rotate(-22,80,95)"><path d="M42 180 Q10 140 18 70 Q28 20 68 8 Q95 0 102 30 Q108 55 95 100 Q85 140 75 175Z" fill="url(#eg)"/><path d="M55 165 Q30 132 36 75 Q44 38 68 28 Q85 22 90 45 Q94 65 83 100 Q74 130 66 162Z" fill="#c090cc" opacity=".5"/></g>
           <g transform="rotate(22,220,95)"><path d="M258 180 Q290 140 282 70 Q272 20 232 8 Q205 0 198 30 Q192 55 205 100 Q215 140 225 175Z" fill="url(#eg)"/><path d="M245 165 Q270 132 264 75 Q256 38 232 28 Q215 22 210 45 Q206 65 217 100 Q226 130 234 162Z" fill="#c090cc" opacity=".5"/></g>
@@ -112,8 +109,8 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
           <path d="M150 148 C128 148,116 162,118 178 C120 194,132 204,150 205 C168 204,180 194,182 178 C184 162,172 148,150 148Z" fill="url(#ng)"/>
           <ellipse cx="140" cy="160" rx="11" ry="7" fill="#6080c0" opacity=".38"/>
           <ellipse cx="138" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/><ellipse cx="162" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
-          <ellipse cx="100" cy="148" rx="32" ry="32" fill="url(#lgScl)"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="url(#lgChroma)"/><ellipse cx="102" cy="151" rx="23" ry="23" fill="url(#lgIris)"/><ellipse cx="102" cy="161" rx="14" ry="3" fill="#9cd0ff" opacity=".42"/><path d="M82 142 Q102 124 122 142" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/><ellipse cx="113" cy="138" rx="6" ry="4" fill="white"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="url(#lgRim)"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2"/>
-          <ellipse cx="200" cy="148" rx="32" ry="32" fill="url(#lgScl)"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="url(#lgChroma)"/><ellipse cx="202" cy="151" rx="23" ry="23" fill="url(#lgIris)"/><ellipse cx="202" cy="161" rx="14" ry="3" fill="#9cd0ff" opacity=".42"/><path d="M182 142 Q202 124 222 142" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/><ellipse cx="213" cy="138" rx="6" ry="4" fill="white"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="url(#lgRim)"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2"/>
+          <ellipse cx="100" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="102" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="113" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
+          <ellipse cx="200" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="202" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="213" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
           <ellipse cx="128" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/><ellipse cx="172" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
           <g id="MC"><path d="M126 232 Q138 244 150 245 Q162 244 174 232" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="122" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/><circle cx="178" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/></g>
           <g id="MO" style="display:none"><path id="MS" fill="#06101e"/><path id="MT" fill="white"/><ellipse id="TG" fill="#c03858" opacity=".85"/><path id="TOP" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/><path id="BOT" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/></g>
@@ -136,7 +133,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         </svg>
       </button>
       <div style="position:relative;width:54px;height:54px;flex-shrink:0">
-        <label id="camBtn" for="fileInputCamera" style="position:absolute;inset:0;width:54px;height:54px;border-radius:50%;background:#008db0;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;z-index:2">
+        <label id="camBtn" for="fileInputCamera" style="position:absolute;inset:0;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,rgba(0,170,205,.85),rgba(0,141,176,.85));backdrop-filter:blur(8px) saturate(160%);-webkit-backdrop-filter:blur(8px) saturate(160%);border:1px solid rgba(255,255,255,.4);box-shadow:0 6px 18px rgba(0,141,176,.4),inset 0 1px 0 rgba(255,255,255,.55);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;z-index:2">
           <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 7h3l2-2h8l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
             <circle cx="12" cy="13" r="4"/>
@@ -160,7 +157,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
     </div>
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
-    <div id="composer" style="width:100%;background:#ffffff;border:2px solid #ffd84d;border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 10px rgba(255,180,80,.2)">
+    <div id="composer" style="width:100%;background:rgba(255,255,255,.45);backdrop-filter:blur(20px) saturate(170%);-webkit-backdrop-filter:blur(20px) saturate(170%);border:1px solid rgba(255,216,77,.65);border-radius:16px;padding:8px 10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 8px 22px rgba(255,180,80,.25),inset 0 1px 0 rgba(255,255,255,.7)">
       <div id="photoPreview" style="display:none;width:100%;align-items:flex-start;gap:12px">
         <div id="photoThumbs" style="display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0"></div>
         <button onclick="cancelAllPhotos()" style="background:#fff;border:1px solid #c0c0c0;color:#222;width:24px;height:24px;border-radius:50%;font-size:14px;line-height:1;cursor:pointer;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.2)">✕</button>
