@@ -85,7 +85,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#2c2e34;color:#2d224
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v388</span></div>
+<div class="title">Стич · Claude <span class="build">v389</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -1080,10 +1080,12 @@ function stopListening() {
   if (state !== 'listening') return;
   var duration = Date.now() - listenStart;
   if (duration < 300) listenAborted = true;
-  // Snap the whole UI back to idle on release — no "Слушаю..." status
-  // hanging around. audioRec.onstop will bump the state to 'thinking'
-  // shortly if there's an actual transcript to process.
-  setState('idle');
+  // If VAD picked up real audio AND the press wasn't cancelled, jump
+  // straight from listening → thinking. Otherwise the UI would briefly
+  // flash "Готов" between release and the Whisper response. onstop still
+  // demotes back to idle if any of its later guards reject the clip.
+  var loudEnough = vadMaxLevel >= VAD_THRESHOLD;
+  setState((listenAborted || !loudEnough) ? 'idle' : 'thinking');
   if (audioRec && audioRec.state === 'recording') {
     try { audioRec.stop(); } catch(_){}
   } else {
