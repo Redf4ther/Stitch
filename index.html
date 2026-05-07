@@ -87,7 +87,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
       </svg>
     </button>
-    <div class="title">Стич · Claude <span class="build">v379</span></div>
+    <div class="title">Стич · Claude <span class="build">v380</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -229,6 +229,18 @@ function hideHoldRing() {
 document.addEventListener('pointerdown', function(e) {
   var chat = document.querySelector('.chat');
   if (!chat || !chat.contains(e.target)) { chatTap = null; return; }
+  // No mic permission → no ring, no listening flip, no anything. If we've
+  // never asked, fire the system prompt now; nothing changes in the UI
+  // until the user taps again after granting.
+  if (typeof micPermission !== 'undefined' && micPermission !== 'granted') {
+    chatTap = null;
+    if (micPermission === 'denied') {
+      errEl.textContent = 'Разреши доступ к микрофону в настройках';
+    } else {
+      requestMicPermission();
+    }
+    return;
+  }
   // If Stitch is thinking/talking, show an orange "wait" ring and don't
   // start the mic yet. As soon as state goes idle (handled in setState),
   // the ring switches to purple and listening starts automatically.
@@ -842,6 +854,7 @@ var pendingStop = false;
 // (or a flat-out denial) doesn't briefly toggle the red "listening" state
 // only to snap back when getUserMedia rejects.
 var micPermission = 'unknown';
+var micPermissionPending = false;
 (async function initMicPermission(){
   try {
     if (navigator.permissions && navigator.permissions.query) {
@@ -851,6 +864,22 @@ var micPermission = 'unknown';
     }
   } catch(_){}
 })();
+// Fire the system permission prompt without touching any mic-related UI.
+// No chat message, no listening animation, no widget swap — caller decides
+// what to do once permission is granted (typically: nothing; user taps again).
+async function requestMicPermission(){
+  if (micPermission === 'granted' || micPermission === 'denied' || micPermissionPending) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { micPermission = 'denied'; return; }
+  micPermissionPending = true;
+  try {
+    var probe = await navigator.mediaDevices.getUserMedia({audio:true});
+    try { probe.getTracks().forEach(function(t){ try { t.stop(); } catch(_){} }); } catch(_){}
+    micPermission = 'granted';
+  } catch(e) {
+    micPermission = (e && (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError')) ? 'denied' : 'unknown';
+  }
+  micPermissionPending = false;
+}
 var vadAnalyser = null;
 var vadInterval = null;
 var vadMaxLevel = 0;
@@ -927,25 +956,10 @@ async function startListening() {
     addMsg('a', 'Сначала отправь мне твой OpenAI API ключ (начинается с sk-) — я его запомню.');
     return;
   }
-  // Permission gate: never enter the listening UI if we don't already have
-  // mic access. If denied, show a clear hint and bail. If unknown/prompt,
-  // request once now (without flipping listening on) — the user will see
-  // the system prompt and on grant we tell them to press again.
+  // Permission gate (defensive — callers also check before showing any
+  // mic widgets). No UI side effects here; just bail if not granted.
   if (micPermission !== 'granted') {
-    if (micPermission === 'denied') {
-      errEl.textContent = 'Разреши доступ к микрофону в настройках Telegram/браузера';
-      return;
-    }
-    errEl.textContent = '';
-    try {
-      var probe = await navigator.mediaDevices.getUserMedia({audio:true});
-      try { probe.getTracks().forEach(function(t){ try { t.stop(); } catch(_){} }); } catch(_){}
-      micPermission = 'granted';
-      addMsg('a', 'Микрофон разрешён! Теперь держи кнопку и говори.');
-    } catch(e) {
-      micPermission = (e && (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError')) ? 'denied' : 'unknown';
-      errEl.textContent = 'Нет доступа к микрофону — разреши в настройках';
-    }
+    requestMicPermission();
     return;
   }
   // If a previous Whisper transcription is still in-flight, abort it so
@@ -1090,6 +1104,17 @@ function cancelPendingListen() {
 micBtn.addEventListener('pointerdown', function(e) {
   if (e.button !== undefined && e.button !== 0) return;
   e.preventDefault();
+  // Mic permission gate — no widget swaps, no cancel, no listening flip
+  // until we know the mic is allowed. First press without permission only
+  // fires the system prompt; user taps again afterwards.
+  if (micPermission !== 'granted') {
+    if (micPermission === 'denied') {
+      errEl.textContent = 'Разреши доступ к микрофону в настройках';
+    } else {
+      requestMicPermission();
+    }
+    return;
+  }
   if (micBtn.setPointerCapture) { try { micBtn.setPointerCapture(e.pointerId); } catch(_){} }
   if (state === 'thinking' || state === 'talking') {
     cancelThinking();
