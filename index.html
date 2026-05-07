@@ -95,7 +95,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v412</span></div>
+<div class="title">Стич · Claude <span class="build">v413</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -195,6 +195,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
 
 <input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;border:0;padding:0;margin:0"/>
 <input type="file" id="fileInput" accept="image/*" multiple style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;border:0;padding:0;margin:0"/>
+<label id="proxyCameraLabel" for="fileInputCamera" style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;cursor:pointer"></label>
+<label id="proxyGalleryLabel" for="fileInput" style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;cursor:pointer"></label>
 
 <script>
 // Telegram WebApp: expand to full height at boot so the keyboard doesn't
@@ -433,9 +435,12 @@ function finalizeChatRelease() {
   // Fire the picker FIRST, while the touchend's user activation is fresh.
   // stopListening() below touches MediaRecorder + AudioContext which can
   // invalidate the activation on some iOS WebView builds, blocking .click().
+  // Trigger a hidden <label> rather than the input directly: iOS WKWebView
+  // accepts native label→input forwarding more readily than a programmatic
+  // input.click() on a hidden file input.
   if (armedCam) {
-    var fi = document.getElementById(camLong ? 'fileInput' : 'fileInputCamera');
-    if (fi) fi.click();
+    var lbl = document.getElementById(camLong ? 'proxyGalleryLabel' : 'proxyCameraLabel');
+    if (lbl) lbl.click();
   }
   if (state === 'listening') {
     if (wasCancelled || armedCam) listenAborted = true;
