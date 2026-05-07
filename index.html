@@ -104,7 +104,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v426</span></div>
+<div class="title">Стич · Claude <span class="build">v427</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -305,17 +305,32 @@ function hideHoldRing() {
   if (cd) { cd.classList.remove('show'); cd.classList.remove('long'); var arcs = cd.querySelector('.arcs'); if (arcs) arcs.innerHTML = ''; }
 }
 // CHANNEL 1 — pure visual: ring shows on every chat touch, hides on every
-// release. No business checks, no waiting on anything else. Capture-phase
-// so it fires before any other listener can stall the path.
-document.addEventListener('pointerdown', function(e) {
-  var chat = document.querySelector('.chat');
-  if (!chat || !chat.contains(e.target)) return;
-  showHoldRing(e.clientX, e.clientY);
-}, {passive:true, capture:true});
-function ringForceHide() { hideHoldRing(); }
-document.addEventListener('pointerup', ringForceHide, {capture:true});
-document.addEventListener('touchend', ringForceHide, {capture:true});
-document.addEventListener('touchcancel', ringForceHide, {capture:true});
+// release. Listeners live directly on the .chat element (instead of
+// document) — element-level listeners on iOS WebView dispatch in the
+// touch-target's own queue, same path as the buttons that respond
+// instantly. Document-level listeners go through extra hit-testing /
+// routing layers and were observed to lag short taps by 1-3s.
+(function(){
+  var chatEl = document.querySelector('.chat');
+  if (!chatEl) return;
+  chatEl.addEventListener('pointerdown', function(e){
+    showHoldRing(e.clientX, e.clientY);
+  }, {passive:true});
+  chatEl.addEventListener('touchstart', function(e){
+    var t = e.touches && e.touches[0]; if (!t) return;
+    showHoldRing(t.clientX, t.clientY);
+  }, {passive:true});
+  function ringForceHide(){ hideHoldRing(); }
+  chatEl.addEventListener('pointerup', ringForceHide);
+  chatEl.addEventListener('pointercancel', ringForceHide);
+  chatEl.addEventListener('touchend', ringForceHide);
+  chatEl.addEventListener('touchcancel', ringForceHide);
+  // Document-level fallback for releases that happen outside .chat (e.g.
+  // finger drifted off the chat area before lifting).
+  document.addEventListener('pointerup', ringForceHide);
+  document.addEventListener('touchend', ringForceHide);
+  document.addEventListener('touchcancel', ringForceHide);
+})();
 
 // CHANNEL 2 — business logic: chatTap state, permission/state checks,
 // audio setup. Runs in parallel with channel 1; never touches the ring's
