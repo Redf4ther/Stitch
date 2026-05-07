@@ -8,7 +8,7 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #app{display:contents}
 .top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
 .below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4}
@@ -95,7 +95,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v411</span></div>
+<div class="title">Стич · Claude <span class="build">v412</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -193,8 +193,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
   </div>
 </div>
 
-<input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;border:0;padding:0;margin:0;z-index:-1"/>
-<input type="file" id="fileInput" accept="image/*" multiple style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;border:0;padding:0;margin:0;z-index:-1"/>
+<input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;border:0;padding:0;margin:0"/>
+<input type="file" id="fileInput" accept="image/*" multiple style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;border:0;padding:0;margin:0"/>
 
 <script>
 // Telegram WebApp: expand to full height at boot so the keyboard doesn't
@@ -451,9 +451,12 @@ document.addEventListener('touchmove', function(e) {
   var t = e.touches[0];
   trackChatPointer(t.clientX, t.clientY);
 }, {passive:true});
-document.addEventListener('pointerup', finalizeChatRelease, {passive:true});
-document.addEventListener('touchend', finalizeChatRelease, {passive:true});
-document.addEventListener('touchcancel', finalizeChatRelease, {passive:true});
+// Non-passive on the release path: some iOS WebView builds don't treat a
+// passive touchend as a valid user activation for input.click() on file
+// inputs, even though the spec says they should.
+document.addEventListener('pointerup', finalizeChatRelease);
+document.addEventListener('touchend', finalizeChatRelease);
+document.addEventListener('touchcancel', finalizeChatRelease);
 
 
 var KEY_SK = 'sk';
