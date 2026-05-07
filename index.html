@@ -103,7 +103,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v424</span></div>
+<div class="title">Стич · Claude <span class="build">v425</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -297,24 +297,31 @@ function hideHoldRing() {
   r.style.opacity = '0';
   try { r.remove(); } catch(_){}
 }
+// CHANNEL 1 — pure visual: ring shows on every chat touch, hides on every
+// release. No business checks, no waiting on anything else. Capture-phase
+// so it fires before any other listener can stall the path.
+document.addEventListener('pointerdown', function(e) {
+  var chat = document.querySelector('.chat');
+  if (!chat || !chat.contains(e.target)) return;
+  showHoldRing(e.clientX, e.clientY);
+}, {passive:true, capture:true});
+function ringForceHide() { hideHoldRing(); }
+document.addEventListener('pointerup', ringForceHide, {capture:true});
+document.addEventListener('touchend', ringForceHide, {capture:true});
+document.addEventListener('touchcancel', ringForceHide, {capture:true});
+
+// CHANNEL 2 — business logic: chatTap state, permission/state checks,
+// audio setup. Runs in parallel with channel 1; never touches the ring's
+// visibility (channel 1 owns it). Cosmetic class swaps only (e.g. .busy).
 document.addEventListener('pointerdown', function(e) {
   var chat = document.querySelector('.chat');
   if (!chat || !chat.contains(e.target)) { chatTap = null; return; }
-  // VISUAL FIRST — only the DOM insert runs synchronously so the browser
-  // paints the ring in the same frame as the touch. haptic, permission/
-  // state checks, active-element blur (triggers iOS keyboard hide reflow),
-  // AudioContext, MediaRecorder setup all move to setTimeout(0).
-  showHoldRing(e.clientX, e.clientY);
-  // Pre-register chatTap so finalizeChatRelease on a fast release tears
-  // things down before the deferred block ever fires.
   chatTap = { t: Date.now(), x: e.clientX, y: e.clientY, cancelled: false, waiting: false, pointerId: e.pointerId, deferred: true };
   setTimeout(function(){
     if (!chatTap || !chatTap.deferred) return;
     chatTap.deferred = false;
     haptic();
     if (typeof micPermission !== 'undefined' && micPermission !== 'granted') {
-      chatTap = null;
-      hideHoldRing();
       if (micPermission === 'denied') {
         errEl.textContent = 'Разреши доступ к микрофону в настройках';
       } else {
@@ -327,7 +334,7 @@ document.addEventListener('pointerdown', function(e) {
       if (holdRing) holdRing.classList.add('busy');
       return;
     }
-    if (state !== 'idle') { chatTap = null; hideHoldRing(); return; }
+    if (state !== 'idle') return;
     var a = document.activeElement;
     if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
     getAudioCtx();
@@ -444,10 +451,8 @@ function finalizeChatRelease() {
   if (ringCamPressTimers) { ringCamPressTimers.forEach(clearTimeout); ringCamPressTimers = null; }
   chatTap = null;
   clearRingTimer();
-  hideHoldRing();
-  // Camera/gallery stays sync — getUserMedia / label.click() need the live
-  // user activation. stopListening can stall the next paint touching the
-  // MediaRecorder, so it goes to setTimeout(0) — the ring fades out first.
+  // Ring already hidden by channel-1 release listener. Camera/gallery stays
+  // sync (needs live user activation); stopListening goes to setTimeout(0).
   if (armedCam) {
     if (camLong) {
       var lbl = document.getElementById('proxyGalleryLabel');
