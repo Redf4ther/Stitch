@@ -50,13 +50,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
 .ring-cd.long .cd-cam{opacity:0}
 .ring-cd.long .cd-paw{opacity:1}
 .hold-ring.busy .ring-cam,.hold-ring.busy .ring-cd{display:none}
-#camCapture{position:fixed;inset:0;background:#000;z-index:400;display:none}
-#camCapture.show{display:block}
-#camCapture video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
-#camCapture .controls{position:absolute;bottom:max(28px,env(safe-area-inset-bottom,0px));left:0;right:0;display:flex;justify-content:center;align-items:center;padding:0 20px;z-index:2}
-#camCapture .shutter{width:78px;height:78px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.75);box-shadow:0 0 0 3px rgba(0,0,0,.55);cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
-#camCapture .shutter:active{transform:scale(.94)}
-#camCapture .cam-cancel{position:absolute;top:max(20px,env(safe-area-inset-top,0px));left:20px;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:2;-webkit-tap-highlight-color:transparent}
 @keyframes ringPop{from{transform:translate(-50%,-50%) scale(.55);opacity:0}}
 
 .status{display:flex;align-items:center;justify-content:center;margin:6px 0 2px}
@@ -104,7 +97,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v427</span></div>
+<div class="title">Стич · Claude <span class="build">v428</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -139,8 +132,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
   <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич! Держи микрофон и говори!</div></div></div>
   <div class="err" id="err"></div>
   <div class="bottom">
-    <div style="display:none;align-items:center;width:100%;justify-content:center;gap:8px">
-      <button class="mic-btn" id="micBtn">
+    <div style="display:flex;align-items:center;width:100%;justify-content:center;gap:8px">
+      <button class="mic-btn" id="micBtn" style="width:calc(100% - 70px);height:54px;border-radius:27px;display:flex;align-items:center;justify-content:center">
         <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="8.5" y="2.5" width="7" height="13" rx="3.5"/>
           <path d="M19 11a7 7 0 0 1-14 0"/>
@@ -202,18 +195,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
   </div>
 </div>
 
-<input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;border:0;padding:0;margin:0"/>
-<input type="file" id="fileInput" accept="image/*" multiple style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;border:0;padding:0;margin:0"/>
-<label id="proxyCameraLabel" for="fileInputCamera" style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;cursor:pointer"></label>
-<label id="proxyGalleryLabel" for="fileInput" style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;cursor:pointer"></label>
-
-<div id="camCapture">
-  <video autoplay playsinline muted></video>
-  <button class="cam-cancel" type="button">✕</button>
-  <div class="controls">
-    <button class="shutter" type="button"></button>
-  </div>
-</div>
+<input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="display:none"/>
+<input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
 
 <script>
 // Telegram WebApp: expand to full height at boot so the keyboard doesn't
@@ -253,56 +236,30 @@ function haptic(){
 // fades when released. Quick taps (under 300ms) get treated as accidental
 // by the SR layer and produce no transcript, so the same gesture also
 // "dismisses" the keyboard if it was open.
-var chatTap = null;
-var ringTimer = null;
-var FADE_DIST = 110; // distance in px at which the ring is fully gone
-function clearRingTimer() {
-  if (ringTimer != null) { clearTimeout(ringTimer); ringTimer = null; }
-}
 // Persistent ring DOM — created once on script init, never removed. Show
 // just sets inline left/top + adds .visible class; hide just removes it.
 // iOS WebView's compositor was observed to lag DOM removals by 1-3s on
 // short touches, so the cheapest reliable path is class toggling on a
 // stable element.
+// Ring is purely cosmetic now — bottom mic + camera buttons handle recording
+// and camera. Pre-created once, toggled via .visible class on every chat
+// touch. No haptic, no business logic, no slide-to-camera gesture.
 var holdRing = (function(){
   var el = document.createElement('div');
   el.className = 'hold-ring';
-  el.innerHTML =
-    '<div class="ring-cam"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="12" cy="12" r="4"/></svg></div>'
-  + '<div class="ring-cd">'
-  +   '<svg class="arcs" viewBox="0 0 46 46" width="46" height="46"></svg>'
-  +   '<div class="icon">'
-  +     '<svg class="cd-cam" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#00ddff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="12" cy="12" r="4"/></svg>'
-  +     '<svg class="cd-paw" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#00ddff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
-  +   '</div>'
-  + '</div>';
   document.body.appendChild(el);
   return el;
 })();
 var ringVisible = false;
 function showHoldRing(x, y) {
-  // Reset any per-press cosmetic state from previous show.
-  holdRing.classList.remove('busy');
   holdRing.style.cssText = 'left:'+x+'px;top:'+y+'px';
   holdRing.classList.add('visible');
   ringVisible = true;
-}
-function fadeRing(ratio) {
-  if (!ringVisible) return;
-  holdRing.style.setProperty('--ring-op', String((1 - ratio) * 0.55));
-  holdRing.style.setProperty('--ring-scale', String(1 + ratio * 0.2));
 }
 function hideHoldRing() {
   if (!ringVisible) return;
   ringVisible = false;
   holdRing.classList.remove('visible');
-  holdRing.classList.remove('busy');
-  // Reset the ring's inner state for the next show — clear any cd/cam
-  // classes that may have been added during the previous gesture.
-  var cam = holdRing.querySelector('.ring-cam');
-  if (cam) { cam.classList.remove('armed'); cam.classList.remove('gallery'); }
-  var cd = holdRing.querySelector('.ring-cd');
-  if (cd) { cd.classList.remove('show'); cd.classList.remove('long'); var arcs = cd.querySelector('.arcs'); if (arcs) arcs.innerHTML = ''; }
 }
 // CHANNEL 1 — pure visual: ring shows on every chat touch, hides on every
 // release. Listeners live directly on the .chat element (instead of
@@ -331,180 +288,6 @@ function hideHoldRing() {
   document.addEventListener('touchend', ringForceHide);
   document.addEventListener('touchcancel', ringForceHide);
 })();
-
-// CHANNEL 2 — business logic: chatTap state, permission/state checks,
-// audio setup. Runs in parallel with channel 1; never touches the ring's
-// visibility (channel 1 owns it). Cosmetic class swaps only (e.g. .busy).
-document.addEventListener('pointerdown', function(e) {
-  var chat = document.querySelector('.chat');
-  if (!chat || !chat.contains(e.target)) { chatTap = null; return; }
-  chatTap = { t: Date.now(), x: e.clientX, y: e.clientY, cancelled: false, waiting: false, pointerId: e.pointerId, deferred: true };
-  setTimeout(function(){
-    if (!chatTap || !chatTap.deferred) return;
-    chatTap.deferred = false;
-    haptic();
-    if (typeof micPermission !== 'undefined' && micPermission !== 'granted') {
-      if (micPermission === 'denied') {
-        errEl.textContent = 'Разреши доступ к микрофону в настройках';
-      } else {
-        requestMicPermission();
-      }
-      return;
-    }
-    if (state === 'thinking' || state === 'talking') {
-      chatTap.waiting = true;
-      if (ringVisible) holdRing.classList.add('busy');
-      return;
-    }
-    if (state !== 'idle') return;
-    var a = document.activeElement;
-    if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
-    getAudioCtx();
-    startListening();
-  }, 0);
-}, {passive:true});
-// Arm the ring's camera button: highlight it, show the floating countdown
-// above (.ring-cd) and progressively fill its 5 cyan arcs over ~1.25s. Once
-// full, swap the cd's cam glyph for a paw to signal "release here = gallery"
-// and add .gallery glow on the button. Mirrors the legacy camBtn timing.
-var ringCamPressTimers = null;
-function armRingCam(cam) {
-  if (chatTap.armedCam) return;
-  chatTap.armedCam = true;
-  chatTap.camLong = false;
-  cam.classList.add('armed');
-  try { haptic(); } catch(_){}
-  var cd = ringVisible ? holdRing.querySelector('.ring-cd') : null;
-  if (!cd) return;
-  cd.classList.add('show');
-  cd.classList.remove('long');
-  var svg = cd.querySelector('.arcs');
-  svg.innerHTML = '';
-  var R = 19, CX = 23, CY = 23;
-  var circumference = 2 * Math.PI * R;
-  var segLen = (circumference / 5) - 4;
-  var per = circumference / 5;
-  var bg = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  bg.setAttribute('cx',CX); bg.setAttribute('cy',CY); bg.setAttribute('r',R);
-  bg.setAttribute('fill','none'); bg.setAttribute('stroke','rgba(0,200,255,.12)'); bg.setAttribute('stroke-width','3');
-  svg.appendChild(bg);
-  var arcs = [];
-  for (var i=0; i<5; i++) {
-    var c2 = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    c2.setAttribute('cx',CX); c2.setAttribute('cy',CY); c2.setAttribute('r',R);
-    c2.setAttribute('fill','none'); c2.setAttribute('stroke','#00ddff'); c2.setAttribute('stroke-width','3');
-    c2.setAttribute('stroke-linecap','round');
-    c2.setAttribute('stroke-dasharray', segLen+' '+circumference);
-    c2.setAttribute('stroke-dashoffset', String(-i*per));
-    c2.style.cssText = 'filter:drop-shadow(0 0 6px #00ddff);opacity:0;transition:opacity .15s';
-    svg.appendChild(c2);
-    arcs.push(c2);
-  }
-  var delays = [0, 400, 700, 900, 1050];
-  var timers = delays.map(function(d, idx) {
-    return setTimeout(function(){ if (arcs[idx]) arcs[idx].style.opacity = '1'; }, d);
-  });
-  timers.push(setTimeout(function() {
-    if (!chatTap || !chatTap.armedCam) return;
-    chatTap.camLong = true;
-    cam.classList.add('gallery');
-    cd.classList.add('long');
-    try { haptic(); } catch(_){}
-  }, 1250));
-  ringCamPressTimers = timers;
-}
-function disarmRingCam(cam) {
-  if (!chatTap || !chatTap.armedCam) return;
-  chatTap.armedCam = false;
-  chatTap.camLong = false;
-  if (ringCamPressTimers) { ringCamPressTimers.forEach(clearTimeout); ringCamPressTimers = null; }
-  if (cam) {
-    cam.classList.remove('armed');
-    cam.classList.remove('gallery');
-  }
-  var cd = ringVisible ? holdRing.querySelector('.ring-cd') : null;
-  if (cd) {
-    cd.classList.remove('show');
-    cd.classList.remove('long');
-    var svg = cd.querySelector('.arcs');
-    if (svg) svg.innerHTML = '';
-  }
-}
-function trackChatPointer(x, y) {
-  if (!chatTap || chatTap.cancelled) return;
-  // Camera-switch hit-test wins over fade-cancel: while pointer sits on the
-  // ring's camera icon, suppress the fade and arm the cam-switch on release.
-  if (ringVisible && state === 'listening') {
-    var cam = holdRing.querySelector('.ring-cam');
-    if (cam) {
-      var rc = cam.getBoundingClientRect();
-      var ccx = rc.left + rc.width/2, ccy = rc.top + rc.height/2;
-      var ddx = x - ccx, ddy = y - ccy;
-      var hit = (ddx*ddx + ddy*ddy) < (rc.width * rc.width);
-      if (hit) {
-        if (!chatTap.armedCam) armRingCam(cam);
-        fadeRing(0);
-        return;
-      } else if (chatTap.armedCam) {
-        disarmRingCam(cam);
-      }
-    }
-  }
-  var dx = x - chatTap.x;
-  var dy = y - chatTap.y;
-  var dist = Math.sqrt(dx * dx + dy * dy);
-  var ratio = Math.min(1, dist / FADE_DIST);
-  if (ringVisible) fadeRing(ratio);
-  if (ratio >= 1) {
-    chatTap.cancelled = true;
-    clearRingTimer();
-    hideHoldRing();
-    if (state === 'listening') {
-      listenAborted = true;
-      stopListening();
-    }
-  }
-}
-function finalizeChatRelease() {
-  if (!chatTap) return;
-  var wasCancelled = chatTap.cancelled;
-  var armedCam = chatTap.armedCam;
-  var camLong = chatTap.camLong;
-  if (ringCamPressTimers) { ringCamPressTimers.forEach(clearTimeout); ringCamPressTimers = null; }
-  chatTap = null;
-  clearRingTimer();
-  // Ring already hidden by channel-1 release listener. Camera/gallery stays
-  // sync (needs live user activation); stopListening goes to setTimeout(0).
-  if (armedCam) {
-    if (camLong) {
-      var lbl = document.getElementById('proxyGalleryLabel');
-      if (lbl) lbl.click();
-    } else {
-      openCustomCamera();
-    }
-  }
-  setTimeout(function(){
-    if (state === 'listening') {
-      if (wasCancelled || armedCam) listenAborted = true;
-      stopListening();
-    }
-  }, 0);
-}
-// Pointer events handle desktop mouse. Touch events keep firing on iOS even
-// when the chat is being scrolled (pointermove stops once browser takes over
-// for scroll, but touchmove continues), so we listen to both.
-document.addEventListener('pointermove', function(e) { trackChatPointer(e.clientX, e.clientY); }, {passive:true});
-document.addEventListener('touchmove', function(e) {
-  if (!chatTap || !e.touches || !e.touches.length) return;
-  var t = e.touches[0];
-  trackChatPointer(t.clientX, t.clientY);
-}, {passive:true});
-// Non-passive on the release path: some iOS WebView builds don't treat a
-// passive touchend as a valid user activation for input.click() on file
-// inputs, even though the spec says they should.
-document.addEventListener('pointerup', finalizeChatRelease);
-document.addEventListener('touchend', finalizeChatRelease);
-document.addEventListener('touchcancel', finalizeChatRelease);
 
 
 var KEY_SK = 'sk';
@@ -733,24 +516,16 @@ function setState(s) {
   micHint.textContent = s==='listening'?'ОТПУСТИ...':busy?'НАЖМИ ЧТОБЫ ОСТАНОВИТЬ':'ДЕРЖИ И ГОВОРИ';
   inp.disabled = busy;
   sb.disabled = busy;
-  // If a wait-ring was shown during busy, drop it once Stitch is done.
-  if (s === 'idle' && chatTap && chatTap.waiting) {
-    chatTap = null;
-    hideHoldRing();
-  }
 }
 
 function isChatAtBottom() {
   return (chat.scrollHeight - chat.scrollTop - chat.clientHeight) < 60;
 }
 function autoScrollChat() {
-  // Don't yank the scroll position if the user is actively touching the
-  // chat (holding for the mic ring) or has scrolled up to read.
-  if (chatTap) return;
   chat.scrollTop = chat.scrollHeight;
 }
 function addMsg(role, text) {
-  var follow = isChatAtBottom() && !chatTap;
+  var follow = isChatAtBottom();
   var w = document.createElement('div'); w.className = 'bbl'+(role==='u'?' u':'');
   var b = document.createElement('div'); b.className = 'bi'; b.textContent = text;
   w.appendChild(b); chat.appendChild(w);
@@ -1480,45 +1255,6 @@ inp.addEventListener('input', function() {
 window.pendingPhotos = [];
 var MAX_PHOTOS = 12;
 
-// Telegram iOS WKWebView blocks programmatic input.click() / label.click()
-// on file inputs even from a fresh user activation, so the slide-to-camera
-// gesture can't open the native picker. We bypass it for the camera path
-// with a custom getUserMedia capture overlay (gallery still goes through
-// the native picker via the proxy <label>, which works for galleries on
-// some builds).
-async function openCustomCamera() {
-  var ui = document.getElementById('camCapture');
-  if (!ui) return;
-  var video = ui.querySelector('video');
-  var stream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
-  } catch(e) {
-    errEl.textContent = 'Камера: ' + ((e && e.message) || e);
-    return;
-  }
-  video.srcObject = stream;
-  ui.classList.add('show');
-  function close() {
-    try { stream.getTracks().forEach(function(t){ try { t.stop(); } catch(_){} }); } catch(_){}
-    try { video.srcObject = null; } catch(_){}
-    ui.classList.remove('show');
-  }
-  function shutter() {
-    if (window.pendingPhotos.length >= MAX_PHOTOS) { close(); return; }
-    var w = video.videoWidth || 1280, h = video.videoHeight || 960;
-    var canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    canvas.getContext('2d').drawImage(video, 0, 0, w, h);
-    try {
-      window.pendingPhotos.push(canvas.toDataURL('image/jpeg', 0.85));
-      renderPhotoPreview();
-    } catch(_){}
-    close();
-  }
-  ui.querySelector('.shutter').onclick = shutter;
-  ui.querySelector('.cam-cancel').onclick = close;
-}
 function handleFiles(files) {
   if (!files || !files.length) return;
   var slots = MAX_PHOTOS - window.pendingPhotos.length;
