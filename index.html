@@ -41,6 +41,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#2c2e34;color:#2d224
 
 .status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8475a8;margin:2px 0}
 .dot{width:6px;height:6px;border-radius:50%;background:#d8cce8;transition:all .3s}
+.dot.ok{background:#5be09b;box-shadow:0 0 8px #5be09b}
 .dot.y{background:#ffd84d;box-shadow:0 0 8px #ffd84d;animation:db .5s infinite}
 .dot.g{background:#5be09b;box-shadow:0 0 8px #5be09b;animation:db 1s infinite}
 .dot.b{background:#7c5cff;box-shadow:0 0 8px #7c5cff;animation:db .4s infinite}
@@ -54,10 +55,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#2c2e34;color:#2d224
 .err:not(:empty){padding:2px 14px}
 .bottom{flex-shrink:0;position:relative;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:transparent;display:flex;flex-direction:column;gap:6px;align-items:center}
 .mic-btn{width:54px;height:54px;border-radius:50%;border:1px solid rgba(255,255,255,.18);font-size:24px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);box-shadow:0 4px 14px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.18);cursor:pointer;touch-action:none}
-.mic-btn.listening{background:rgba(255,90,110,.35);border-color:rgba(255,120,140,.5);animation:micP .8s ease infinite;box-shadow:0 4px 20px rgba(255,80,120,.45),inset 0 1px 0 rgba(255,255,255,.2)}
 .mic-btn.disabled{opacity:.5}
 .mic-btn.busy{background:rgba(255,144,67,.28);border-color:rgba(255,160,90,.45);box-shadow:0 4px 14px rgba(255,90,110,.35),inset 0 1px 0 rgba(255,255,255,.18)}
-.mic-btn:active:not(.listening):not(.busy){background:rgba(255,255,255,.04)}
+.mic-btn:active:not(.busy){background:rgba(255,255,255,.04)}
 #camBtn{transition:background .12s ease}
 #camBtn:active{background:rgba(255,255,255,.04)!important}
 #camBtn.neon{background:rgba(0,221,255,.25)!important;box-shadow:0 0 6px #00ddff,0 0 16px rgba(0,221,255,.5)!important}
@@ -85,7 +85,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#2c2e34;color:#2d224
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v392</span></div>
+<div class="title">Стич · Claude <span class="build">v393</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -535,7 +535,7 @@ function stopMouth() { if (raf) { cancelAnimationFrame(raf); raf=null; } mC=0; d
 
 function setState(s) {
   state = s;
-  dot.className = 'dot'+(s==='thinking'?' y':s==='talking'?' g':s==='listening'?' b':'');
+  dot.className = 'dot'+(s==='thinking'?' y':s==='talking'?' g':s==='listening'?' b':' ok');
   stxt.textContent = {idle:'Готов',listening:'Слушаю...',thinking:'Думаю...',talking:'Говорит...'}[s];
   head.className = 'head'+(s==='talking'?' talk':s==='listening'?' listen':'');
   glow.className = 'glow'+(s==='talking'?' on':'');
