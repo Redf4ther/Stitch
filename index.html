@@ -31,7 +31,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
 @keyframes saluteFall{0%{transform:translate(-50%,-50%);opacity:1;animation-timing-function:cubic-bezier(.05,.55,.4,1)}30%{transform:translate(calc(-50% + var(--peak-x,0)),calc(-50% + var(--peak-y,-260px)));opacity:1;animation-timing-function:cubic-bezier(.6,.04,.85,.55)}100%{transform:translate(calc(-50% + var(--end-x,0)),110vh);opacity:.85}}
 @keyframes saluteSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.hold-ring{position:fixed;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.12);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.28);box-shadow:0 10px 30px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.32);pointer-events:none;z-index:50;transform:translate(-50%,-50%) scale(var(--ring-scale,1));opacity:var(--ring-op,.85);transition:opacity .12s linear,transform .15s linear,background-color .2s linear,border-color .2s linear;will-change:transform,opacity;animation:ringPop .22s cubic-bezier(.16,.7,.3,1)}
+.hold-ring{position:fixed;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.12);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.28);box-shadow:0 10px 30px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.32);pointer-events:none;z-index:50;transform:translate(-50%,-50%) scale(var(--ring-scale,1));opacity:var(--ring-op,.85);transition:background-color .2s linear,border-color .2s linear;will-change:transform,opacity;display:none}
+.hold-ring.visible{display:block}
 .hold-ring.busy{background:rgba(255,144,67,.18);border-color:rgba(255,160,90,.45)}
 #voiceToast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.78);color:#fff;padding:10px 18px;border-radius:14px;font-size:15px;font-weight:500;z-index:200;opacity:0;transition:opacity .25s ease;pointer-events:none;letter-spacing:.5px}
 #voiceToast.show{opacity:1}
@@ -103,7 +104,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v425</span></div>
+<div class="title">Стич · Claude <span class="build">v426</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -253,49 +254,55 @@ function haptic(){
 // by the SR layer and produce no transcript, so the same gesture also
 // "dismisses" the keyboard if it was open.
 var chatTap = null;
-var holdRing = null;
 var ringTimer = null;
 var FADE_DIST = 110; // distance in px at which the ring is fully gone
 function clearRingTimer() {
   if (ringTimer != null) { clearTimeout(ringTimer); ringTimer = null; }
 }
-// Pre-built string for the ring's inner DOM so showHoldRing can do a
-// single innerHTML write instead of three createElement + setAttribute +
-// appendChild round trips. Saves a few ms on the touch-to-paint path.
-var HOLD_RING_INNER =
-  '<div class="ring-cam"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="12" cy="12" r="4"/></svg></div>'
-+ '<div class="ring-cd">'
-+   '<svg class="arcs" viewBox="0 0 46 46" width="46" height="46"></svg>'
-+   '<div class="icon">'
-+     '<svg class="cd-cam" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#00ddff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="12" cy="12" r="4"/></svg>'
-+     '<svg class="cd-paw" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#00ddff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
-+   '</div>'
-+ '</div>';
+// Persistent ring DOM — created once on script init, never removed. Show
+// just sets inline left/top + adds .visible class; hide just removes it.
+// iOS WebView's compositor was observed to lag DOM removals by 1-3s on
+// short touches, so the cheapest reliable path is class toggling on a
+// stable element.
+var holdRing = (function(){
+  var el = document.createElement('div');
+  el.className = 'hold-ring';
+  el.innerHTML =
+    '<div class="ring-cam"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="12" cy="12" r="4"/></svg></div>'
+  + '<div class="ring-cd">'
+  +   '<svg class="arcs" viewBox="0 0 46 46" width="46" height="46"></svg>'
+  +   '<div class="icon">'
+  +     '<svg class="cd-cam" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#00ddff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="12" cy="12" r="4"/></svg>'
+  +     '<svg class="cd-paw" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#00ddff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
+  +   '</div>'
+  + '</div>';
+  document.body.appendChild(el);
+  return el;
+})();
+var ringVisible = false;
 function showHoldRing(x, y) {
-  if (holdRing) { try { holdRing.remove(); } catch(_){} }
-  holdRing = document.createElement('div');
-  holdRing.className = 'hold-ring';
+  // Reset any per-press cosmetic state from previous show.
+  holdRing.classList.remove('busy');
   holdRing.style.cssText = 'left:'+x+'px;top:'+y+'px';
-  holdRing.innerHTML = HOLD_RING_INNER;
-  document.body.appendChild(holdRing);
+  holdRing.classList.add('visible');
+  ringVisible = true;
 }
 function fadeRing(ratio) {
-  if (!holdRing) return;
-  // Ring slightly expands (up to 1.2x) and fades out as the finger drags away.
+  if (!ringVisible) return;
   holdRing.style.setProperty('--ring-op', String((1 - ratio) * 0.55));
   holdRing.style.setProperty('--ring-scale', String(1 + ratio * 0.2));
 }
 function hideHoldRing() {
-  if (!holdRing) return;
-  var r = holdRing;
-  holdRing = null;
-  // Hide instantly: kill the entrance animation, set inline opacity to 0
-  // (overrides the CSS-var-based opacity in case some iOS WebView builds
-  // miss transitions on var() changes), then remove the element on the
-  // very next frame. No more waiting on a delayed setTimeout.
-  r.style.animation = 'none';
-  r.style.opacity = '0';
-  try { r.remove(); } catch(_){}
+  if (!ringVisible) return;
+  ringVisible = false;
+  holdRing.classList.remove('visible');
+  holdRing.classList.remove('busy');
+  // Reset the ring's inner state for the next show — clear any cd/cam
+  // classes that may have been added during the previous gesture.
+  var cam = holdRing.querySelector('.ring-cam');
+  if (cam) { cam.classList.remove('armed'); cam.classList.remove('gallery'); }
+  var cd = holdRing.querySelector('.ring-cd');
+  if (cd) { cd.classList.remove('show'); cd.classList.remove('long'); var arcs = cd.querySelector('.arcs'); if (arcs) arcs.innerHTML = ''; }
 }
 // CHANNEL 1 — pure visual: ring shows on every chat touch, hides on every
 // release. No business checks, no waiting on anything else. Capture-phase
@@ -331,7 +338,7 @@ document.addEventListener('pointerdown', function(e) {
     }
     if (state === 'thinking' || state === 'talking') {
       chatTap.waiting = true;
-      if (holdRing) holdRing.classList.add('busy');
+      if (ringVisible) holdRing.classList.add('busy');
       return;
     }
     if (state !== 'idle') return;
@@ -352,7 +359,7 @@ function armRingCam(cam) {
   chatTap.camLong = false;
   cam.classList.add('armed');
   try { haptic(); } catch(_){}
-  var cd = holdRing && holdRing.querySelector('.ring-cd');
+  var cd = ringVisible ? holdRing.querySelector('.ring-cd') : null;
   if (!cd) return;
   cd.classList.add('show');
   cd.classList.remove('long');
@@ -400,7 +407,7 @@ function disarmRingCam(cam) {
     cam.classList.remove('armed');
     cam.classList.remove('gallery');
   }
-  var cd = holdRing && holdRing.querySelector('.ring-cd');
+  var cd = ringVisible ? holdRing.querySelector('.ring-cd') : null;
   if (cd) {
     cd.classList.remove('show');
     cd.classList.remove('long');
@@ -412,7 +419,7 @@ function trackChatPointer(x, y) {
   if (!chatTap || chatTap.cancelled) return;
   // Camera-switch hit-test wins over fade-cancel: while pointer sits on the
   // ring's camera icon, suppress the fade and arm the cam-switch on release.
-  if (holdRing && state === 'listening') {
+  if (ringVisible && state === 'listening') {
     var cam = holdRing.querySelector('.ring-cam');
     if (cam) {
       var rc = cam.getBoundingClientRect();
@@ -432,7 +439,7 @@ function trackChatPointer(x, y) {
   var dy = y - chatTap.y;
   var dist = Math.sqrt(dx * dx + dy * dy);
   var ratio = Math.min(1, dist / FADE_DIST);
-  if (holdRing) fadeRing(ratio);
+  if (ringVisible) fadeRing(ratio);
   if (ratio >= 1) {
     chatTap.cancelled = true;
     clearRingTimer();
