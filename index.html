@@ -85,7 +85,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#2c2e34;color:#2d224
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v389</span></div>
+<div class="title">Стич · Claude <span class="build">v390</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -1113,14 +1113,9 @@ function cancelThinking() {
   setState('idle');
 }
 
-// Push-to-talk + cancel-on-tap. While busy: pointerdown cancels the current
-// thinking/talking. If the finger keeps holding past 250 ms, we slide into
-// recording — the user can immediately keep speaking. A quick release stays
-// "just a cancel" without flashing the listening UI.
-var pendingListen = null;
-function cancelPendingListen() {
-  if (pendingListen != null) { clearTimeout(pendingListen); pendingListen = null; }
-}
+// Push-to-talk: press starts listening NOW (cancelling any in-flight
+// thinking/talking first); release returns the UI to default with no
+// scheduled tasks left in flight to "linger" the visual state.
 micBtn.addEventListener('pointerdown', function(e) {
   if (e.button !== undefined && e.button !== 0) return;
   e.preventDefault();
@@ -1136,16 +1131,7 @@ micBtn.addEventListener('pointerdown', function(e) {
     return;
   }
   if (micBtn.setPointerCapture) { try { micBtn.setPointerCapture(e.pointerId); } catch(_){} }
-  if (state === 'thinking' || state === 'talking') {
-    cancelThinking();
-    cancelPendingListen();
-    pendingListen = setTimeout(function() {
-      pendingListen = null;
-      getAudioCtx();
-      startListening();
-    }, 250);
-    return;
-  }
+  if (state === 'thinking' || state === 'talking') cancelThinking();
   getAudioCtx();
   startListening();
 });
@@ -1155,7 +1141,6 @@ micBtn.addEventListener('pointerdown', function(e) {
 // and short-circuit the second/third firing via the state guard.
 function micRelease(e){
   try { if (e && e.pointerId != null && micBtn.releasePointerCapture) micBtn.releasePointerCapture(e.pointerId); } catch(_){}
-  if (pendingListen != null) { cancelPendingListen(); return; }
   if (state === 'listening') stopListening();
 }
 micBtn.addEventListener('pointerup', function(e){ e.preventDefault(); micRelease(e); });
@@ -1166,11 +1151,11 @@ micBtn.addEventListener('touchcancel', function(e){ micRelease(e); }, {passive:t
 micBtn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 // Window-level safety nets in case the host (Telegram WebView) swallows
 // every event that hit the button itself.
-window.addEventListener('pointerup', function(){ if (pendingListen != null) cancelPendingListen(); if (state==='listening') stopListening(); });
-window.addEventListener('mouseup', function(){ if (pendingListen != null) cancelPendingListen(); if (state==='listening') stopListening(); });
-window.addEventListener('touchend', function(){ if (pendingListen != null) cancelPendingListen(); if (state==='listening') stopListening(); });
-window.addEventListener('touchcancel', function(){ if (pendingListen != null) cancelPendingListen(); if (state==='listening') stopListening(); });
-window.addEventListener('blur', function(){ if (pendingListen != null) cancelPendingListen(); if (state==='listening') stopListening(); });
+window.addEventListener('pointerup', function(){ if (state==='listening') stopListening(); });
+window.addEventListener('mouseup', function(){ if (state==='listening') stopListening(); });
+window.addEventListener('touchend', function(){ if (state==='listening') stopListening(); });
+window.addEventListener('touchcancel', function(){ if (state==='listening') stopListening(); });
+window.addEventListener('blur', function(){ if (state==='listening') stopListening(); });
 document.addEventListener('visibilitychange', function(){ if (document.hidden && state==='listening') stopListening(); });
 
 // Render the photos-with-text bubble in the chat and forward to GPT-4o
