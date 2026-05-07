@@ -37,7 +37,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
 #voiceToast.show{opacity:1}
 #voiceCountdown{position:fixed;top:38%;left:50%;width:92px;height:92px;border-radius:50%;background:rgba(124,92,255,.85);color:#fff;display:flex;align-items:center;justify-content:center;font-size:46px;font-weight:700;z-index:201;pointer-events:none;box-shadow:0 6px 24px rgba(124,92,255,.45);transform:translate(-50%,-50%) scale(.6);opacity:0;transition:transform .15s ease,opacity .15s ease}
 #voiceCountdown.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
-.ring-cam{position:absolute;top:0;left:50%;width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.32);box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.32);transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:auto;cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s,transform .15s;-webkit-tap-highlight-color:transparent}
+.ring-cam{position:absolute;top:0;left:50%;width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.32);box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.32);transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;transition:background .15s,border-color .15s,box-shadow .15s,transform .15s}
 .ring-cam.armed{background:rgba(0,221,255,.4);border-color:rgba(0,221,255,.95);box-shadow:0 6px 28px rgba(0,221,255,.7),inset 0 1px 0 rgba(255,255,255,.32);transform:translate(-50%,-50%) scale(1.18)}
 .ring-cam.gallery{box-shadow:0 0 8px rgba(0,221,255,.7),0 0 22px rgba(0,221,255,.55),inset 0 1px 0 rgba(255,255,255,.32)}
 .ring-cd{position:absolute;top:-81px;left:50%;transform:translateX(-50%);width:46px;height:46px;display:none;pointer-events:none;filter:brightness(1) !important;isolation:isolate}
@@ -102,7 +102,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v415</span></div>
+<div class="title">Стич · Claude <span class="build">v416</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -264,16 +264,13 @@ function showHoldRing(x, y) {
   holdRing.className = 'hold-ring';
   holdRing.style.left = x + 'px';
   holdRing.style.top = y + 'px';
-  // Camera button on the top edge of the ring (mirrors the legacy bottom
-  // camBtn). Slide finger onto it → arms; release → native picker. Hold
-  // past 1.25s → cd swaps cam→paw → release → gallery. Element is a real
-  // <label>: armRingCam transfers pointer capture so the user's finger
-  // release fires pointerup + native click on this label, which forwards
-  // to the file input — Telegram iOS WebView blocks programmatic .click()
-  // but accepts the native captured-release click as a real user tap.
-  var cam = document.createElement('label');
+  // Camera button on the top edge of the ring. Slide finger onto it →
+  // arms; release → custom getUserMedia camera UI (Telegram iOS WebView
+  // blocks every programmatic file-picker invocation we tried). Hold past
+  // 1.25s → cd swaps cam→paw → release → tries gallery picker (proxy
+  // label). Hidden via CSS for the .busy wait ring.
+  var cam = document.createElement('div');
   cam.className = 'ring-cam';
-  cam.id = 'ringCamLabel';
   cam.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="12" cy="12" r="4"/></svg>';
   holdRing.appendChild(cam);
   // Countdown circle that floats above the camera button (same layout as
@@ -350,13 +347,6 @@ function armRingCam(cam) {
   chatTap.armedCam = true;
   chatTap.camLong = false;
   cam.classList.add('armed');
-  // Point label at the camera input now; the long-press timer below switches
-  // it to the gallery input. Capture the chat's pointer so the user's
-  // release fires pointerup + a native click directly on this <label>.
-  cam.setAttribute('for', 'fileInputCamera');
-  if (chatTap.pointerId != null && cam.setPointerCapture) {
-    try { cam.setPointerCapture(chatTap.pointerId); } catch(_){}
-  }
   try { haptic(); } catch(_){}
   var cd = holdRing && holdRing.querySelector('.ring-cd');
   if (!cd) return;
@@ -393,7 +383,6 @@ function armRingCam(cam) {
     chatTap.camLong = true;
     cam.classList.add('gallery');
     cd.classList.add('long');
-    cam.setAttribute('for', 'fileInput');
     try { haptic(); } catch(_){}
   }, 1250));
   ringCamPressTimers = timers;
@@ -406,10 +395,6 @@ function disarmRingCam(cam) {
   if (cam) {
     cam.classList.remove('armed');
     cam.classList.remove('gallery');
-    cam.removeAttribute('for');
-    if (chatTap && chatTap.pointerId != null && cam.releasePointerCapture && cam.hasPointerCapture && cam.hasPointerCapture(chatTap.pointerId)) {
-      try { cam.releasePointerCapture(chatTap.pointerId); } catch(_){}
-    }
   }
   var cd = holdRing && holdRing.querySelector('.ring-cd');
   if (cd) {
@@ -463,10 +448,20 @@ function finalizeChatRelease() {
   chatTap = null;
   clearRingTimer();
   hideHoldRing();
-  // Picker is opened natively: the .ring-cam <label> received pointer
-  // capture in armRingCam, so the user's pointerup fires on the label and
-  // the browser dispatches a real click event that forwards to the file
-  // input via the for=... attribute. Nothing to do here.
+  // Camera path uses our own getUserMedia overlay because Telegram iOS
+  // WebView blocks programmatic file-picker invocation in every form we
+  // tried (input.click, label.click, setPointerCapture+native click).
+  // Camera permission is pre-granted at startup so no prompt fires here.
+  // Gallery path still attempts the proxy <label> click; it's the best
+  // we can do without bringing back a visible button.
+  if (armedCam) {
+    if (camLong) {
+      var lbl = document.getElementById('proxyGalleryLabel');
+      if (lbl) lbl.click();
+    } else {
+      openCustomCamera();
+    }
+  }
   if (state === 'listening') {
     if (wasCancelled || armedCam) listenAborted = true;
     stopListening();
@@ -1088,8 +1083,17 @@ async function requestMicPermission(){
   if (micPermission === 'granted' || micPermission === 'denied' || micPermissionPending) return;
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { micPermission = 'denied'; return; }
   micPermissionPending = true;
+  // Request mic + camera in one combined prompt so the slide-to-camera
+  // flow doesn't trigger a second iOS WebView permission dialog later.
+  // If the combined call rejects (some builds reject if either device is
+  // missing), fall back to mic-only — voice is the critical path.
   try {
-    var probe = await navigator.mediaDevices.getUserMedia({audio:true});
+    var probe;
+    try {
+      probe = await navigator.mediaDevices.getUserMedia({audio:true, video:{facingMode:'environment'}});
+    } catch(combinedErr) {
+      probe = await navigator.mediaDevices.getUserMedia({audio:true});
+    }
     try { probe.getTracks().forEach(function(t){ try { t.stop(); } catch(_){} }); } catch(_){}
     micPermission = 'granted';
   } catch(e) {
