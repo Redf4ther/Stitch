@@ -39,11 +39,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
 #voiceCountdown.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .ring-cam{position:absolute;top:0;left:50%;width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.32);box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.32);transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;transition:background .15s,border-color .15s,box-shadow .15s,transform .15s}
 .ring-cam.armed{background:rgba(0,221,255,.4);border-color:rgba(0,221,255,.95);box-shadow:0 6px 28px rgba(0,221,255,.7),inset 0 1px 0 rgba(255,255,255,.32);transform:translate(-50%,-50%) scale(1.18)}
-.ring-cam.gallery{background:rgba(0,221,255,.55);border-color:rgba(0,221,255,1);box-shadow:0 0 8px rgba(0,221,255,.7),0 0 22px rgba(0,221,255,.55),inset 0 1px 0 rgba(255,255,255,.32);transform:translate(-50%,-50%) scale(1.22)}
-.ring-cam .paw-svg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0;transition:opacity .2s;pointer-events:none}
-.ring-cam .cam-svg{transition:opacity .2s}
-.ring-cam .cam-arcs{position:absolute;inset:0;transform:rotate(-90deg);pointer-events:none}
-.hold-ring.busy .ring-cam{display:none}
+.ring-cam.gallery{box-shadow:0 0 8px rgba(0,221,255,.7),0 0 22px rgba(0,221,255,.55),inset 0 1px 0 rgba(255,255,255,.32)}
+.ring-cd{position:absolute;top:-81px;left:50%;transform:translateX(-50%);width:46px;height:46px;display:none;pointer-events:none;filter:brightness(1) !important;isolation:isolate}
+.ring-cd.show{display:block}
+.ring-cd .arcs{position:absolute;inset:0;transform:rotate(-90deg)}
+.ring-cd .icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.ring-cd .icon svg{position:absolute;filter:drop-shadow(0 0 4px #00ddff);transition:opacity .25s}
+.ring-cd .cd-paw{opacity:0}
+.ring-cd.long .cd-cam{opacity:0}
+.ring-cd.long .cd-paw{opacity:1}
+.hold-ring.busy .ring-cam,.hold-ring.busy .ring-cd{display:none}
 @keyframes ringPop{from{transform:translate(-50%,-50%) scale(.55);opacity:0}}
 
 .status{display:flex;align-items:center;justify-content:center;margin:6px 0 2px}
@@ -90,7 +95,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v407</span></div>
+<div class="title">Стич · Claude <span class="build">v408</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -241,17 +246,26 @@ function showHoldRing(x, y) {
   holdRing.className = 'hold-ring';
   holdRing.style.left = x + 'px';
   holdRing.style.top = y + 'px';
-  // Camera icon attached to the top edge of the ring — slide finger onto it
-  // to cancel Whisper and open the camera. Long-press on the icon (1.25s)
-  // fills 5 cyan arcs around it and swaps to a paw glyph; release after
-  // that opens the gallery instead. Hidden via CSS for the .busy wait ring.
+  // Camera button on the top edge of the ring (mirrors the legacy bottom
+  // camBtn). Slide finger onto it → arms; release → camera. Hold past 1.25s
+  // → arc countdown above swaps cam→paw → release → gallery. Hidden via CSS
+  // for the .busy wait ring.
   var cam = document.createElement('div');
   cam.className = 'ring-cam';
-  cam.innerHTML =
-    '<svg class="cam-svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="12" cy="12" r="4"/></svg>'
-  + '<svg class="paw-svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
-  + '<svg class="cam-arcs" viewBox="0 0 54 54" width="54" height="54"></svg>';
+  cam.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="12" cy="12" r="4"/></svg>';
   holdRing.appendChild(cam);
+  // Countdown circle that floats above the camera button (same layout as
+  // the legacy camCountdown: 46×46, centered horizontally, ~58px gap above
+  // the button). Built once, populated/animated when armed.
+  var cd = document.createElement('div');
+  cd.className = 'ring-cd';
+  cd.innerHTML =
+    '<svg class="arcs" viewBox="0 0 46 46" width="46" height="46"></svg>'
+  + '<div class="icon">'
+  +   '<svg class="cd-cam" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#00ddff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="12" cy="12" r="4"/></svg>'
+  +   '<svg class="cd-paw" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#00ddff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
+  + '</div>';
+  holdRing.appendChild(cd);
   document.body.appendChild(holdRing);
   // CSS @keyframes ringPop runs automatically on insertion; nothing else
   // to coordinate from JS.
@@ -304,9 +318,10 @@ document.addEventListener('pointerdown', function(e) {
   getAudioCtx();
   startListening();
 }, {passive:true});
-// Arm the ring's camera icon: highlight it, animate the 5 cyan arcs filling
-// in over ~1.25s; once full, swap the cam glyph for a paw to signal "release
-// here = gallery". Mirrors the legacy camBtn long-press timing.
+// Arm the ring's camera button: highlight it, show the floating countdown
+// above (.ring-cd) and progressively fill its 5 cyan arcs over ~1.25s. Once
+// full, swap the cd's cam glyph for a paw to signal "release here = gallery"
+// and add .gallery glow on the button. Mirrors the legacy camBtn timing.
 var ringCamPressTimers = null;
 function armRingCam(cam) {
   if (chatTap.armedCam) return;
@@ -314,16 +329,19 @@ function armRingCam(cam) {
   chatTap.camLong = false;
   cam.classList.add('armed');
   try { haptic(); } catch(_){}
-  var svg = cam.querySelector('.cam-arcs');
-  if (!svg) return;
+  var cd = holdRing && holdRing.querySelector('.ring-cd');
+  if (!cd) return;
+  cd.classList.add('show');
+  cd.classList.remove('long');
+  var svg = cd.querySelector('.arcs');
   svg.innerHTML = '';
-  var R = 22, CX = 27, CY = 27;
+  var R = 19, CX = 23, CY = 23;
   var circumference = 2 * Math.PI * R;
   var segLen = (circumference / 5) - 4;
   var per = circumference / 5;
   var bg = document.createElementNS('http://www.w3.org/2000/svg','circle');
   bg.setAttribute('cx',CX); bg.setAttribute('cy',CY); bg.setAttribute('r',R);
-  bg.setAttribute('fill','none'); bg.setAttribute('stroke','rgba(0,200,255,.18)'); bg.setAttribute('stroke-width','3');
+  bg.setAttribute('fill','none'); bg.setAttribute('stroke','rgba(0,200,255,.12)'); bg.setAttribute('stroke-width','3');
   svg.appendChild(bg);
   var arcs = [];
   for (var i=0; i<5; i++) {
@@ -345,10 +363,7 @@ function armRingCam(cam) {
     if (!chatTap || !chatTap.armedCam) return;
     chatTap.camLong = true;
     cam.classList.add('gallery');
-    var camSvg = cam.querySelector('.cam-svg');
-    var pawSvg = cam.querySelector('.paw-svg');
-    if (camSvg) camSvg.style.opacity = '0';
-    if (pawSvg) pawSvg.style.opacity = '1';
+    cd.classList.add('long');
     try { haptic(); } catch(_){}
   }, 1250));
   ringCamPressTimers = timers;
@@ -361,12 +376,13 @@ function disarmRingCam(cam) {
   if (cam) {
     cam.classList.remove('armed');
     cam.classList.remove('gallery');
-    var svg = cam.querySelector('.cam-arcs');
+  }
+  var cd = holdRing && holdRing.querySelector('.ring-cd');
+  if (cd) {
+    cd.classList.remove('show');
+    cd.classList.remove('long');
+    var svg = cd.querySelector('.arcs');
     if (svg) svg.innerHTML = '';
-    var camSvg = cam.querySelector('.cam-svg');
-    var pawSvg = cam.querySelector('.paw-svg');
-    if (camSvg) camSvg.style.opacity = '1';
-    if (pawSvg) pawSvg.style.opacity = '0';
   }
 }
 function trackChatPointer(x, y) {
