@@ -83,7 +83,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v403</span></div>
+<div class="title">Стич · Claude <span class="build">v404</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -695,7 +695,7 @@ async function askClaude(msg) {
   hist.push({role:'user', content:msg});
   saveHist();
   try {
-    // Filter out image messages for gpt-4o-mini (text only)
+    // Voice path — collapse any image content to a text placeholder
     var textHist = hist.map(function(m) {
       if (Array.isArray(m.content)) {
         var txt = m.content.filter(function(p){return p.type==='text';}).map(function(p){return p.text;}).join(' ');
@@ -709,7 +709,7 @@ async function askClaude(msg) {
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body: JSON.stringify({model:'gpt-4o-mini', max_tokens:800, messages:messages}),
+      body: JSON.stringify({model:'gpt-5', max_completion_tokens:800, messages:messages}),
       signal: currentAbort.signal
     });
     var data = await r.json();
@@ -1475,7 +1475,7 @@ async function askWithImages(photos, userText) {
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body:JSON.stringify({model:'gpt-4o-mini', max_tokens:800, messages:[{role:'system',content:prompt}].concat(hist)}),
+      body:JSON.stringify({model:'gpt-5', max_completion_tokens:800, messages:[{role:'system',content:prompt}].concat(hist)}),
       signal: currentAbort.signal
     });
     var data = await r.json();
