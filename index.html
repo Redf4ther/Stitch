@@ -85,7 +85,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#2c2e34;color:#2d224
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v391</span></div>
+<div class="title">Стич · Claude <span class="build">v392</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -205,6 +205,19 @@ try {
   }
 } catch(_) {}
 
+// Single short haptic pulse — used on every button press and on chat-tap
+// hold-ring. Prefers Telegram's native impact (matches system feel) and
+// falls back to navigator.vibrate for non-Telegram browsers.
+function haptic(){
+  try {
+    if (tg && tg.HapticFeedback && typeof tg.HapticFeedback.impactOccurred === 'function') {
+      tg.HapticFeedback.impactOccurred('light');
+      return;
+    }
+  } catch(_) {}
+  try { if (navigator.vibrate) navigator.vibrate(10); } catch(_) {}
+}
+
 // Press-and-hold anywhere in the chat to push-to-talk, exactly like the
 // mic button. A translucent ring appears at the touch point on press and
 // fades when released. Quick taps (under 300ms) get treated as accidental
@@ -263,6 +276,7 @@ document.addEventListener('pointerdown', function(e) {
     chatTap = { t: Date.now(), x: e.clientX, y: e.clientY, cancelled: false, waiting: true };
     showHoldRing(e.clientX, e.clientY);
     if (holdRing) holdRing.classList.add('busy');
+    haptic();
     return;
   }
   if (state !== 'idle') { chatTap = null; return; }
@@ -270,6 +284,7 @@ document.addEventListener('pointerdown', function(e) {
   var a = document.activeElement;
   if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
   showHoldRing(e.clientX, e.clientY);
+  haptic();
   getAudioCtx();
   startListening();
 }, {passive:true});
@@ -429,10 +444,15 @@ function showVoiceToast(name) {
   var bd = document.getElementById('settingsBackdrop');
   function openS(){ if (sp) sp.style.display = 'flex'; }
   function closeS(){ if (sp) sp.style.display = 'none'; }
-  if (sb2 && !sb2._wired) { sb2._wired = true; sb2.addEventListener('click', openS); }
-  if (sc && !sc._wired) { sc._wired = true; sc.addEventListener('click', closeS); }
+  if (sb2 && !sb2._wired) { sb2._wired = true; sb2.addEventListener('click', function(){ haptic(); openS(); }); }
+  if (sc && !sc._wired) { sc._wired = true; sc.addEventListener('click', function(){ haptic(); closeS(); }); }
   if (bd && !bd._wired) { bd._wired = true; bd.addEventListener('click', closeS); }
-  if (vb && !vb._wired) { vb._wired = true; vb.addEventListener('click', function(){ closeS(); cycleVoice(); }); }
+  if (vb && !vb._wired) { vb._wired = true; vb.addEventListener('click', function(){ haptic(); closeS(); cycleVoice(); }); }
+})();
+// Camera button haptic on press (label triggers a hidden file input on tap).
+(function(){
+  var c = document.getElementById('camBtn');
+  if (c && !c._hapticWired) { c._hapticWired = true; c.addEventListener('pointerdown', function(){ haptic(); }); }
 })();
 
 // If no key yet, replace the welcome bubble with a request to send one in
@@ -1119,6 +1139,7 @@ function cancelThinking() {
 micBtn.addEventListener('pointerdown', function(e) {
   if (e.button !== undefined && e.button !== 0) return;
   e.preventDefault();
+  haptic();
   // Mic permission gate — no widget swaps, no cancel, no listening flip
   // until we know the mic is allowed. First press without permission only
   // fires the system prompt; user taps again afterwards.
@@ -1213,6 +1234,7 @@ sb.addEventListener('pointerdown', function(e) {
   if (e.button !== undefined && e.button !== 0) return;
   if (sb.disabled) return;
   sbDown = true;
+  haptic();
 });
 sb.addEventListener('pointerleave', function() { sbDown = false; });
 sb.addEventListener('pointercancel', function() { sbDown = false; });
