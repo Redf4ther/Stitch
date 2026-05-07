@@ -95,7 +95,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v408</span></div>
+<div class="title">Стич · Claude <span class="build">v409</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -159,8 +159,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
           </div>
         </div>
       </div>
-      <input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="display:none"/>
-      <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
     </div>
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
     <div id="composer" style="width:100%;background:rgba(255,255,255,.08);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:8px 10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.22)">
@@ -194,6 +192,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
     </button>
   </div>
 </div>
+
+<input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none"/>
+<input type="file" id="fileInput" accept="image/*" multiple style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none"/>
 
 <script>
 // Telegram WebApp: expand to full height at boot so the keyboard doesn't
