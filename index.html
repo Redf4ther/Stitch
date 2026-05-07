@@ -83,7 +83,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v401</span></div>
+<div class="title">Стич · Claude <span class="build">v402</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -709,7 +709,7 @@ async function askClaude(msg) {
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body: JSON.stringify({model:'gpt-4o', max_tokens:2000, messages:messages}),
+      body: JSON.stringify({model:'gpt-4o-mini', max_tokens:800, messages:messages}),
       signal: currentAbort.signal
     });
     var data = await r.json();
@@ -919,7 +919,7 @@ async function requestMicPermission(){
 var vadAnalyser = null;
 var vadInterval = null;
 var vadMaxLevel = 0;
-var VAD_THRESHOLD = 14; // average byte-frequency above which we treat audio as actual speech
+var VAD_THRESHOLD = 24; // average byte-frequency above which we treat audio as actual speech
 function startVAD(stream) {
   try {
     var ctx = getAudioCtx();
@@ -947,7 +947,7 @@ function stopVAD() {
 // the most common Russian ones plus short punctuation-only transcripts.
 var WHISPER_HALLUCINATIONS = [
   /^[\s\.,!?…\-—]+$/,
-  /^спасибо за (просмотр|внимание)/i,
+  /^спасибо( за (просмотр|внимание))?[!.\s]*$/i,
   /^подписывайтесь на канал/i,
   /^субтитры (подготовил|сделал)/i,
   /^продолжение следует/i,
@@ -960,11 +960,16 @@ var WHISPER_HALLUCINATIONS = [
   /^титры/i,
   /^редактор субтитров/i,
   /^корректор/i,
-  /^продолжение в следующей серии/i
+  /^продолжение в следующей серии/i,
+  /^(да|нет|ага|угу|ок|ой|ах|эм|хм|так|ну)[!.,\s]*$/i,
+  /^you$/i,
+  /^thank(s| you)[!.\s]*$/i,
+  /^bye[!.\s]*$/i,
+  /^[a-z]{1,3}$/i
 ];
 function isWhisperHallucination(t) {
   var s = String(t || '').trim();
-  if (!s || s.length < 2) return true;
+  if (!s || s.length < 3) return true;
   for (var i = 0; i < WHISPER_HALLUCINATIONS.length; i++) {
     if (WHISPER_HALLUCINATIONS[i].test(s)) return true;
   }
@@ -1470,7 +1475,7 @@ async function askWithImages(photos, userText) {
     var r = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body:JSON.stringify({model:'gpt-4o', max_tokens:2000, messages:[{role:'system',content:prompt}].concat(hist)}),
+      body:JSON.stringify({model:'gpt-4o-mini', max_tokens:800, messages:[{role:'system',content:prompt}].concat(hist)}),
       signal: currentAbort.signal
     });
     var data = await r.json();
