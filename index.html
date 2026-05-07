@@ -95,7 +95,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v409</span></div>
+<div class="title">Стич · Claude <span class="build">v410</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -193,8 +193,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
   </div>
 </div>
 
-<input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none"/>
-<input type="file" id="fileInput" accept="image/*" multiple style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none"/>
+<input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;border:0;padding:0;margin:0;z-index:-1"/>
+<input type="file" id="fileInput" accept="image/*" multiple style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;border:0;padding:0;margin:0;z-index:-1"/>
 
 <script>
 // Telegram WebApp: expand to full height at boot so the keyboard doesn't
@@ -430,14 +430,16 @@ function finalizeChatRelease() {
   chatTap = null;
   clearRingTimer();
   hideHoldRing();
+  // Fire the picker FIRST, while the touchend's user activation is fresh.
+  // stopListening() below touches MediaRecorder + AudioContext which can
+  // invalidate the activation on some iOS WebView builds, blocking .click().
+  if (armedCam) {
+    var fi = document.getElementById(camLong ? 'fileInput' : 'fileInputCamera');
+    if (fi) fi.click();
+  }
   if (state === 'listening') {
     if (wasCancelled || armedCam) listenAborted = true;
     stopListening();
-  }
-  if (armedCam) {
-    var inputId = camLong ? 'fileInput' : 'fileInputCamera';
-    var fi = document.getElementById(inputId);
-    if (fi) { try { fi.click(); } catch(_){} }
   }
 }
 // Pointer events handle desktop mouse. Touch events keep firing on iOS even
