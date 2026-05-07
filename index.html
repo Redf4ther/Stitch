@@ -53,7 +53,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#2c2e34;color:#2d224
 .err{flex-shrink:0;font-size:11px;color:#e84a5f;padding:0 14px;text-align:center}
 .err:not(:empty){padding:2px 14px}
 .bottom{flex-shrink:0;position:relative;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:transparent;display:flex;flex-direction:column;gap:6px;align-items:center}
-.mic-btn{width:54px;height:54px;border-radius:50%;border:1px solid rgba(255,255,255,.18);font-size:24px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);box-shadow:0 4px 14px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.18);cursor:pointer;touch-action:none;transition:background .12s ease}
+.mic-btn{width:54px;height:54px;border-radius:50%;border:1px solid rgba(255,255,255,.18);font-size:24px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);box-shadow:0 4px 14px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.18);cursor:pointer;touch-action:none}
 .mic-btn.listening{background:rgba(255,90,110,.35);border-color:rgba(255,120,140,.5);animation:micP .8s ease infinite;box-shadow:0 4px 20px rgba(255,80,120,.45),inset 0 1px 0 rgba(255,255,255,.2)}
 .mic-btn.disabled{opacity:.5}
 .mic-btn.busy{background:rgba(255,144,67,.28);border-color:rgba(255,160,90,.45);box-shadow:0 4px 14px rgba(255,90,110,.35),inset 0 1px 0 rgba(255,255,255,.18)}
@@ -85,7 +85,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#2c2e34;color:#2d224
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v386</span></div>
+<div class="title">Стич · Claude <span class="build">v387</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -1149,10 +1149,17 @@ micBtn.addEventListener('pointerdown', function(e) {
 });
 micBtn.addEventListener('pointerup', function(e) {
   e.preventDefault();
+  // Explicit capture release: in some Telegram WebViews the browser keeps
+  // the element in :active until capture is dropped, which makes the mic
+  // button look "stuck" in the press tint after the finger is up.
+  try { if (e.pointerId != null && micBtn.releasePointerCapture) micBtn.releasePointerCapture(e.pointerId); } catch(_){}
   if (pendingListen != null) { cancelPendingListen(); return; }
   stopListening();
 });
-micBtn.addEventListener('pointercancel', function(){ cancelPendingListen(); stopListening(); });
+micBtn.addEventListener('pointercancel', function(e){
+  try { if (e && e.pointerId != null && micBtn.releasePointerCapture) micBtn.releasePointerCapture(e.pointerId); } catch(_){}
+  cancelPendingListen(); stopListening();
+});
 micBtn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 // Safety nets in case the pointerup is swallowed by the host (Telegram WebView).
 window.addEventListener('pointerup', function(){ cancelPendingListen(); if (state==='listening') stopListening(); });
