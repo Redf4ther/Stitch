@@ -58,8 +58,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
 .mic-btn.disabled{opacity:.5}
 .mic-btn.busy{background:rgba(255,144,67,.22);border-color:rgba(255,160,90,.4);box-shadow:0 6px 18px rgba(255,90,110,.3),inset 0 1px 0 rgba(255,255,255,.22)}
 .mic-btn:active:not(.busy){background:rgba(255,255,255,.05)}
-#camBtn{transition:background .12s ease}
-#camBtn:active{background:rgba(255,255,255,.04)!important}
 #camBtn.neon{box-shadow:0 0 8px rgba(0,221,255,.7),0 0 20px rgba(0,221,255,.5),inset 0 1px 0 rgba(255,255,255,.28)!important}
 .mic-hint{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#8475a8;font-weight:600}
 .irow{display:flex;gap:6px;width:100%}
@@ -85,7 +83,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v396</span></div>
+<div class="title">Стич · Claude <span class="build">v397</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -1319,10 +1317,10 @@ function startCamPress(e) {
   // Clear any leftover timers from previous press
   if (camTimer && camTimer.clear) camTimer.clear();
   camTimer = null;
-  // Local reset
+  // Local reset — only the .neon class controls the long-press glow.
+  // The button's glass background/shadow are inline in HTML and must not
+  // be overwritten here (otherwise they "stick" after release).
   camBtn.classList.remove('neon');
-  camBtn.style.background = '#008db0';
-  camBtn.style.boxShadow = '';
   camBtn.setAttribute('for', 'fileInputCamera');
   var ccS = document.getElementById('centerCam');
   var cpS = document.getElementById('centerPaw');
@@ -1421,10 +1419,9 @@ function renderPhotoPreview() {
   var thumbs = document.getElementById('photoThumbs');
   thumbs.innerHTML = '';
   var cb = document.getElementById('camBtn');
-  // Always reset to default
+  // Always reset to default — leave the inline glass background/shadow
+  // alone, only drop the long-press glow class.
   cb.classList.remove('neon');
-  cb.style.background = '#008db0';
-  cb.style.removeProperty('box-shadow');
   if (window.pendingPhotos.length >= MAX_PHOTOS) {
     cb.style.opacity = '0.4';
     cb.style.pointerEvents = 'none';
