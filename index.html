@@ -85,7 +85,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#2c2e34;color:#2d224
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v387</span></div>
+<div class="title">Стич · Claude <span class="build">v388</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -1147,25 +1147,29 @@ micBtn.addEventListener('pointerdown', function(e) {
   getAudioCtx();
   startListening();
 });
-micBtn.addEventListener('pointerup', function(e) {
-  e.preventDefault();
-  // Explicit capture release: in some Telegram WebViews the browser keeps
-  // the element in :active until capture is dropped, which makes the mic
-  // button look "stuck" in the press tint after the finger is up.
-  try { if (e.pointerId != null && micBtn.releasePointerCapture) micBtn.releasePointerCapture(e.pointerId); } catch(_){}
-  if (pendingListen != null) { cancelPendingListen(); return; }
-  stopListening();
-});
-micBtn.addEventListener('pointercancel', function(e){
+// Centralised release path: pointerup, pointercancel, lostpointercapture,
+// raw touchend/touchcancel directly on the button — Telegram's WebView
+// occasionally drops one or two of these on iOS, so we listen to the lot
+// and short-circuit the second/third firing via the state guard.
+function micRelease(e){
   try { if (e && e.pointerId != null && micBtn.releasePointerCapture) micBtn.releasePointerCapture(e.pointerId); } catch(_){}
-  cancelPendingListen(); stopListening();
-});
+  if (pendingListen != null) { cancelPendingListen(); return; }
+  if (state === 'listening') stopListening();
+}
+micBtn.addEventListener('pointerup', function(e){ e.preventDefault(); micRelease(e); });
+micBtn.addEventListener('pointercancel', function(e){ micRelease(e); });
+micBtn.addEventListener('lostpointercapture', function(e){ micRelease(e); });
+micBtn.addEventListener('touchend', function(e){ micRelease(e); }, {passive:true});
+micBtn.addEventListener('touchcancel', function(e){ micRelease(e); }, {passive:true});
 micBtn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
-// Safety nets in case the pointerup is swallowed by the host (Telegram WebView).
-window.addEventListener('pointerup', function(){ cancelPendingListen(); if (state==='listening') stopListening(); });
-window.addEventListener('mouseup', function(){ cancelPendingListen(); if (state==='listening') stopListening(); });
-window.addEventListener('touchend', function(){ cancelPendingListen(); if (state==='listening') stopListening(); });
-window.addEventListener('blur', function(){ cancelPendingListen(); if (state==='listening') stopListening(); });
+// Window-level safety nets in case the host (Telegram WebView) swallows
+// every event that hit the button itself.
+window.addEventListener('pointerup', function(){ if (pendingListen != null) cancelPendingListen(); if (state==='listening') stopListening(); });
+window.addEventListener('mouseup', function(){ if (pendingListen != null) cancelPendingListen(); if (state==='listening') stopListening(); });
+window.addEventListener('touchend', function(){ if (pendingListen != null) cancelPendingListen(); if (state==='listening') stopListening(); });
+window.addEventListener('touchcancel', function(){ if (pendingListen != null) cancelPendingListen(); if (state==='listening') stopListening(); });
+window.addEventListener('blur', function(){ if (pendingListen != null) cancelPendingListen(); if (state==='listening') stopListening(); });
+document.addEventListener('visibilitychange', function(){ if (document.hidden && state==='listening') stopListening(); });
 
 // Render the photos-with-text bubble in the chat and forward to GPT-4o
 // vision. Used by both the typed-send path and the voice-input path so a
