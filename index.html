@@ -87,7 +87,7 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
       </svg>
     </button>
-    <div class="title">Стич · Claude <span class="build">v371</span></div>
+    <div class="title">Стич · Claude <span class="build">v372</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -96,6 +96,10 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
             <radialGradient id="bg" cx="42%" cy="30%" r="65%"><stop offset="0%" stop-color="#a8dff0"/><stop offset="35%" stop-color="#72b8e0"/><stop offset="70%" stop-color="#4a8ec8"/><stop offset="100%" stop-color="#2a5a9a"/></radialGradient>
             <radialGradient id="eg" cx="40%" cy="25%" r="65%"><stop offset="0%" stop-color="#7ac0d8"/><stop offset="100%" stop-color="#3060a0"/></radialGradient>
             <radialGradient id="ng" cx="30%" cy="25%" r="65%"><stop offset="0%" stop-color="#4a68b0"/><stop offset="100%" stop-color="#1a2858"/></radialGradient>
+            <radialGradient id="lgIris" cx="42%" cy="38%" r="68%"><stop offset="0%" stop-color="#1c2a4a"/><stop offset="55%" stop-color="#080c18"/><stop offset="100%" stop-color="#01030a"/></radialGradient>
+            <radialGradient id="lgScl" cx="38%" cy="30%" r="75%"><stop offset="0%" stop-color="#f6fbff"/><stop offset="60%" stop-color="#dceaff"/><stop offset="100%" stop-color="#9cb8e0"/></radialGradient>
+            <linearGradient id="lgChroma" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff9ad6" stop-opacity=".55"/><stop offset="50%" stop-color="#8cc8ff" stop-opacity="0"/><stop offset="100%" stop-color="#a8ffd0" stop-opacity=".55"/></linearGradient>
+            <radialGradient id="lgRim" cx="50%" cy="50%" r="50%"><stop offset="78%" stop-color="#ffffff" stop-opacity="0"/><stop offset="92%" stop-color="#bee1ff" stop-opacity=".55"/><stop offset="100%" stop-color="#ffffff" stop-opacity=".9"/></radialGradient>
           </defs>
           <g transform="rotate(-22,80,95)"><path d="M42 180 Q10 140 18 70 Q28 20 68 8 Q95 0 102 30 Q108 55 95 100 Q85 140 75 175Z" fill="url(#eg)"/><path d="M55 165 Q30 132 36 75 Q44 38 68 28 Q85 22 90 45 Q94 65 83 100 Q74 130 66 162Z" fill="#c090cc" opacity=".5"/></g>
           <g transform="rotate(22,220,95)"><path d="M258 180 Q290 140 282 70 Q272 20 232 8 Q205 0 198 30 Q192 55 205 100 Q215 140 225 175Z" fill="url(#eg)"/><path d="M245 165 Q270 132 264 75 Q256 38 232 28 Q215 22 210 45 Q206 65 217 100 Q226 130 234 162Z" fill="#c090cc" opacity=".5"/></g>
@@ -108,8 +112,8 @@ label.mic-btn:active{background:linear-gradient(135deg,#006b85,#00a4cc) !importa
           <path d="M150 148 C128 148,116 162,118 178 C120 194,132 204,150 205 C168 204,180 194,182 178 C184 162,172 148,150 148Z" fill="url(#ng)"/>
           <ellipse cx="140" cy="160" rx="11" ry="7" fill="#6080c0" opacity=".38"/>
           <ellipse cx="138" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/><ellipse cx="162" cy="187" rx="8" ry="6" fill="#0c1630" opacity=".55"/>
-          <ellipse cx="100" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="102" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="113" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
-          <ellipse cx="200" cy="148" rx="32" ry="32" fill="white"/><ellipse cx="202" cy="151" rx="23" ry="23" fill="#080c12"/><ellipse cx="213" cy="139" rx="10" ry="8" fill="white" opacity=".9"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2.5"/>
+          <ellipse cx="100" cy="148" rx="32" ry="32" fill="url(#lgScl)"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="url(#lgChroma)"/><ellipse cx="102" cy="151" rx="23" ry="23" fill="url(#lgIris)"/><ellipse cx="102" cy="161" rx="14" ry="3" fill="#9cd0ff" opacity=".42"/><path d="M82 142 Q102 124 122 142" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/><ellipse cx="113" cy="138" rx="6" ry="4" fill="white"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="url(#lgRim)"/><ellipse cx="100" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2"/>
+          <ellipse cx="200" cy="148" rx="32" ry="32" fill="url(#lgScl)"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="url(#lgChroma)"/><ellipse cx="202" cy="151" rx="23" ry="23" fill="url(#lgIris)"/><ellipse cx="202" cy="161" rx="14" ry="3" fill="#9cd0ff" opacity=".42"/><path d="M182 142 Q202 124 222 142" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/><ellipse cx="213" cy="138" rx="6" ry="4" fill="white"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="url(#lgRim)"/><ellipse cx="200" cy="148" rx="32" ry="32" fill="none" stroke="#18305a" stroke-width="2"/>
           <ellipse cx="128" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/><ellipse cx="172" cy="56" rx="10" ry="7" fill="#6ab0d0" stroke="#3a70a0" stroke-width="1.5"/>
           <g id="MC"><path d="M126 232 Q138 244 150 245 Q162 244 174 232" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="122" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/><circle cx="178" cy="234" r="2.5" fill="#3a70b0" opacity=".35"/></g>
           <g id="MO" style="display:none"><path id="MS" fill="#06101e"/><path id="MT" fill="white"/><ellipse id="TG" fill="#c03858" opacity=".85"/><path id="TOP" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/><path id="BOT" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/></g>
