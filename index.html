@@ -49,6 +49,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
 .ring-cd.long .cd-cam{opacity:0}
 .ring-cd.long .cd-paw{opacity:1}
 .hold-ring.busy .ring-cam,.hold-ring.busy .ring-cd{display:none}
+#camCapture{position:fixed;inset:0;background:#000;z-index:400;display:none}
+#camCapture.show{display:block}
+#camCapture video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+#camCapture .controls{position:absolute;bottom:max(28px,env(safe-area-inset-bottom,0px));left:0;right:0;display:flex;justify-content:center;align-items:center;padding:0 20px;z-index:2}
+#camCapture .shutter{width:78px;height:78px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.75);box-shadow:0 0 0 3px rgba(0,0,0,.55);cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
+#camCapture .shutter:active{transform:scale(.94)}
+#camCapture .cam-cancel{position:absolute;top:max(20px,env(safe-area-inset-top,0px));left:20px;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:2;-webkit-tap-highlight-color:transparent}
 @keyframes ringPop{from{transform:translate(-50%,-50%) scale(.55);opacity:0}}
 
 .status{display:flex;align-items:center;justify-content:center;margin:6px 0 2px}
@@ -95,7 +102,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v413</span></div>
+<div class="title">Стич · Claude <span class="build">v414</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -197,6 +204,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
 <input type="file" id="fileInput" accept="image/*" multiple style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;border:0;padding:0;margin:0"/>
 <label id="proxyCameraLabel" for="fileInputCamera" style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;cursor:pointer"></label>
 <label id="proxyGalleryLabel" for="fileInput" style="position:fixed;top:0;left:0;width:60px;height:60px;opacity:0;cursor:pointer"></label>
+
+<div id="camCapture">
+  <video autoplay playsinline muted></video>
+  <button class="cam-cancel" type="button">✕</button>
+  <div class="controls">
+    <button class="shutter" type="button"></button>
+  </div>
+</div>
 
 <script>
 // Telegram WebApp: expand to full height at boot so the keyboard doesn't
@@ -433,14 +448,17 @@ function finalizeChatRelease() {
   clearRingTimer();
   hideHoldRing();
   // Fire the picker FIRST, while the touchend's user activation is fresh.
-  // stopListening() below touches MediaRecorder + AudioContext which can
-  // invalidate the activation on some iOS WebView builds, blocking .click().
-  // Trigger a hidden <label> rather than the input directly: iOS WKWebView
-  // accepts native label→input forwarding more readily than a programmatic
-  // input.click() on a hidden file input.
+  // Camera path uses our own getUserMedia overlay because Telegram iOS
+  // WebView blocks programmatic file-picker invocation; gallery path still
+  // tries the proxy <label> click — works on more builds than the camera
+  // picker for reasons unknown.
   if (armedCam) {
-    var lbl = document.getElementById(camLong ? 'proxyGalleryLabel' : 'proxyCameraLabel');
-    if (lbl) lbl.click();
+    if (camLong) {
+      var lbl = document.getElementById('proxyGalleryLabel');
+      if (lbl) lbl.click();
+    } else {
+      openCustomCamera();
+    }
   }
   if (state === 'listening') {
     if (wasCancelled || armedCam) listenAborted = true;
@@ -1421,6 +1439,45 @@ inp.addEventListener('input', function() {
 window.pendingPhotos = [];
 var MAX_PHOTOS = 12;
 
+// Telegram iOS WKWebView blocks programmatic input.click() / label.click()
+// on file inputs even from a fresh user activation, so the slide-to-camera
+// gesture can't open the native picker. We bypass it for the camera path
+// with a custom getUserMedia capture overlay (gallery still goes through
+// the native picker via the proxy <label>, which works for galleries on
+// some builds).
+async function openCustomCamera() {
+  var ui = document.getElementById('camCapture');
+  if (!ui) return;
+  var video = ui.querySelector('video');
+  var stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+  } catch(e) {
+    errEl.textContent = 'Камера: ' + ((e && e.message) || e);
+    return;
+  }
+  video.srcObject = stream;
+  ui.classList.add('show');
+  function close() {
+    try { stream.getTracks().forEach(function(t){ try { t.stop(); } catch(_){} }); } catch(_){}
+    try { video.srcObject = null; } catch(_){}
+    ui.classList.remove('show');
+  }
+  function shutter() {
+    if (window.pendingPhotos.length >= MAX_PHOTOS) { close(); return; }
+    var w = video.videoWidth || 1280, h = video.videoHeight || 960;
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+    try {
+      window.pendingPhotos.push(canvas.toDataURL('image/jpeg', 0.85));
+      renderPhotoPreview();
+    } catch(_){}
+    close();
+  }
+  ui.querySelector('.shutter').onclick = shutter;
+  ui.querySelector('.cam-cancel').onclick = close;
+}
 function handleFiles(files) {
   if (!files || !files.length) return;
   var slots = MAX_PHOTOS - window.pendingPhotos.length;
