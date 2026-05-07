@@ -85,7 +85,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#2c2e34;color:#2d224
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v393</span></div>
+<div class="title">Стич · Claude <span class="build">v394</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -1106,6 +1106,10 @@ function stopListening() {
   // demotes back to idle if any of its later guards reject the clip.
   var loudEnough = vadMaxLevel >= VAD_THRESHOLD;
   setState((listenAborted || !loudEnough) ? 'idle' : 'thinking');
+  // Stop the recorder so it flushes the last chunk, then immediately kill
+  // the mic tracks. Without this releaseMicStream waits for onstop, which
+  // leaves the OS mic indicator (and the active stream) on for a noticeable
+  // beat after the finger is up.
   if (audioRec && audioRec.state === 'recording') {
     try { audioRec.stop(); } catch(_){}
   } else {
@@ -1113,6 +1117,8 @@ function stopListening() {
     // tears down without recording.
     pendingStop = true;
   }
+  stopVAD();
+  releaseMicStream();
 }
 
 // Cancel in-flight thinking / talking — abort fetch, stop audio, exit
