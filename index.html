@@ -95,7 +95,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v410</span></div>
+<div class="title">Стич · Claude <span class="build">v411</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -1027,6 +1027,26 @@ var micPermissionPending = false;
       try { st.onchange = function(){ micPermission = st.state; }; } catch(_){}
     }
   } catch(_){}
+  // Fire the system mic prompt as early as possible. Telegram WebView and
+  // most desktop browsers accept this without an explicit user gesture
+  // because opening the Mini App already counts as activation. Browsers
+  // that don't (Safari mobile outside Telegram) will silently no-op and
+  // the chat-tap fallback in pointerdown still asks on first interaction.
+  if (micPermission !== 'granted' && micPermission !== 'denied') {
+    requestMicPermission();
+  }
+})();
+// First-touch fallback: if the boot-time prompt was suppressed (no user
+// activation yet), the very first physical interaction with the page is
+// treated as a gesture by every WebView, so retry there.
+(function(){
+  function bootMicOnFirstTouch(){
+    document.removeEventListener('pointerdown', bootMicOnFirstTouch, true);
+    document.removeEventListener('touchstart', bootMicOnFirstTouch, true);
+    if (micPermission !== 'granted' && micPermission !== 'denied') requestMicPermission();
+  }
+  document.addEventListener('pointerdown', bootMicOnFirstTouch, true);
+  document.addEventListener('touchstart', bootMicOnFirstTouch, true);
 })();
 // Fire the system permission prompt without touching any mic-related UI.
 // No chat message, no listening animation, no widget swap — caller decides
