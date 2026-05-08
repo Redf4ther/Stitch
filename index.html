@@ -97,7 +97,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v453</span></div>
+<div class="title">Стич · Claude <span class="build">v454</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -139,7 +139,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <button onclick="cancelAllPhotos()" style="background:#fff;border:1px solid #c0c0c0;color:#222;width:24px;height:24px;border-radius:50%;font-size:14px;line-height:1;cursor:pointer;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.2)">✕</button>
       </div>
       <div style="display:flex;align-items:center;width:100%;gap:8px">
-        <button class="mic-btn" id="micBtn" style="flex:1;min-width:0;height:54px;border-radius:27px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.06) 100%);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1)">
+        <button class="mic-btn" id="micBtn" style="flex:1;min-width:0;height:54px;border-radius:27px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),var(--btn-tint, transparent);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1)">
           <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="8.5" y="2.5" width="7" height="13" rx="3.5"/>
             <path d="M19 11a7 7 0 0 1-14 0"/>
@@ -147,7 +147,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
           </svg>
         </button>
         <div style="position:relative;width:54px;height:54px;flex-shrink:0">
-          <label id="camBtn" for="fileInputCamera" style="position:absolute;inset:0;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.06) 100%);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;z-index:2">
+          <label id="camBtn" for="fileInputCamera" style="position:absolute;inset:0;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),var(--btn-tint, transparent);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;z-index:2">
             <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <rect x="4" y="4" width="16" height="16" rx="3.5"/>
               <circle cx="12" cy="12" r="4"/>
@@ -170,7 +170,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
       </div>
       <div class="irow" style="gap:8px;align-items:center;width:100%;background:transparent;border:none;border-radius:0;padding:0;box-shadow:none">
         <textarea class="inp" id="inp" placeholder="Напечатай вопрос..." rows="1" style="flex:1;background:transparent!important;border:none!important;padding:0 0 0 4px;margin:0;resize:none;font-family:inherit;line-height:1.4;max-height:120px;overflow-y:auto;-webkit-appearance:none;appearance:none;border-radius:0;outline:none;box-shadow:none"></textarea>
-        <button class="sbtn" id="sb" style="display:none;flex-shrink:0;background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.06) 100%);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1)">➤</button>
+        <button class="sbtn" id="sb" style="display:none;flex-shrink:0;background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),var(--btn-tint, transparent);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1)">➤</button>
       </div>
     </div>
   </div>
@@ -195,6 +195,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
     <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон фона</div>
       <div id="tonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
+    </div>
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон кнопок</div>
+      <div id="btnTonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
     </div>
   </div>
 </div>
@@ -410,6 +414,46 @@ function showVoiceToast(name) {
       picker.appendChild(b);
     });
     refreshRings(savedTone);
+  }
+  // Палитра тонов кнопок (mic/cam/send). "Чистый" = без tint, дальше —
+  // те же спокойные цвета что и для фона. Применяется через CSS-переменную
+  // --btn-tint: inline background у кнопок имеет двухслойный фон, где tint
+  // лежит под полупрозрачным glass-gradient (стеклянный эффект сохраняется).
+  var BTN_TONES = [{n:'Чистый', c:'transparent'}].concat(TONES);
+  var BTN_KEY = 'stitch_btn_tint';
+  function applyBtnTint(c){ document.documentElement.style.setProperty('--btn-tint', c); }
+  var savedBtn = localStorage.getItem(BTN_KEY) || 'transparent';
+  applyBtnTint(savedBtn);
+  var btnPicker = document.getElementById('btnTonePicker');
+  if (btnPicker && !btnPicker._wired) {
+    btnPicker._wired = true;
+    function refreshBtnRings(active){
+      Array.prototype.forEach.call(btnPicker.children, function(b){
+        var on = b.dataset.tone === active;
+        b.style.boxShadow = on
+          ? '0 0 0 2px rgba(255,255,255,.95), inset 0 1px 1px rgba(255,255,255,.4), inset 0 -2px 4px rgba(0,0,0,.4)'
+          : 'inset 0 1px 1px rgba(255,255,255,.35), inset 0 -2px 4px rgba(0,0,0,.45)';
+      });
+    }
+    BTN_TONES.forEach(function(t){
+      var b = document.createElement('button');
+      b.dataset.tone = t.c;
+      b.title = t.n;
+      // "Чистый" рисуем как чекерборд с диагональной полоской, чтобы был
+      // отличим от чёрного. Остальные — стеклянный камешек как у фоновых.
+      var bg = (t.c === 'transparent')
+        ? 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), repeating-linear-gradient(45deg, #444 0 4px, #222 4px 8px)'
+        : 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), '+t.c;
+      b.style.cssText = 'width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;background:'+bg+';transition:transform .15s';
+      b.addEventListener('click', function(){
+        haptic();
+        applyBtnTint(t.c);
+        localStorage.setItem(BTN_KEY, t.c);
+        refreshBtnRings(t.c);
+      });
+      btnPicker.appendChild(b);
+    });
+    refreshBtnRings(savedBtn);
   }
 })();
 // Camera button haptic on press (label triggers a hidden file input on tap).
