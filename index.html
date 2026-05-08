@@ -103,7 +103,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v486</span></div>
+<div class="title">Стич · Claude <span class="build">v487</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -266,11 +266,15 @@ function cycleVoice() {
   var i = VOICES.indexOf(currentVoice);
   currentVoice = VOICES[(i + 1) % VOICES.length];
   localStorage.setItem(KEY_VOICE, currentVoice);
-  // Pre-fetch the sample so by the time the countdown ends, audio is
-  // ready to play immediately.
+  // Pre-fetch the sample. Если он успел до конца countdown — audio
+  // стартует ровно по концу отсчёта. Если нет — countdown держит panel
+  // открытым пока url не готов, и тогда сразу же play + close.
   var urlPromise = fetchPreviewUrl(currentVoice);
-  showVoicePanel(currentVoice, 3, function() {
-    urlPromise.then(function(url) { if (url) playPreviewUrl(url); });
+  showVoicePanel(currentVoice, 3, function(close) {
+    urlPromise.then(function(url) {
+      if (url) playPreviewUrl(url);
+      close();
+    });
   });
 }
 function fetchPreviewUrl(voice) {
@@ -337,13 +341,18 @@ function showVoicePanel(name, steps, onDone) {
   void el.offsetHeight;
   el.classList.add('show');
   var i = steps;
+  var closed = false;
+  function close(){
+    if (closed) return; closed = true;
+    el.classList.remove('show');
+    setTimeout(function(){ try { el.remove(); } catch(_){} }, 220);
+  }
   function tick() {
     i--;
     if (i <= 0) {
       countEl.textContent = '';
-      el.classList.remove('show');
-      setTimeout(function(){ try { el.remove(); } catch(_){} }, 220);
-      onDone && onDone();
+      // panel остаётся открытым; close вызовет caller, когда url готов.
+      onDone && onDone(close);
       return;
     }
     countEl.textContent = String(i);
