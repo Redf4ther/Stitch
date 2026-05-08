@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v548</span></div>
+<div class="title">Стич · Claude <span class="build">v549</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -731,18 +731,15 @@ var shapes = ['normal','normal','wide','normal','tube','normal','wide','tube','n
 var openPos = [0.3,0.5,0.7,0.9,0.4,0.75,0.55];
 
 function drawMouth(a) {
-  if (!MC || !MO) return;
-  if (a < 0.04) { MC.style.display=''; MO.style.display='none'; return; }
-  MC.style.display='none'; MO.style.display='';
-  // Деревянная челюсть: верх рта зафиксирован на линии улыбки (cy=168),
-  // нижняя кромка опускается на amount пропорционально амплитуде. MS — чёрная
-  // зона между челюстями (открытый рот). TOP/BOT — кромки в цвете бровей.
-  var cx=110, cyTop=168, w=22;
-  var bottomDrop = 4 + a * 18;
-  var L=cx-w, R=cx+w, bY=cyTop+bottomDrop;
-  MS.setAttribute('d', 'M'+L+' '+cyTop+' L'+R+' '+cyTop+' Q'+(R-3)+' '+bY+' '+cx+' '+(bY+1)+' Q'+(L+3)+' '+bY+' '+L+' '+cyTop+' Z');
-  TOP.setAttribute('d', 'M'+L+' '+cyTop+' L'+R+' '+cyTop);
-  BOT.setAttribute('d', 'M'+L+' '+cyTop+' Q'+(L+4)+' '+(bY+1)+' '+cx+' '+(bY+2)+' Q'+(R-4)+' '+(bY+1)+' '+R+' '+cyTop);
+  var jaw = document.getElementById('dollJaw');
+  if (!jaw) return;
+  // Деревянная кукла: подбородок (отдельный SVG-кусок) опускается вниз
+  // на amount пропорционально амплитуде. Между ним и статичными прорезями
+  // открывается тёмная зона MS под ним — это и есть "рот".
+  var down = a < 0.04 ? 0 : 4 + a * 12;
+  jaw.style.transform = 'translateY('+down+'px)';
+  jaw.style.transformBox = 'fill-box';
+  jaw.style.transformOrigin = '50% 0';
 }
 
 function mLoop(t) {
@@ -1923,21 +1920,20 @@ async function askWithImages(photos, userText) {
     '<path d="M118 88 L 138 92" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
     // Носик
     '<path d="M110 138 L 106 152 L 114 152" stroke="#6a4030" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
-    // Деревянная челюсть — тонкие прорези по углам рта (петли распила),
-    // имитирует чревовещательскую куклу.
-    '<line x1="86" y1="160" x2="82" y2="180" stroke="#3a2010" stroke-width="1.3" stroke-linecap="round" opacity=".8"/>'+
-    '<line x1="134" y1="160" x2="138" y2="180" stroke="#3a2010" stroke-width="1.3" stroke-linecap="round" opacity=".8"/>'+
-    // Рот в цвет бровей. MC — закрытый смайл, MO — открытый рот (drawMouth).
-    '<g id="MC">'+
+    // Подбородок-челюсть как у деревянной куклы: тёмная зона рта (MS) лежит
+    // под отдельным куском "подбородка" в цвете кожи. drawMouth опускает
+    // подбородок вниз — между ним и неподвижными прорезями открывается рот.
+    '<path id="MS" d="M85 160 L 82 180 Q90 196 110 200 Q130 196 138 180 L 135 160 Q110 158 85 160 Z" fill="#1a0a04"/>'+
+    '<g id="dollJaw">'+
+      '<path id="jawShape" d="M85 160 L 82 180 Q90 196 110 200 Q130 196 138 180 L 135 160 Q110 158 85 160 Z" fill="url(#d-skin)" stroke="#2a1808" stroke-width="0.8"/>'+
       '<path d="M88 162 Q98 172 110 174 Q122 172 132 162" stroke="#3a2010" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+
     '</g>'+
-    '<g id="MO" style="display:none">'+
-      '<path id="MS" fill="#1a0a04"/>'+
-      '<path id="MT" style="display:none"/>'+
-      '<ellipse id="TG" style="display:none"/>'+
-      '<path id="TOP" stroke="#3a2010" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
-      '<path id="BOT" stroke="#3a2010" stroke-width="2" fill="none" stroke-linecap="round"/>'+
-    '</g>'+
+    // Прорези — статичные, на стыке подбородка и щёк. По ним рот раскрывается.
+    '<line x1="85" y1="160" x2="82" y2="180" stroke="#3a2010" stroke-width="1.3" stroke-linecap="round" opacity=".85"/>'+
+    '<line x1="135" y1="160" x2="138" y2="180" stroke="#3a2010" stroke-width="1.3" stroke-linecap="round" opacity=".85"/>'+
+    // Stub-элементы MC/MO/MT/TG/TOP/BOT для совместимости со старым drawMouth.
+    '<g id="MC" style="display:none"></g>'+
+    '<g id="MO" style="display:none"><path id="MT"/><ellipse id="TG"/><path id="TOP"/><path id="BOT"/></g>'+
     // Торс
     '<path d="M68 208 L 152 208 Q 168 290, 162 460 L 58 460 Q 52 290, 68 208 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
     '<circle cx="110" cy="234" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
@@ -1953,16 +1949,9 @@ async function askWithImages(photos, userText) {
     '<circle id="hip-l" cx="84" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
     '<circle id="hip-r" cx="136" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>';
   document.body.insertBefore(doll, document.body.firstChild);
-  // Привязываем MC/MO/MS/MT/TG/TOP/BOT теперь когда они в DOM. Раньше JS
-  // получал их getElementById на старте (до создания #doll) и получал null,
-  // поэтому drawMouth ничего не рисовал → рот не открывался при talk.
-  MC = doll.querySelector('#MC');
-  MO = doll.querySelector('#MO');
-  MS = doll.querySelector('#MS');
-  MT = doll.querySelector('#MT');
-  TG = doll.querySelector('#TG');
-  TOP = doll.querySelector('#TOP');
-  BOT = doll.querySelector('#BOT');
+  // Плавный переход челюсти при открытии/закрытии рта.
+  var jawEl = doll.querySelector('#dollJaw');
+  if (jawEl) jawEl.style.transition = 'transform .08s ease-out';
 
   // top позиционируется через CSS (env(safe-area-inset-top) + 14px) —
   // отступ под notch/dynamic island. Позиция стабильна, JS не нужен.
