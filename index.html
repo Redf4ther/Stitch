@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v529</span></div>
+<div class="title">Стич · Claude <span class="build">v530</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -215,6 +215,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
     <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон Стича</div>
       <div id="asstTonePicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:3px 3px 5px;-webkit-overflow-scrolling:touch"></div>
+    </div>
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Прозрачность сообщений</div>
+      <div id="alphaPicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:3px 3px 5px;-webkit-overflow-scrolling:touch"></div>
     </div>
   </div>
 </div>
@@ -567,11 +571,20 @@ function showVoicePanel(name, steps, onDone) {
     });
     refreshBtnRings(savedBtn);
   }
-  // Тон user-сообщений (правые пузыри). Default — тёмно-серый #2c2c2e.
+  // hex → rgba с заданным alpha. Используется для bubble-фонов: тон хранится
+  // как hex, прозрачность — как отдельный CSS var.
+  function hexToRgba(hex, a){
+    var n = parseInt(hex.replace('#',''), 16);
+    return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
+  }
+  var ALPHA_KEY = 'stitch_bbl_alpha';
+  var bblAlpha = parseFloat(localStorage.getItem(ALPHA_KEY));
+  if (isNaN(bblAlpha)) bblAlpha = 0.35;
+  // Тон user-сообщений (правые пузыри).
   var MSG_TONES = [{n:'Серый', c:'#2c2c2e'}].concat(TONES.slice(1));
   var MSG_KEY = 'stitch_msg_tint';
-  function applyMsgTint(c){ document.documentElement.style.setProperty('--msg-tint', c); }
   var savedMsg = localStorage.getItem(MSG_KEY) || '#2c2c2e';
+  function applyMsgTint(c){ savedMsg = c; document.documentElement.style.setProperty('--msg-tint', hexToRgba(c, bblAlpha)); }
   applyMsgTint(savedMsg);
   var msgPicker = document.getElementById('msgTonePicker');
   if (msgPicker && !msgPicker._wired) {
@@ -600,12 +613,54 @@ function showVoicePanel(name, steps, onDone) {
     });
     refreshMsgRings(savedMsg);
   }
-  // Тон assistant-сообщений (левые пузыри от Стича). Default — #1c1c1e.
+  // Тон assistant-сообщений (левые пузыри от Стича).
   var ASST_TONES = [{n:'Серый', c:'#1c1c1e'}].concat(TONES.slice(1));
   var ASST_KEY = 'stitch_asst_tint';
-  function applyAsstTint(c){ document.documentElement.style.setProperty('--asst-tint', c); }
   var savedAsst = localStorage.getItem(ASST_KEY) || '#1c1c1e';
+  function applyAsstTint(c){ savedAsst = c; document.documentElement.style.setProperty('--asst-tint', hexToRgba(c, bblAlpha)); }
   applyAsstTint(savedAsst);
+  // Меняем bblAlpha — пересчитываем оба тона.
+  function applyBblAlpha(a){
+    bblAlpha = a;
+    applyMsgTint(savedMsg);
+    applyAsstTint(savedAsst);
+  }
+
+  // Пресеты прозрачности bubble-сообщений: чем меньше alpha, тем больше
+  // фон стекла просвечивает за пузырями.
+  var ALPHA_PRESETS = [0.1, 0.25, 0.4, 0.6, 0.8, 1.0];
+  var alphaPicker = document.getElementById('alphaPicker');
+  if (alphaPicker && !alphaPicker._wired) {
+    alphaPicker._wired = true;
+    function refreshAlphaRings(active){
+      Array.prototype.forEach.call(alphaPicker.children, function(b){
+        var on = parseFloat(b.dataset.alpha) === active;
+        b.style.boxShadow = on
+          ? '0 0 0 2px rgba(255,255,255,.95), inset 0 1px 1px rgba(255,255,255,.4), inset 0 -2px 4px rgba(0,0,0,.4)'
+          : 'inset 0 1px 1px rgba(255,255,255,.35), inset 0 -2px 4px rgba(0,0,0,.45)';
+      });
+    }
+    ALPHA_PRESETS.forEach(function(a){
+      var b = document.createElement('button');
+      b.dataset.alpha = a;
+      b.title = Math.round(a * 100) + '%';
+      // Чёрный кружок с alpha — визуально показывает уровень прозрачности.
+      b.style.cssText = 'width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;background:radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), rgba(28,28,30,'+a+');transition:transform .15s';
+      b.addEventListener('click', function(){
+        haptic();
+        applyBblAlpha(a);
+        localStorage.setItem(ALPHA_KEY, String(a));
+        refreshAlphaRings(a);
+        killBackdrop();
+      });
+      alphaPicker.appendChild(b);
+    });
+    // Найти пресет ближайший к savedAlpha (для подсветки кольцом)
+    var closest = ALPHA_PRESETS.reduce(function(p, x){
+      return Math.abs(x - bblAlpha) < Math.abs(p - bblAlpha) ? x : p;
+    }, ALPHA_PRESETS[0]);
+    refreshAlphaRings(closest);
+  }
   var asstPicker = document.getElementById('asstTonePicker');
   if (asstPicker && !asstPicker._wired) {
     asstPicker._wired = true;
