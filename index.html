@@ -129,7 +129,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v543</span></div>
+<div class="title">Стич · Claude <span class="build">v544</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1929,6 +1929,10 @@ async function askWithImages(photos, userText) {
     '<path d="M118 88 L 138 92" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
     // Носик
     '<path d="M110 138 L 106 152 L 114 152" stroke="#6a4030" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
+    // Деревянная челюсть — тонкие прорези по углам рта (петли распила),
+    // имитирует чревовещательскую куклу.
+    '<line x1="86" y1="160" x2="82" y2="180" stroke="#3a1a08" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>'+
+    '<line x1="134" y1="160" x2="138" y2="180" stroke="#3a1a08" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>'+
     // Рот Стича: смайл-улыбка с двумя голубыми точками-щёчками. MO рисуется
     // JS-ом drawMouth (синий контур, белые зубы, красный язык — как у Стича).
     '<g id="MC">'+
