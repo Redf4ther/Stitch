@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v579</span></div>
+<div class="title">Стич · Claude <span class="build">v580</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1130,7 +1130,7 @@ async function askClaude(msg) {
     if (typeof msg0.content === 'string') text = msg0.content;
     else if (Array.isArray(msg0.content)) text = msg0.content.map(function(p){return p.text||'';}).join('');
     else if (msg0.refusal) text = msg0.refusal;
-    if (!text) throw new Error('Empty: ' + JSON.stringify(data.choices[0]).slice(0,300));
+    if (!text) text = 'Хм, я задумался… попробуй спросить ещё раз!';
     hist.push({role:'assistant', content:text});
     saveHist();
 
@@ -2006,7 +2006,7 @@ async function askWithImages(photos, userText) {
     if (typeof msg0.content === 'string') text = msg0.content;
     else if (Array.isArray(msg0.content)) text = msg0.content.map(function(p){return p.text||'';}).join('');
     else if (msg0.refusal) text = msg0.refusal;
-    if (!text) throw new Error('Empty: ' + JSON.stringify(data.choices[0]).slice(0,300));
+    if (!text) text = 'Хм, я задумался… попробуй спросить ещё раз!';
     hist.push({role:'assistant', content:text});
     saveHist();
 
