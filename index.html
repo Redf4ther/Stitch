@@ -86,7 +86,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 .img-msg{max-width:200px;border-radius:12px;margin-top:4px;display:block}
 .set-block{transition:opacity .3s ease}
 #settingsCard.dimmed{background:transparent!important;border-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-#settingsCard.dimmed .set-block{opacity:.1}
+#settingsCard.dimmed .set-block{opacity:.05}
 #settingsCard.dimmed .set-block.active{opacity:1}
 </style>
 
@@ -102,7 +102,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v474</span></div>
+<div class="title">Стич · Claude <span class="build">v475</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -390,21 +390,24 @@ function showVoicePanel(name, steps, onDone) {
       s.classList.toggle('active', s === section);
     });
   }
-  // Click на любой другой (не активный) блок в dimmed-режиме — возвращает
-  // меню в обычный вид. Color-кружки сначала вызывают focusBlock и делают
-  // блок active, поэтому bubble сюда уже видит block.active и ничего не
-  // снимает. А клик в пустую часть/заголовок неактивной плашки undim'ит.
+  // В dimmed-режиме любой клик ВНЕ активной секции — просто возвращает
+  // меню в обычный вид (без применения каких-либо действий). Capture-phase,
+  // чтобы перехватить event до color-кружков других секций — иначе их
+  // click-handler сработал бы и сменил цвет/active. stopPropagation +
+  // preventDefault гасит дальнейшие listener'ы.
   var card0 = document.getElementById('settingsCard');
   if (card0 && !card0._undimWired) {
     card0._undimWired = true;
     card0.addEventListener('click', function(e){
       if (!card0.classList.contains('dimmed')) return;
       var block = e.target.closest && e.target.closest('.set-block');
-      if (!block || block.classList.contains('active')) return;
+      if (block && block.classList.contains('active')) return;
+      e.stopPropagation();
+      e.preventDefault();
       card0.classList.remove('dimmed');
       Array.prototype.forEach.call(card0.querySelectorAll('.set-block.active'), function(s){ s.classList.remove('active'); });
       restoreBackdrop();
-    });
+    }, true);
   }
   if (sb2 && !sb2._wired) { sb2._wired = true; sb2.addEventListener('click', function(){ haptic(); openS(); }); }
   if (sc && !sc._wired) { sc._wired = true; sc.addEventListener('click', function(){ haptic(); closeS(); }); }
