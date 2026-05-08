@@ -131,7 +131,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v514</span></div>
+<div class="title">Стич · Claude <span class="build">v515</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -710,8 +710,8 @@ function drawMouth(a, shape) {
   if (!MC || !MO) return;
   if (a < 0.04) { MC.style.display=''; MO.style.display='none'; return; }
   MC.style.display='none'; MO.style.display='';
-  // Координаты под голову куклы: cx=110, cy=174 в SVG #doll (220x540).
-  var cx=110, cy=174, w, h;
+  // Координаты под голову куклы: cx=110, cy=168 в SVG #doll (220x540).
+  var cx=110, cy=168, w, h;
   if (shape==='tube') { w=12+a*7; h=a*26; }
   else if (shape==='wide') { w=34+a*10; h=a*9; }
   else { w=28+a*10; h=a*17; }
@@ -1891,23 +1891,23 @@ async function askWithImages(photos, userText) {
     '<rect x="102" y="170" width="16" height="40" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
     // Голова — почти круглая, чуть вытянута вверх
     '<ellipse cx="110" cy="120" rx="60" ry="64" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.5"/>'+
-    // Глаза (поближе к центру головы)
-    '<ellipse cx="94" cy="118" rx="8" ry="11" fill="#020202"/>'+
-    '<ellipse cx="126" cy="118" rx="8" ry="11" fill="#020202"/>'+
-    '<circle cx="92" cy="114" r="1.6" fill="#90a0b0" opacity=".6"/>'+
-    '<circle cx="124" cy="114" r="1.6" fill="#90a0b0" opacity=".6"/>'+
-    '<ellipse cx="94" cy="132" rx="8" ry="2.6" fill="rgba(40,20,30,.5)" filter="url(#d-soft)"/>'+
-    '<ellipse cx="126" cy="132" rx="8" ry="2.6" fill="rgba(40,20,30,.5)" filter="url(#d-soft)"/>'+
-    // Брови (тоже сдвинуты к центру)
-    '<path d="M82 98 L 102 94" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
-    '<path d="M118 94 L 138 98" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
+    // Глаза
+    '<ellipse cx="94" cy="112" rx="8" ry="11" fill="#020202"/>'+
+    '<ellipse cx="126" cy="112" rx="8" ry="11" fill="#020202"/>'+
+    '<circle cx="92" cy="108" r="1.6" fill="#90a0b0" opacity=".6"/>'+
+    '<circle cx="124" cy="108" r="1.6" fill="#90a0b0" opacity=".6"/>'+
+    '<ellipse cx="94" cy="126" rx="8" ry="2.6" fill="rgba(40,20,30,.5)" filter="url(#d-soft)"/>'+
+    '<ellipse cx="126" cy="126" rx="8" ry="2.6" fill="rgba(40,20,30,.5)" filter="url(#d-soft)"/>'+
+    // Брови
+    '<path d="M82 92 L 102 88" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
+    '<path d="M118 88 L 138 92" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
     // Носик
-    '<path d="M110 144 L 106 158 L 114 158" stroke="#6a4030" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
-    // Рот: MC (улыбка-смайл) и MO (открытый — рисуется JS-ом drawMouth).
+    '<path d="M110 138 L 106 152 L 114 152" stroke="#6a4030" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
+    // Рот
     '<g id="MC">'+
-      '<path d="M88 168 Q98 178 110 180 Q122 178 132 168" stroke="#3a1810" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
-      '<circle cx="84" cy="170" r="1.8" fill="#a04030" opacity=".35"/>'+
-      '<circle cx="136" cy="170" r="1.8" fill="#a04030" opacity=".35"/>'+
+      '<path d="M88 162 Q98 172 110 174 Q122 172 132 162" stroke="#3a1810" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
+      '<circle cx="84" cy="164" r="1.8" fill="#a04030" opacity=".35"/>'+
+      '<circle cx="136" cy="164" r="1.8" fill="#a04030" opacity=".35"/>'+
     '</g>'+
     '<g id="MO" style="display:none">'+
       '<path id="MS" fill="#0a0408"/>'+
