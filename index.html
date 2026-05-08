@@ -1952,7 +1952,7 @@ async function askWithImages(photos, userText) {
   document.body.insertBefore(doll, document.body.firstChild);
   // Плавный переход челюсти при открытии/закрытии рта.
   var jawEl = doll.querySelector('#dollJaw');
-  if (jawEl) jawEl.style.transition = 'transform .08s ease-out';
+  if (jawEl) jawEl.style.transition = 'transform .18s ease-out';
 
   // top позиционируется через CSS (env(safe-area-inset-top) + 14px) —
   // отступ под notch/dynamic island. Позиция стабильна, JS не нужен.
