@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v570</span></div>
+<div class="title">Стич · Claude <span class="build">v571</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -679,9 +679,51 @@ function showVoicePanel(name, steps, onDone) {
     });
     refreshAsstRings(savedAsst);
   }
-  // Тон одежды куклы: red rgba(60,40,30,.5) → solid hex выбранного тона.
-  // Применяется через JS на element #dollTorso (он создаётся позже, в IIFE).
-  var CLOTH_TONES = [{n:'Бурый', c:'default'}].concat(TONES.slice(1));
+  // Тон одежды куклы. Default — текущий бурый gradient. Дальше Pixar/Apple
+  // палитра ярких цветов для тряпичных кукольных комбинезонов.
+  var CLOTH_TONES = [
+    {n:'Бурый',      c:'default'},
+    // Pixar/Disney
+    {n:'Красный',    c:'#c41030'},
+    {n:'Алый',       c:'#dc2030'},
+    {n:'Кирпич',     c:'#a04030'},
+    {n:'Манго',      c:'#f4862c'},
+    {n:'Янтарь',     c:'#e8a830'},
+    {n:'Солнце',     c:'#f4c020'},
+    {n:'Лимон',      c:'#d4d020'},
+    {n:'Лайм',       c:'#7ac84a'},
+    {n:'Изумруд',    c:'#1ec88a'},
+    {n:'Мята',       c:'#50c8a0'},
+    {n:'Бирюза',     c:'#1ec0c8'},
+    {n:'Небо',       c:'#4ab8e0'},
+    {n:'Океан',      c:'#3080c8'},
+    {n:'Кобальт',    c:'#3060c0'},
+    {n:'Сапфир',     c:'#2848a0'},
+    {n:'Индиго',     c:'#5a3aa8'},
+    {n:'Лаванда',    c:'#8060c8'},
+    {n:'Сирень',     c:'#a060c0'},
+    {n:'Орхидея',    c:'#c050b0'},
+    {n:'Фуксия',     c:'#d04098'},
+    {n:'Малина',     c:'#c83870'},
+    {n:'Роза',       c:'#e060a0'},
+    {n:'Коралл',     c:'#f0708a'},
+    // Apple System
+    {n:'Apple Red',     c:'#FF3B30'},
+    {n:'Apple Orange',  c:'#FF9500'},
+    {n:'Apple Yellow',  c:'#FFCC00'},
+    {n:'Apple Green',   c:'#34C759'},
+    {n:'Apple Mint',    c:'#00C7BE'},
+    {n:'Apple Teal',    c:'#30B0C7'},
+    {n:'Apple Cyan',    c:'#32ADE6'},
+    {n:'Apple Blue',    c:'#007AFF'},
+    {n:'Apple Indigo',  c:'#5856D6'},
+    {n:'Apple Purple',  c:'#AF52DE'},
+    {n:'Apple Pink',    c:'#FF2D55'},
+    {n:'Apple Brown',   c:'#A2845E'},
+    // Нейтральные
+    {n:'Графит',     c:'#3a3a4a'},
+    {n:'Уголь',      c:'#1c1c1e'}
+  ];
   var CLOTH_KEY = 'stitch_cloth_tint';
   var savedCloth = localStorage.getItem(CLOTH_KEY) || 'default';
   function applyClothTint(c){
