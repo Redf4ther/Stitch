@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v520</span></div>
+<div class="title">Стич · Claude <span class="build">v521</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1924,8 +1924,8 @@ async function askWithImages(photos, userText) {
     // половина руки/ноги под одеждой, половина наружу).
     '<circle id="shoulder-l" cx="68" cy="226" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
     '<circle id="shoulder-r" cx="152" cy="226" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
-    '<circle id="hip-l" cx="58" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
-    '<circle id="hip-r" cx="162" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>';
+    '<circle id="hip-l" cx="84" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
+    '<circle id="hip-r" cx="136" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>';
   document.body.insertBefore(doll, document.body.firstChild);
 
   // top позиционируется через CSS (env(safe-area-inset-top) + 14px) —
@@ -1995,10 +1995,11 @@ async function askWithImages(photos, userText) {
     return {x:x, y:y};
   }
   // Свободно висящая конечность — строго вниз от плеча (без боковой
-  // развёрнутости), чтобы рисовалась прямой линией, а не дугой.
+  // развёрнутости), чтобы рисовалась прямой линией, а не дугой. Длина рук
+  // подобрана так, чтобы кисть оказывалась чуть ниже пояса.
   function dangleGoal(L){
     var s = shoulderPoint(L.shoulderId);
-    return {x: s.x, y: s.y + (L.isLeg ? 220 : 160)};
+    return {x: s.x, y: s.y + (L.isLeg ? 220 : 250)};
   }
   function quadPath(p1, p2){
     var dx = p2.x - p1.x, dy = p2.y - p1.y;
