@@ -129,7 +129,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v505</span></div>
+<div class="title">Стич · Claude <span class="build">v506</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1965,7 +1965,7 @@ async function askWithImages(photos, userText) {
     L.pathEl = overlay.querySelector('#'+L.pathId);
     L.handEl = overlay.querySelector('#'+L.handId);
   });
-  var attachOrder = 0;
+  var attachOrderL = 0, attachOrderR = 0;
 
   function shoulderPoint(svgId){
     var c = document.getElementById(svgId);
@@ -2003,11 +2003,15 @@ async function askWithImages(photos, userText) {
   }
   function easeOut(t){ return 1 - Math.pow(1 - t, 3); }
 
+  // Левые конечности (arm-l, leg-l) ставятся только на левые bubble
+  // (assistant без класса .u), правые (arm-r, leg-r) — только на правые
+  // (user с .u). Внутри своей стороны round-robin между рукой и ногой.
   window.dollAttach = function(bubble){
     if (!bubble) return;
-    var idx = attachOrder % LIMBS.length;
-    attachOrder++;
-    LIMBS[idx].bubble = bubble;
+    var isUser = bubble.classList && bubble.classList.contains('u');
+    var pool = isUser ? [LIMBS[1], LIMBS[3]] : [LIMBS[0], LIMBS[2]];
+    var idx = isUser ? (attachOrderR++ % pool.length) : (attachOrderL++ % pool.length);
+    pool[idx].bubble = bubble;
   };
 
   // Low-pass smoothing с большим фактором (0.4) — конечность плотно следует
