@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v553</span></div>
+<div class="title">Стич · Claude <span class="build">v554</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1920,19 +1920,18 @@ async function askWithImages(photos, userText) {
     '<path d="M118 88 L 138 92" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
     // Носик
     '<path d="M110 138 L 106 152 L 114 152" stroke="#6a4030" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
-    // Подбородок-челюсть как у деревянной куклы: тёмная зона MS лежит под
-    // подбородком (path в цвете кожи). drawMouth опускает подбородок вниз
-    // — между ним и неподвижными прорезями открывается тёмный рот.
-    // Path подбородка строго внутри контура головы (rx=60 ry=64), не выпирает.
-    '<path id="MS" d="M88 160 L 88 180 Q98 184 110 184 Q122 184 132 180 L 132 160 Q110 158 88 160 Z" fill="#1a0a04"/>'+
+    // Подбородок-челюсть деревянной куклы. Верхняя кромка челюсти повторяет
+    // форму улыбки — именно по этой линии и открывается рот при talk.
+    // Боковые прорези соединяются с улыбкой-прорезью на верхушке челюсти.
+    '<path id="MS" d="M88 160 Q98 168 110 168 Q122 168 132 160 L 132 180 Q122 184 110 184 Q98 184 88 180 Z" fill="#1a0a04"/>'+
     '<g id="dollJaw">'+
-      '<path id="jawShape" d="M88 160 L 88 180 Q98 184 110 184 Q122 184 132 180 L 132 160 Q110 158 88 160 Z" fill="url(#d-skin)"/>'+
-      // Прорезь-улыбка поперёк подбородка — третья щель деревянной куклы.
-      '<path d="M93 168 Q110 173 127 168" stroke="#3a2010" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".85"/>'+
+      '<path id="jawShape" d="M88 160 Q98 168 110 168 Q122 168 132 160 L 132 180 Q122 184 110 184 Q98 184 88 180 Z" fill="url(#d-skin)"/>'+
     '</g>'+
-    // Прорези — вертикальные, статичные, на стыке подбородка и щёк.
+    // Три прорези — вертикальные по бокам и горизонтальная улыбка на стыке.
+    // Все три соединяются и образуют контур по которому раскрывается рот.
     '<line x1="88" y1="160" x2="88" y2="180" stroke="#3a2010" stroke-width="1.3" stroke-linecap="round" opacity=".85"/>'+
     '<line x1="132" y1="160" x2="132" y2="180" stroke="#3a2010" stroke-width="1.3" stroke-linecap="round" opacity=".85"/>'+
+    '<path d="M88 160 Q98 168 110 168 Q122 168 132 160" stroke="#3a2010" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".85"/>'+
     // Stub-элементы MC/MO/MT/TG/TOP/BOT для совместимости со старым drawMouth.
     '<g id="MC" style="display:none"></g>'+
     '<g id="MO" style="display:none"><path id="MT"/><ellipse id="TG"/><path id="TOP"/><path id="BOT"/></g>'+
