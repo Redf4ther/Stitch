@@ -97,7 +97,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v430</span></div>
+<div class="title">Стич · Claude <span class="build">v431</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -1320,6 +1320,7 @@ var camTimer = null;
 var camCountdownEl = document.getElementById('camCountdown');
 var camLongPress = false;
 var wasLongPress = false;
+var camAborted = false;
 var countdownVal = 0;
 
 function startCamPress(e) {
@@ -1331,12 +1332,14 @@ function startCamPress(e) {
   // be overwritten here (otherwise they "stick" after release).
   camBtn.classList.remove('neon');
   camBtn.setAttribute('for', 'fileInputCamera');
+  document.getElementById('galLabel').setAttribute('for', 'fileInput');
   var ccS = document.getElementById('centerCam');
   var cpS = document.getElementById('centerPaw');
   if (ccS) ccS.style.opacity = '1';
   if (cpS) cpS.style.opacity = '0';
   camLongPress = false;
   wasLongPress = false;
+  camAborted = false;
   // Generate arc segments
   var svg = document.getElementById('camArcs');
   svg.innerHTML = '';
@@ -1411,12 +1414,47 @@ function endCamPress(e) {
 
 camBtn.addEventListener('touchstart', startCamPress, {passive:false});
 camBtn.addEventListener('touchend', function(e){
+  if (camAborted) {
+    // Палец уехал с кнопки — блокируем нативный label-click, чтобы не
+    // открылась камера/галерея. preventDefault на touchend гасит
+    // touch→click sequence в iOS Safari/Telegram WebView.
+    e.preventDefault();
+  }
   endCamPress(e);
   resetLines();
 }, {passive:false});
+camBtn.addEventListener('touchcancel', function(e){
+  if (!camAborted) {
+    camAborted = true;
+    camBtn.removeAttribute('for');
+    document.getElementById('galLabel').removeAttribute('for');
+  }
+  endCamPress(e);
+  resetLines();
+}, {passive:true});
+// Slide-to-cancel: палец во время удержания вышел за пределы кнопки
+// (с люфтом 12px) — отменяем long-press countdown, скидываем визуал
+// в исходное и снимаем `for` с label, чтобы touchend не открыл
+// камеру/галерею. startCamPress восстановит `for` при следующем нажатии.
+camBtn.addEventListener('touchmove', function(e){
+  if (camAborted) return;
+  if (!camTimer && !camLongPress) return;
+  var t = e.touches && e.touches[0]; if (!t) return;
+  var r = camBtn.getBoundingClientRect();
+  var slack = 12;
+  var inside = t.clientX >= r.left - slack && t.clientX <= r.right + slack
+            && t.clientY >= r.top - slack && t.clientY <= r.bottom + slack;
+  if (!inside) {
+    camAborted = true;
+    endCamPress(e);
+    camBtn.removeAttribute('for');
+    document.getElementById('galLabel').removeAttribute('for');
+  }
+}, {passive:true});
 // Gallery overlay - same handlers so finger release works
 var galLabel = document.getElementById('galLabel');
 galLabel.addEventListener('touchend', function(e){
+  if (camAborted) e.preventDefault();
   endCamPress(e);
   resetLines();
 }, {passive:false});
