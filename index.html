@@ -128,7 +128,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v541</span></div>
+<div class="title">Стич · Claude <span class="build">v542</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1928,18 +1928,19 @@ async function askWithImages(photos, userText) {
     '<path d="M118 88 L 138 92" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
     // Носик
     '<path d="M110 138 L 106 152 L 114 152" stroke="#6a4030" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
-    // Рот
+    // Рот Стича: смайл-улыбка с двумя голубыми точками-щёчками. MO рисуется
+    // JS-ом drawMouth (синий контур, белые зубы, красный язык — как у Стича).
     '<g id="MC">'+
-      '<path d="M88 162 Q98 172 110 174 Q122 172 132 162" stroke="#3a1810" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
-      '<circle cx="84" cy="164" r="1.8" fill="#a04030" opacity=".35"/>'+
-      '<circle cx="136" cy="164" r="1.8" fill="#a04030" opacity=".35"/>'+
+      '<path d="M88 162 Q98 172 110 174 Q122 172 132 162" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+
+      '<circle cx="84" cy="164" r="2" fill="#3a70b0" opacity=".4"/>'+
+      '<circle cx="136" cy="164" r="2" fill="#3a70b0" opacity=".4"/>'+
     '</g>'+
     '<g id="MO" style="display:none">'+
-      '<path id="MS" fill="#0a0408"/>'+
-      '<path id="MT" fill="#fff8ec"/>'+
+      '<path id="MS" fill="#06101e"/>'+
+      '<path id="MT" fill="#ffffff"/>'+
       '<ellipse id="TG" fill="#c03858" opacity=".85"/>'+
-      '<path id="TOP" stroke="#3a1810" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
-      '<path id="BOT" stroke="#3a1810" stroke-width="1.8" fill="none" stroke-linecap="round"/>'+
+      '<path id="TOP" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+
+      '<path id="BOT" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/>'+
     '</g>'+
     // Торс
     '<path d="M68 208 L 152 208 Q 168 290, 162 460 L 58 460 Q 52 290, 68 208 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
