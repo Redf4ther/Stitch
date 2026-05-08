@@ -38,11 +38,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 }
 /* Кукла — единый SVG fixed позади чата. Висит на верёвочке от потолка,
    тихо качается dangleDoll. Голова + шея + торс + шарниры плеч/бёдер. */
-#doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px);left:50%;width:220px;height:540px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% 0}
-/* Руки/ноги (path) ПОЗАДИ сообщений (z:1, под .below z:4) и поверх тела
-   куклы (#doll z:0). Конечности рисуются сбоку от тела (см. фильтр в
-   bubblePoint), поэтому не пересекают торс. */
-#dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+#doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px);left:50%;width:220px;height:540px;pointer-events:none;z-index:1;display:block;transform:translateX(-50%);transform-origin:50% 0}
+/* Руки/ноги (path) ПОД телом куклы (z:0, #doll z:1). Path может пересекать
+   зону торса — он скрывается за телом куклы, виден только участок снаружи. */
+#dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:15;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 #dollLimbs .leg{stroke:#1a1610;stroke-width:22;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 /* Кисти/стопы — ПЕРЕД сообщениями (z:5, выше .below). */
@@ -129,7 +128,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v544</span></div>
+<div class="title">Стич · Claude <span class="build">v545</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2038,15 +2037,16 @@ async function askWithImages(photos, userText) {
       var micTop = mic ? mic.getBoundingClientRect().top : window.innerHeight;
       if (y < midY || y > micTop) return null;
     }
-    // И рука, и нога — на ближний к шарниру край bubble. Это держит путь
-    // конечности СБОКУ от тела куклы, не пересекая его.
-    var x = L.sideSign < 0 ? Math.round(r.left + 24) : Math.round(r.right - 24);
-    if (L.isLeg) y = Math.round(r.top);
+    // Рука — на ближний к плечу край (полочка). Нога — на ДАЛЬНИЙ край,
+    // ближе к центру/телу куклы, чтобы цеплялась за самый край сообщения.
+    var x;
+    if (!L.isLeg) {
+      x = L.sideSign < 0 ? Math.round(r.left + 24) : Math.round(r.right - 24);
+    } else {
+      x = L.sideSign < 0 ? Math.round(r.right) : Math.round(r.left);
+      y = Math.round(r.top);
+    }
     var sh = shoulderPoint(L.shoulderId);
-    // Точка не должна быть на противоположной от плеча стороне центра тела.
-    var bodyCenter = window.innerWidth / 2;
-    if (L.sideSign < 0 && x > bodyCenter - 10) return null;
-    if (L.sideSign > 0 && x < bodyCenter + 10) return null;
     var dist = Math.hypot(x - sh.x, y - sh.y);
     if (dist > (L.L1 + L.L2) * 0.92) return null;
     return {x:x, y:y};
