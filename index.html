@@ -129,7 +129,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v504</span></div>
+<div class="title">Стич · Claude <span class="build">v505</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -223,6 +223,25 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 
 <input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="display:none"/>
 <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
+
+<!-- Тест-кнопки для куклы: добавляют bubble без вызова API. -->
+<div id="testBar" style="position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 8px);left:8px;display:flex;flex-direction:column;gap:6px;z-index:50;pointer-events:auto">
+  <button id="testAsst" style="background:rgba(40,140,220,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 10px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent">+ стич</button>
+  <button id="testUser" style="background:rgba(220,80,140,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 10px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent">+ я</button>
+</div>
+<script>
+(function(){
+  var asstLines = ['ага.', 'смотри сюда.', 'попробуем.', 'мысль интересная.', 'класс.', 'это любопытно...', 'хм.', 'не уверен.'];
+  var userLines = ['ну?', 'давай.', 'окей', 'и что?', 'хорошо', 'попробую', 'ага', 'понял'];
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+  document.getElementById('testAsst').addEventListener('click', function(){
+    if (typeof addMsg === 'function') addMsg('a', pick(asstLines));
+  });
+  document.getElementById('testUser').addEventListener('click', function(){
+    if (typeof addMsg === 'function') addMsg('u', pick(userLines));
+  });
+})();
+</script>
 
 <script>
 // Telegram WebApp: expand to full height at boot so the keyboard doesn't
