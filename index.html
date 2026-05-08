@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v539</span></div>
+<div class="title">Стич · Claude <span class="build">v540</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1984,13 +1984,14 @@ async function askWithImages(photos, userText) {
     '<ellipse id="foot-r" rx="14" ry="9" fill="#181410" stroke="#3a3028" stroke-width="1" class="foot"/>';
   document.body.appendChild(hands);
 
-  // L1/L2 — длины верхнего/нижнего сегмента в screen-px. Локоть/колено
-  // вычисляется через 2-bone IK так, чтобы оба сегмента сохраняли длину.
+  // L1/L2 — длины верхнего/нижнего сегмента в screen-px. С запасом, чтобы
+  // даже когда bubble близко к максимальной дотягиваемости, оставался
+  // заметный изгиб (joint смещён от прямой S→T на h = √(L1² - a²)).
   var LIMBS = [
-    {pathId:'arm-l', handId:'hand-l', shoulderId:'shoulder-l', isLeg:false, sideSign:-1, L1:125, L2:125},
-    {pathId:'arm-r', handId:'hand-r', shoulderId:'shoulder-r', isLeg:false, sideSign: 1, L1:125, L2:125},
-    {pathId:'leg-l', handId:'foot-l', shoulderId:'hip-l',     isLeg:true,  sideSign:-1, L1:110, L2:110},
-    {pathId:'leg-r', handId:'foot-r', shoulderId:'hip-r',     isLeg:true,  sideSign: 1, L1:110, L2:110}
+    {pathId:'arm-l', handId:'hand-l', shoulderId:'shoulder-l', isLeg:false, sideSign:-1, L1:170, L2:170},
+    {pathId:'arm-r', handId:'hand-r', shoulderId:'shoulder-r', isLeg:false, sideSign: 1, L1:170, L2:170},
+    {pathId:'leg-l', handId:'foot-l', shoulderId:'hip-l',     isLeg:true,  sideSign:-1, L1:140, L2:140},
+    {pathId:'leg-r', handId:'foot-r', shoulderId:'hip-r',     isLeg:true,  sideSign: 1, L1:140, L2:140}
   ];
   LIMBS.forEach(function(L){
     L.bubble = null; L.cur = null;
@@ -2046,7 +2047,7 @@ async function askWithImages(photos, userText) {
     // чтобы конечность не выпрямлялась струной.
     var sh = shoulderPoint(L.shoulderId);
     var dist = Math.hypot(x - sh.x, y - sh.y);
-    if (dist > (L.L1 + L.L2) * 0.92) return null;
+    if (dist > (L.L1 + L.L2) * 0.78) return null;
     return {x:x, y:y};
   }
   // Свободно висящая конечность — строго вниз от плеча (без боковой
@@ -2163,9 +2164,10 @@ async function askWithImages(photos, userText) {
       L.cur.y += (goal.y - L.cur.y) * SMOOTH;
       var s = shoulderPoint(L.shoulderId);
       // Ограничение длины. Когда конечность прицеплена к bubble — clamp
-      // до 92% макс. длины, чтобы локоть/колено всегда были видимо согнуты
-      // (как у Вуди). Когда висит — на полную длину (прямая).
-      var maxD = attached ? (L.L1 + L.L2) * 0.92 : (L.L1 + L.L2);
+      // до 78% макс. длины. При L1=L2=170 это значит max d=265px, и при
+      // d=200 joint смещается перпендикулярно на ~125px — заметный изгиб
+      // как у тряпичной куклы. Когда висит — на полную длину (прямая).
+      var maxD = attached ? (L.L1 + L.L2) * 0.78 : (L.L1 + L.L2);
       var ddx = L.cur.x - s.x, ddy = L.cur.y - s.y;
       var dd = Math.hypot(ddx, ddy);
       if (dd > maxD) {
@@ -2174,11 +2176,12 @@ async function askWithImages(photos, userText) {
       }
       var d;
       if (attached) {
-        // Двусегментная конечность с реальным изгибом в локте/колене (Toy
-        // Story-style): два прямых L-сегмента сходятся в joint. CSS
-        // stroke-linejoin:round даёт мягкое округление в шарнире.
+        // Тряпичная конечность: Q-кривая через joint как control point.
+        // Joint вычисляется через 2-bone IK — он понимает куда сгибаться,
+        // но визуально сгиб мягкий, без жёсткого шарнира. Как у Вуди из
+        // Toy Story: рука гнётся плавной дугой к локтю и кисти.
         var j = twoBoneJoint(s, L.cur, L.L1, L.L2, L.sideSign);
-        d = 'M '+s.x+' '+s.y+' L '+j.x+' '+j.y+' L '+L.cur.x+' '+L.cur.y;
+        d = 'M '+s.x+' '+s.y+' Q '+j.x+' '+j.y+' '+L.cur.x+' '+L.cur.y;
       } else {
         d = 'M '+s.x+' '+s.y+' L '+L.cur.x+' '+L.cur.y;
       }
