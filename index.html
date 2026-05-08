@@ -90,14 +90,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
 
 <div id="app">
   <div class="top">
-    <button id="settingsBtn" style="position:absolute;top:calc(56px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));right:12px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.22);box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;z-index:6;-webkit-tap-highlight-color:transparent">
+    <button id="settingsBtn" style="display:none;position:absolute;top:calc(56px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));right:12px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.22);box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28);cursor:pointer;align-items:center;justify-content:center;padding:0;z-index:6;-webkit-tap-highlight-color:transparent">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
         <line x1="5" y1="7" x2="19" y2="7"/>
         <line x1="5" y1="12" x2="19" y2="12"/>
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v431</span></div>
+<div class="title">Стич · Claude <span class="build">v432</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -231,63 +231,6 @@ function haptic(){
   try { if (navigator.vibrate) navigator.vibrate(10); } catch(_) {}
 }
 
-// Press-and-hold anywhere in the chat to push-to-talk, exactly like the
-// mic button. A translucent ring appears at the touch point on press and
-// fades when released. Quick taps (under 300ms) get treated as accidental
-// by the SR layer and produce no transcript, so the same gesture also
-// "dismisses" the keyboard if it was open.
-// Persistent ring DOM — created once on script init, never removed. Show
-// just sets inline left/top + adds .visible class; hide just removes it.
-// iOS WebView's compositor was observed to lag DOM removals by 1-3s on
-// short touches, so the cheapest reliable path is class toggling on a
-// stable element.
-// Ring is purely cosmetic now — bottom mic + camera buttons handle recording
-// and camera. Pre-created once, toggled via .visible class on every chat
-// touch. No haptic, no business logic, no slide-to-camera gesture.
-var holdRing = (function(){
-  var el = document.createElement('div');
-  el.className = 'hold-ring';
-  document.body.appendChild(el);
-  return el;
-})();
-var ringVisible = false;
-function showHoldRing(x, y) {
-  holdRing.style.cssText = 'left:'+x+'px;top:'+y+'px';
-  holdRing.classList.add('visible');
-  ringVisible = true;
-}
-function hideHoldRing() {
-  if (!ringVisible) return;
-  ringVisible = false;
-  holdRing.classList.remove('visible');
-}
-// CHANNEL 1 — pure visual: ring shows on every chat touch, hides on every
-// release. Listeners live directly on the .chat element (instead of
-// document) — element-level listeners on iOS WebView dispatch in the
-// touch-target's own queue, same path as the buttons that respond
-// instantly. Document-level listeners go through extra hit-testing /
-// routing layers and were observed to lag short taps by 1-3s.
-(function(){
-  var chatEl = document.querySelector('.chat');
-  if (!chatEl) return;
-  chatEl.addEventListener('pointerdown', function(e){
-    showHoldRing(e.clientX, e.clientY);
-  }, {passive:true});
-  chatEl.addEventListener('touchstart', function(e){
-    var t = e.touches && e.touches[0]; if (!t) return;
-    showHoldRing(t.clientX, t.clientY);
-  }, {passive:true});
-  function ringForceHide(){ hideHoldRing(); }
-  chatEl.addEventListener('pointerup', ringForceHide);
-  chatEl.addEventListener('pointercancel', ringForceHide);
-  chatEl.addEventListener('touchend', ringForceHide);
-  chatEl.addEventListener('touchcancel', ringForceHide);
-  // Document-level fallback for releases that happen outside .chat (e.g.
-  // finger drifted off the chat area before lifting).
-  document.addEventListener('pointerup', ringForceHide);
-  document.addEventListener('touchend', ringForceHide);
-  document.addEventListener('touchcancel', ringForceHide);
-})();
 
 
 var KEY_SK = 'sk';
@@ -408,6 +351,14 @@ function showVoiceToast(name) {
   if (sc && !sc._wired) { sc._wired = true; sc.addEventListener('click', function(){ haptic(); closeS(); }); }
   if (bd && !bd._wired) { bd._wired = true; bd.addEventListener('click', closeS); }
   if (vb && !vb._wired) { vb._wired = true; vb.addEventListener('click', function(){ haptic(); closeS(); cycleVoice(); }); }
+  // Тап по голове Стича открывает то же меню (раньше было — по hamburger
+  // справа сверху, который теперь скрыт). cursor:pointer для desktop.
+  var hd = document.getElementById('head');
+  if (hd && !hd._menuWired) {
+    hd._menuWired = true;
+    hd.style.cursor = 'pointer';
+    hd.addEventListener('click', function(){ haptic(); openS(); });
+  }
 })();
 // Camera button haptic on press (label triggers a hidden file input on tap).
 (function(){
