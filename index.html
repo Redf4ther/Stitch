@@ -41,8 +41,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 #doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px);left:50%;width:220px;height:540px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% 0}
 /* Сами руки/ноги (path) ПОЗАДИ сообщений (z:1, ниже .below z:4). */
 #dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
-#dollLimbs .arm{stroke:#2a2620;stroke-width:15;stroke-linecap:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
-#dollLimbs .leg{stroke:#1a1610;stroke-width:22;stroke-linecap:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+#dollLimbs .arm{stroke:#2a2620;stroke-width:15;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+#dollLimbs .leg{stroke:#1a1610;stroke-width:22;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 /* Кисти/стопы — ПЕРЕД сообщениями (z:5, выше .below). */
 #dollHands{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
 #dollHands .hand,#dollHands .foot{filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v530</span></div>
+<div class="title">Стич · Claude <span class="build">v531</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2011,11 +2011,13 @@ async function askWithImages(photos, userText) {
     '<ellipse id="foot-r" rx="14" ry="9" fill="#181410" stroke="#3a3028" stroke-width="1" class="foot"/>';
   document.body.appendChild(hands);
 
+  // L1/L2 — длины верхнего/нижнего сегмента в screen-px. Локоть/колено
+  // вычисляется через 2-bone IK так, чтобы оба сегмента сохраняли длину.
   var LIMBS = [
-    {pathId:'arm-l', handId:'hand-l', shoulderId:'shoulder-l', isLeg:false, sideSign:-1},
-    {pathId:'arm-r', handId:'hand-r', shoulderId:'shoulder-r', isLeg:false, sideSign: 1},
-    {pathId:'leg-l', handId:'foot-l', shoulderId:'hip-l',     isLeg:true,  sideSign:-1},
-    {pathId:'leg-r', handId:'foot-r', shoulderId:'hip-r',     isLeg:true,  sideSign: 1}
+    {pathId:'arm-l', handId:'hand-l', shoulderId:'shoulder-l', isLeg:false, sideSign:-1, L1:80, L2:80},
+    {pathId:'arm-r', handId:'hand-r', shoulderId:'shoulder-r', isLeg:false, sideSign: 1, L1:80, L2:80},
+    {pathId:'leg-l', handId:'foot-l', shoulderId:'hip-l',     isLeg:true,  sideSign:-1, L1:110, L2:110},
+    {pathId:'leg-r', handId:'foot-r', shoulderId:'hip-r',     isLeg:true,  sideSign: 1, L1:110, L2:110}
   ];
   LIMBS.forEach(function(L){
     L.bubble = null; L.cur = null;
@@ -2075,17 +2077,23 @@ async function askWithImages(photos, userText) {
     var s = shoulderPoint(L.shoulderId);
     return {x: s.x, y: s.y + (L.isLeg ? 220 : 250)};
   }
-  function quadPath(p1, p2){
-    var dx = p2.x - p1.x, dy = p2.y - p1.y;
-    var len = Math.hypot(dx, dy) || 1;
-    var midX = (p1.x + p2.x)/2;
-    var midY = (p1.y + p2.y)/2;
-    var sag = Math.min(50, len*0.2);
-    var nx = -dy/len, ny = dx/len;
-    var sign = (p1.x < p2.x) ? 1 : -1;
-    var cx = midX + nx*sag*sign;
-    var cy = midY + sag*0.7 + ny*sag*sign;
-    return 'M '+p1.x+' '+p1.y+' Q '+cx+' '+cy+' '+p2.x+' '+p2.y;
+  // 2-bone IK: считает позицию локтя/колена так, чтобы upper-сегмент длиной
+  // L1 от шарнира S и lower-сегмент длиной L2 до цели T соединялись в точке
+  // joint. bendSign: -1 — joint смещается влево от прямой S→T, +1 — вправо.
+  // Для рук/ног bendSign выбирает сторону естественного сгиба наружу.
+  function twoBoneJoint(S, T, L1, L2, bendSign){
+    var dx = T.x - S.x, dy = T.y - S.y;
+    var d = Math.hypot(dx, dy) || 0.001;
+    if (d >= L1 + L2 - 0.5) {
+      var k = L1 / (L1 + L2);
+      return {x: S.x + dx*k, y: S.y + dy*k};
+    }
+    var a = (L1*L1 - L2*L2 + d*d) / (2*d);
+    var hSq = L1*L1 - a*a;
+    var h = hSq > 0 ? Math.sqrt(hSq) : 0;
+    var ux = dx / d, uy = dy / d;
+    var px = -uy * bendSign, py = ux * bendSign;
+    return {x: S.x + ux*a + px*h, y: S.y + uy*a + py*h};
   }
   function easeOut(t){ return 1 - Math.pow(1 - t, 3); }
 
@@ -2175,9 +2183,10 @@ async function askWithImages(photos, userText) {
       L.cur.x += (goal.x - L.cur.x) * SMOOTH;
       L.cur.y += (goal.y - L.cur.y) * SMOOTH;
       var s = shoulderPoint(L.shoulderId);
-      var d = attached
-        ? quadPath(s, L.cur)
-        : ('M '+s.x+' '+s.y+' L '+L.cur.x+' '+L.cur.y);
+      // 2-bone IK даёт позицию локтя/колена. Сегменты конечности рисуются
+      // двумя прямыми с округлым стыком в шарнире (Toy Story-style сгиб).
+      var j = twoBoneJoint(s, L.cur, L.L1, L.L2, L.sideSign);
+      var d = 'M '+s.x+' '+s.y+' L '+j.x+' '+j.y+' L '+L.cur.x+' '+L.cur.y;
       L.pathEl.setAttribute('d', d);
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
