@@ -131,7 +131,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v512</span></div>
+<div class="title">Стич · Claude <span class="build">v513</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -228,8 +228,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 
 <!-- Тест-кнопки для куклы: добавляют bubble без вызова API. Фиксированы над
      mic-рядом: левая (стич) у левого края, правая (я) у правого. -->
-<button id="testAsst" style="position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 200px);background:rgba(40,140,220,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto">+ стич</button>
-<button id="testUser" style="position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 200px);background:rgba(220,80,140,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto">+ я</button>
+<button id="testAsst" style="position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:rgba(40,140,220,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto">+ стич</button>
+<button id="testUser" style="position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:rgba(220,80,140,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto">+ я</button>
 <script>
 (function(){
   var asstLines = ['ага.', 'смотри сюда.', 'попробуем.', 'мысль интересная.', 'класс.', 'это любопытно...', 'хм.', 'не уверен.'];
@@ -1980,19 +1980,25 @@ async function askWithImages(photos, userText) {
     var r = c.getBoundingClientRect();
     return {x:Math.round(r.left + r.width/2), y:Math.round(r.top + r.height/2)};
   }
-  // Конечность садится на сам bubble — на отступе ~24px от ближнего края
-  // (а не на самом крае экрана). Левая конечность — на левый край bubble,
-  // правая — на правый.
+  // Конечность садится на сам bubble — на отступе 24px от ближнего края.
+  // Зона досягаемости: руки только выше середины экрана, ноги — только ниже.
+  // Если bubble не в зоне — возвращаем null → конечность висит свободно.
   function bubblePoint(bubble, L){
     if (!bubble) return null;
     var bi = bubble.querySelector('.bi') || bubble;
     var r = bi.getBoundingClientRect();
+    var y = Math.round(r.top - 6);
+    var midY = window.innerHeight / 2;
+    if (!L.isLeg && y > midY) return null;
+    if (L.isLeg && y < midY) return null;
     var x = L.sideSign < 0 ? Math.round(r.left + 24) : Math.round(r.right - 24);
-    return {x:x, y:Math.round(r.top - 6)};
+    return {x:x, y:y};
   }
+  // Свободно висящая конечность — строго вниз от плеча (без боковой
+  // развёрнутости), чтобы рисовалась прямой линией, а не дугой.
   function dangleGoal(L){
     var s = shoulderPoint(L.shoulderId);
-    return {x: s.x + L.sideSign * (L.isLeg ? 6 : 18), y: s.y + (L.isLeg ? 200 : 140)};
+    return {x: s.x, y: s.y + (L.isLeg ? 220 : 160)};
   }
   function quadPath(p1, p2){
     var dx = p2.x - p1.x, dy = p2.y - p1.y;
@@ -2028,13 +2034,18 @@ async function askWithImages(photos, userText) {
   function tick(){
     LIMBS.forEach(function(L){
       if (L.bubble && !document.body.contains(L.bubble)) L.bubble = null;
-      var goal = (L.bubble) ? bubblePoint(L.bubble, L) : dangleGoal(L);
-      if (!goal) goal = dangleGoal(L);
+      var bp = L.bubble ? bubblePoint(L.bubble, L) : null;
+      var attached = !!bp;
+      var goal = bp || dangleGoal(L);
       if (!L.cur) L.cur = {x:goal.x, y:goal.y};
       L.cur.x += (goal.x - L.cur.x) * SMOOTH;
       L.cur.y += (goal.y - L.cur.y) * SMOOTH;
       var s = shoulderPoint(L.shoulderId);
-      L.pathEl.setAttribute('d', quadPath(s, L.cur));
+      // Привязана к bubble — рисуем дугу с провисом; висит свободно — прямая.
+      var d = attached
+        ? quadPath(s, L.cur)
+        : ('M '+s.x+' '+s.y+' L '+L.cur.x+' '+L.cur.y);
+      L.pathEl.setAttribute('d', d);
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
     });
