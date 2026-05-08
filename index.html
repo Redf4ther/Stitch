@@ -8,7 +8,7 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease}
 #app{display:contents}
 .top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
 .below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4}
@@ -97,7 +97,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v440</span></div>
+<div class="title">Стич · Claude <span class="build">v441</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -192,6 +192,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
       </svg>
       <span>Голоса</span>
     </button>
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон фона</div>
+      <div id="tonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
+    </div>
   </div>
 </div>
 
@@ -358,6 +362,52 @@ function showVoiceToast(name) {
     hd._menuWired = true;
     hd.style.cursor = 'pointer';
     hd.addEventListener('click', function(){ haptic(); openS(); });
+  }
+  // Палитра тонов фона. Apple-style: сатурированные dark-tones (HSL ~12% L)
+  // Кружок-кнопка с лёгким inset-highlight, выбранный — в обрамлении
+  // белого кольца. Сохраняется в localStorage, применяется на старте.
+  var TONES = [
+    {n:'Чёрный',     c:'#000000'},
+    {n:'Малина',     c:'#3a0a25'},
+    {n:'Красный',    c:'#3a0a0e'},
+    {n:'Оранжевый',  c:'#3a1a05'},
+    {n:'Жёлтый',     c:'#3a3205'},
+    {n:'Зелёный',    c:'#0a3a14'},
+    {n:'Бирюза',     c:'#053a3a'},
+    {n:'Синий',      c:'#0a153a'},
+    {n:'Фиолетовый', c:'#250a3a'}
+  ];
+  var TONE_KEY = 'stitch_bg_tone';
+  function applyTone(c){ document.documentElement.style.setProperty('--bg-tone', c); }
+  var savedTone = localStorage.getItem(TONE_KEY) || '#000000';
+  applyTone(savedTone);
+  var picker = document.getElementById('tonePicker');
+  if (picker && !picker._wired) {
+    picker._wired = true;
+    function refreshRings(active){
+      Array.prototype.forEach.call(picker.children, function(b){
+        var on = b.dataset.tone === active;
+        b.style.boxShadow = on
+          ? '0 0 0 2px rgba(255,255,255,.95), inset 0 1px 1px rgba(255,255,255,.4), inset 0 -2px 4px rgba(0,0,0,.4)'
+          : 'inset 0 1px 1px rgba(255,255,255,.35), inset 0 -2px 4px rgba(0,0,0,.45)';
+      });
+    }
+    TONES.forEach(function(t){
+      var b = document.createElement('button');
+      b.dataset.tone = t.c;
+      b.title = t.n;
+      // Добавляем светлую "крышку" сверху-слева через radial-gradient,
+      // чтобы кружок выглядел как стеклянный камешек.
+      b.style.cssText = 'width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;background:radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), '+t.c+';transition:transform .15s';
+      b.addEventListener('click', function(){
+        haptic();
+        applyTone(t.c);
+        localStorage.setItem(TONE_KEY, t.c);
+        refreshRings(t.c);
+      });
+      picker.appendChild(b);
+    });
+    refreshRings(savedTone);
   }
 })();
 // Camera button haptic on press (label triggers a hidden file input on tap).
