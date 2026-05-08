@@ -102,7 +102,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v480</span></div>
+<div class="title">Стич · Claude <span class="build">v481</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -398,26 +398,38 @@ function showVoicePanel(name, steps, onDone) {
   var card0 = document.getElementById('settingsCard');
   if (card0 && !card0._undimWired) {
     card0._undimWired = true;
+    function undim(){
+      card0.classList.remove('dimmed');
+      Array.prototype.forEach.call(card0.querySelectorAll('.set-block.active'), function(s){ s.classList.remove('active'); });
+      restoreBackdrop();
+    }
     function handleCardClick(e){
       var dimmed = card0.classList.contains('dimmed');
       var block = e.target.closest && e.target.closest('.set-block');
       var isColorBtn = e.target.closest && e.target.closest('#tonePicker, #btnTonePicker, #msgTonePicker, #asstTonePicker') && e.target.tagName === 'BUTTON';
       if (isColorBtn) return; // color-кружки сами делают focusBlock
       if (block && block.classList.contains('set-tone')) {
-        // Клик по тон-плашке (не по кружку) — фокусируем эту плашку.
+        if (!dimmed) {
+          // normal режим — клик по плашке включает dim на ней.
+          e.stopPropagation();
+          e.preventDefault();
+          var picker = block.querySelector('#tonePicker, #btnTonePicker, #msgTonePicker, #asstTonePicker');
+          if (picker) focusBlock(picker);
+          return;
+        }
+        // dimmed режим:
+        if (block.classList.contains('active')) return; // тап по padding активной — ничего
+        // тап по полупрозрачной плашке → возвращаем меню в полный вид.
         e.stopPropagation();
         e.preventDefault();
-        var picker = block.querySelector('#tonePicker, #btnTonePicker, #msgTonePicker, #asstTonePicker');
-        if (picker) focusBlock(picker);
+        undim();
         return;
       }
       if (!dimmed) return;
       if (block && block.classList.contains('active')) return;
       e.stopPropagation();
       e.preventDefault();
-      card0.classList.remove('dimmed');
-      Array.prototype.forEach.call(card0.querySelectorAll('.set-block.active'), function(s){ s.classList.remove('active'); });
-      restoreBackdrop();
+      undim();
     }
     card0.addEventListener('click', handleCardClick, true);
   }
