@@ -131,7 +131,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v513</span></div>
+<div class="title">Стич · Claude <span class="build">v514</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1924,11 +1924,12 @@ async function askWithImages(photos, userText) {
     '<circle cx="110" cy="342" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
     '<circle cx="110" cy="378" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
     '<circle cx="110" cy="414" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    // Шарниры
-    '<circle id="shoulder-l" cx="68" cy="222" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
-    '<circle id="shoulder-r" cx="152" cy="222" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
-    '<circle id="hip-l" cx="84" cy="458" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
-    '<circle id="hip-r" cx="136" cy="458" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>';
+    // Шарниры — сдвинуты внутрь торса, чтобы начало конечности было ВНУТРИ
+    // ткани одежды и не было visual-gap'а между рукой и плечом при качании.
+    '<circle id="shoulder-l" cx="74" cy="226" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
+    '<circle id="shoulder-r" cx="146" cy="226" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
+    '<circle id="hip-l" cx="90" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
+    '<circle id="hip-r" cx="130" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>';
   document.body.insertBefore(doll, document.body.firstChild);
 
   // top позиционируется через CSS (env(safe-area-inset-top) + 14px) —
