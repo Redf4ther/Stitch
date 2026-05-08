@@ -91,8 +91,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 .chat{flex:1;min-height:0;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px;touch-action:pan-y;-webkit-touch-callout:none}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
-.bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.5;background:linear-gradient(135deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.04) 55%,rgba(0,0,0,.06) 100%),var(--asst-tint, rgba(28,28,30,.35));backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(255,255,255,.12);color:#e6e8eb;box-shadow:0 4px 14px rgba(0,0,0,.32),inset .5px .5px 0 rgba(255,255,255,.32);transition:background .35s ease}
-.bbl.u .bi{background:linear-gradient(135deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.04) 55%,rgba(0,0,0,.06) 100%),var(--msg-tint, rgba(44,44,46,.35));border:1px solid rgba(255,255,255,.12);color:#ffffff;border-radius:16px 16px 4px 16px;box-shadow:0 4px 14px rgba(0,0,0,.32),inset .5px .5px 0 rgba(255,255,255,.32);transition:background .35s ease}
+.bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.5;background:linear-gradient(135deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.04) 55%,rgba(0,0,0,.06) 100%),var(--asst-tint, rgba(28,28,30,.35));backdrop-filter:var(--asst-blur, blur(14px) saturate(160%));-webkit-backdrop-filter:var(--asst-blur, blur(14px) saturate(160%));border:1px solid rgba(255,255,255,.12);color:#e6e8eb;box-shadow:0 4px 14px rgba(0,0,0,.32),inset .5px .5px 0 rgba(255,255,255,.32);transition:background .35s ease}
+.bbl.u .bi{background:linear-gradient(135deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.04) 55%,rgba(0,0,0,.06) 100%),var(--msg-tint, rgba(44,44,46,.35));backdrop-filter:var(--msg-blur, blur(14px) saturate(160%));-webkit-backdrop-filter:var(--msg-blur, blur(14px) saturate(160%));border:1px solid rgba(255,255,255,.12);color:#ffffff;border-radius:16px 16px 4px 16px;box-shadow:0 4px 14px rgba(0,0,0,.32),inset .5px .5px 0 rgba(255,255,255,.32);transition:background .35s ease}
 .cur::after{content:‘▋’;color:#7c5cff;animation:cur .4s steps(1) infinite}
 .err{flex-shrink:0;font-size:11px;color:#e84a5f;padding:0 14px;text-align:center}
 .err:not(:empty){padding:2px 14px}
@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v536</span></div>
+<div class="title">Стич · Claude <span class="build">v537</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -568,10 +568,19 @@ function showVoicePanel(name, steps, onDone) {
     refreshBtnRings(savedBtn);
   }
   // Тон user-сообщений (правые пузыри). Первый — "Чистый" (прозрачное
-  // стекло без подсветки) — как у тона кнопок.
-  var MSG_TONES = [{n:'Чистый', c:'transparent'}, {n:'Серый', c:'#2c2c2e'}].concat(TONES.slice(1));
+  // стекло с blur), второй — "Глянец" (без blur, чистое стекло).
+  var MSG_TONES = [{n:'Чистый', c:'transparent'}, {n:'Глянец', c:'glossy'}, {n:'Серый', c:'#2c2c2e'}].concat(TONES.slice(1));
   var MSG_KEY = 'stitch_msg_tint';
-  function applyMsgTint(c){ document.documentElement.style.setProperty('--msg-tint', c); }
+  function applyMsgTint(c){
+    var root = document.documentElement.style;
+    if (c === 'glossy') {
+      root.setProperty('--msg-tint', 'transparent');
+      root.setProperty('--msg-blur', 'none');
+    } else {
+      root.setProperty('--msg-tint', c);
+      root.setProperty('--msg-blur', 'blur(14px) saturate(160%)');
+    }
+  }
   var savedMsg = localStorage.getItem(MSG_KEY) || 'transparent';
   applyMsgTint(savedMsg);
   var msgPicker = document.getElementById('msgTonePicker');
@@ -589,9 +598,10 @@ function showVoicePanel(name, steps, onDone) {
       var b = document.createElement('button');
       b.dataset.tone = t.c;
       b.title = t.n;
-      var bg = (t.c === 'transparent')
-        ? 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), repeating-linear-gradient(45deg, #444 0 4px, #222 4px 8px)'
-        : 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), '+t.c;
+      var bg;
+      if (t.c === 'transparent') bg = 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), repeating-linear-gradient(45deg, #444 0 4px, #222 4px 8px)';
+      else if (t.c === 'glossy') bg = 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.85) 0%, rgba(255,255,255,.15) 45%, rgba(255,255,255,.05) 100%)';
+      else bg = 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), '+t.c;
       b.style.cssText = 'width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;background:'+bg+';transition:transform .15s';
       b.addEventListener('click', function(){
         haptic();
@@ -605,9 +615,18 @@ function showVoicePanel(name, steps, onDone) {
     refreshMsgRings(savedMsg);
   }
   // Тон assistant-сообщений (левые пузыри от Стича).
-  var ASST_TONES = [{n:'Чистый', c:'transparent'}, {n:'Серый', c:'#1c1c1e'}].concat(TONES.slice(1));
+  var ASST_TONES = [{n:'Чистый', c:'transparent'}, {n:'Глянец', c:'glossy'}, {n:'Серый', c:'#1c1c1e'}].concat(TONES.slice(1));
   var ASST_KEY = 'stitch_asst_tint';
-  function applyAsstTint(c){ document.documentElement.style.setProperty('--asst-tint', c); }
+  function applyAsstTint(c){
+    var root = document.documentElement.style;
+    if (c === 'glossy') {
+      root.setProperty('--asst-tint', 'transparent');
+      root.setProperty('--asst-blur', 'none');
+    } else {
+      root.setProperty('--asst-tint', c);
+      root.setProperty('--asst-blur', 'blur(14px) saturate(160%)');
+    }
+  }
   var savedAsst = localStorage.getItem(ASST_KEY) || 'transparent';
   applyAsstTint(savedAsst);
 
@@ -626,9 +645,10 @@ function showVoicePanel(name, steps, onDone) {
       var b = document.createElement('button');
       b.dataset.tone = t.c;
       b.title = t.n;
-      var bg = (t.c === 'transparent')
-        ? 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), repeating-linear-gradient(45deg, #444 0 4px, #222 4px 8px)'
-        : 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), '+t.c;
+      var bg;
+      if (t.c === 'transparent') bg = 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), repeating-linear-gradient(45deg, #444 0 4px, #222 4px 8px)';
+      else if (t.c === 'glossy') bg = 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.85) 0%, rgba(255,255,255,.15) 45%, rgba(255,255,255,.05) 100%)';
+      else bg = 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), '+t.c;
       b.style.cssText = 'width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;background:'+bg+';transition:transform .15s';
       b.addEventListener('click', function(){
         haptic();
