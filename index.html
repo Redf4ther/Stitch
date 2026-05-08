@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v581</span></div>
+<div class="title">Стич · Claude <span class="build">v582</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2187,10 +2187,10 @@ async function askWithImages(photos, userText) {
 
   // L1/L2 — длины верхнего/нижнего сегмента в screen-px.
   var LIMBS = [
-    {pathId:'arm-l', handId:'hand-l', shoulderId:'shoulder-l', isLeg:false, sideSign:-1, L1:115, L2:115},
-    {pathId:'arm-r', handId:'hand-r', shoulderId:'shoulder-r', isLeg:false, sideSign: 1, L1:115, L2:115},
-    {pathId:'leg-l', handId:'foot-l', shoulderId:'hip-l',     isLeg:true,  sideSign:-1, L1:130, L2:130},
-    {pathId:'leg-r', handId:'foot-r', shoulderId:'hip-r',     isLeg:true,  sideSign: 1, L1:130, L2:130}
+    {pathId:'arm-l', handId:'hand-l', shoulderId:'shoulder-l', isLeg:false, sideSign:-1, L1:140, L2:140},
+    {pathId:'arm-r', handId:'hand-r', shoulderId:'shoulder-r', isLeg:false, sideSign: 1, L1:140, L2:140},
+    {pathId:'leg-l', handId:'foot-l', shoulderId:'hip-l',     isLeg:true,  sideSign:-1, L1:160, L2:160},
+    {pathId:'leg-r', handId:'foot-r', shoulderId:'hip-r',     isLeg:true,  sideSign: 1, L1:160, L2:160}
   ];
   LIMBS.forEach(function(L){
     L.bubble = null; L.cur = null;
@@ -2254,7 +2254,7 @@ async function askWithImages(photos, userText) {
     }
     var sh = shoulderPoint(L.shoulderId);
     var dist = Math.hypot(x - sh.x, y - sh.y);
-    if (dist > (L.L1 + L.L2) * 0.92) return null;
+    if (dist > (L.L1 + L.L2) * 0.82) return null;
     return {x:x, y:y};
   }
   // Свободно висящая конечность — строго вниз от плеча (без боковой
@@ -2373,7 +2373,7 @@ async function askWithImages(photos, userText) {
       var s = shoulderPoint(L.shoulderId);
       // Ограничение длины. Привязанной — до 92% макс., чтобы локоть/колено
       // оставались чуть согнутыми, но без сильного изгиба. Висящей — полная.
-      var maxD = attached ? (L.L1 + L.L2) * 0.92 : (L.L1 + L.L2);
+      var maxD = attached ? (L.L1 + L.L2) * 0.82 : (L.L1 + L.L2);
       var ddx = L.cur.x - s.x, ddy = L.cur.y - s.y;
       var dd = Math.hypot(ddx, ddy);
       if (dd > maxD) {
