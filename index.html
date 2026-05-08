@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v537</span></div>
+<div class="title">Стич · Claude <span class="build">v538</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2041,10 +2041,12 @@ async function askWithImages(photos, userText) {
       x = L.sideSign < 0 ? Math.round(r.right) : Math.round(r.left);
       y = Math.round(r.top);
     }
-    // Проверка досягаемости: если точка дальше L1+L2 от плеча/бедра — null.
+    // Проверка досягаемости: bubble считается досягаемым только если
+    // точка внутри 92% радиуса L1+L2 — оставляет запас на изгиб локтя/колена,
+    // чтобы конечность не выпрямлялась струной.
     var sh = shoulderPoint(L.shoulderId);
     var dist = Math.hypot(x - sh.x, y - sh.y);
-    if (dist > L.L1 + L.L2) return null;
+    if (dist > (L.L1 + L.L2) * 0.92) return null;
     return {x:x, y:y};
   }
   // Свободно висящая конечность — строго вниз от плеча (без боковой
@@ -2160,10 +2162,10 @@ async function askWithImages(photos, userText) {
       L.cur.x += (goal.x - L.cur.x) * SMOOTH;
       L.cur.y += (goal.y - L.cur.y) * SMOOTH;
       var s = shoulderPoint(L.shoulderId);
-      // Ограничение длины: кисть/стопа не дальше L1+L2 от плеча/бедра.
-      // Если goal был дальше — конечность вытягивается до максимума и
-      // дальше не уходит, не растягивается.
-      var maxD = L.L1 + L.L2;
+      // Ограничение длины. Когда конечность прицеплена к bubble — clamp
+      // до 92% макс. длины, чтобы локоть/колено всегда были видимо согнуты
+      // (как у Вуди). Когда висит — на полную длину (прямая).
+      var maxD = attached ? (L.L1 + L.L2) * 0.92 : (L.L1 + L.L2);
       var ddx = L.cur.x - s.x, ddy = L.cur.y - s.y;
       var dd = Math.hypot(ddx, ddy);
       if (dd > maxD) {
