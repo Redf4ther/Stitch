@@ -36,10 +36,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
   35%{transform:translateY(2.5px) scaleY(2.8)}
   70%{transform:translateY(1.5px) scaleY(1.6)}
 }
-/* Тело куклы — fixed full-screen за всем UI. Шарниры внутри (плечи + бёдра)
-   — статичны, не двигаются с .head iB-анимацией → руки не подёргиваются. */
-#dollBody{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
-#dollBody svg{display:block;width:100%;height:100%}
+/* Тело куклы — компактный SVG, висит сразу под головой по центру экрана.
+   Шарниры внутри (плечи + бёдра) — статичны, не подёргиваются с .head. */
+#dollBody{position:fixed;left:50%;transform:translateX(-50%);width:200px;height:340px;pointer-events:none;z-index:0;display:block}
 /* Конечности — над чатом/кнопками, но ниже settings panel'и. */
 #dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:11;stroke-linecap:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
@@ -126,7 +125,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v500</span></div>
+<div class="title">Стич · Claude <span class="build">v501</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -140,8 +139,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
             <filter id="dollSoft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.5"/></filter>
           </defs>
 
-          <!-- Верёвочка над головой -->
-          <line x1="100" y1="-40" x2="100" y2="14" stroke="#8a7a60" stroke-width="1.5"/>
+          <!-- Верёвочка от потолка до головы -->
+          <line x1="100" y1="-220" x2="100" y2="14" stroke="#8a7a60" stroke-width="1.5"/>
           <circle cx="100" cy="14" r="3" fill="#5a4a30"/>
 
           <!-- Голова — занимает почти весь viewBox -->
@@ -162,30 +161,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
           <!-- Носик -->
           <path d="M100 130 L 96 148 L 104 148" stroke="#6a4030" stroke-width="1.4" fill="none" stroke-linecap="round"/>
 
-          <!-- Механический рот Dollman'а -->
-          <g class="mouth">
-            <ellipse cx="100" cy="166" rx="28" ry="6" fill="#080202"/>
-            <path d="M72 163 Q 100 156 128 163 L 128 166 L 72 166 Z" fill="#a08070" stroke="#3a1808" stroke-width="1"/>
-            <line x1="78" y1="164" x2="78" y2="166.5" stroke="#1a0c08" stroke-width="1"/>
-            <line x1="86" y1="164" x2="86" y2="166.5" stroke="#1a0c08" stroke-width="1"/>
-            <line x1="94" y1="164" x2="94" y2="166.5" stroke="#1a0c08" stroke-width="1"/>
-            <line x1="102" y1="164" x2="102" y2="166.5" stroke="#1a0c08" stroke-width="1"/>
-            <line x1="110" y1="164" x2="110" y2="166.5" stroke="#1a0c08" stroke-width="1"/>
-            <line x1="118" y1="164" x2="118" y2="166.5" stroke="#1a0c08" stroke-width="1"/>
-            <g class="jaw">
-              <path d="M72 166 L 128 166 Q 128 180 100 184 Q 72 180 72 166 Z" fill="#b8907c" stroke="#3a1808" stroke-width="1"/>
-              <line x1="78" y1="168" x2="78" y2="170.5" stroke="#1a0c08" stroke-width="1"/>
-              <line x1="86" y1="168" x2="86" y2="170.5" stroke="#1a0c08" stroke-width="1"/>
-              <line x1="94" y1="168" x2="94" y2="170.5" stroke="#1a0c08" stroke-width="1"/>
-              <line x1="102" y1="168" x2="102" y2="170.5" stroke="#1a0c08" stroke-width="1"/>
-              <line x1="110" y1="168" x2="110" y2="170.5" stroke="#1a0c08" stroke-width="1"/>
-              <line x1="118" y1="168" x2="118" y2="170.5" stroke="#1a0c08" stroke-width="1"/>
-            </g>
-            <circle cx="70" cy="166" r="3.5" fill="#3a3a40" stroke="#1a0c08" stroke-width="1"/>
-            <circle cx="130" cy="166" r="3.5" fill="#3a3a40" stroke="#1a0c08" stroke-width="1"/>
-            <circle cx="70" cy="166" r="1" fill="#0a0204"/>
-            <circle cx="130" cy="166" r="1" fill="#0a0204"/>
-          </g>
+          <!-- Рот — простая горизонтальная полосочка -->
+          <line x1="74" y1="166" x2="126" y2="166" stroke="#1a0c08" stroke-width="2.5" stroke-linecap="round"/>
 
           <!-- Stub'ы для совместимости со старым JS-кодом анимации Стича. -->
           <g id="MC" style="display:none"></g>
@@ -1899,11 +1876,11 @@ async function askWithImages(photos, userText) {
 // СТАТИЧНЫ (не качаются с головой → руки не подёргиваются).
 // Конечности (#dollLimbs) — ещё один fixed-SVG ПОВЕРХ чата.
 (function(){
-  // 1) Тело куклы (фон).
+  // 1) Тело куклы — компактное, висит под головой.
   var body = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   body.id = 'dollBody';
-  body.setAttribute('viewBox', '0 0 200 1000');
-  body.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+  body.setAttribute('viewBox', '0 0 200 340');
+  body.setAttribute('preserveAspectRatio', 'xMidYMin meet');
   body.innerHTML =
     '<defs>'+
       '<radialGradient id="db-skin" cx="40%" cy="30%" r="75%">'+
@@ -1917,24 +1894,33 @@ async function askWithImages(photos, userText) {
         '<stop offset="100%" stop-color="#0a0806"/>'+
       '</radialGradient>'+
     '</defs>'+
-    // Шея — узкий прямоугольник под головой (которая в .head)
-    '<rect x="92" y="170" width="16" height="40" fill="url(#db-skin)" stroke="#2a1808" stroke-width="1.2"/>'+
-    // Туловище (длинное)
-    '<path d="M58 210 L 142 210 Q 158 380, 150 580 L 50 580 Q 42 380, 58 210 Z" fill="url(#db-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
-    // Пуговицы
-    '<circle cx="100" cy="240" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="100" cy="290" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="100" cy="340" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="100" cy="390" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="100" cy="440" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="100" cy="490" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="100" cy="540" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    // Шарниры — плечи и бёдра. Точки откуда тянутся конечности.
-    '<circle id="shoulder-l" cx="58" cy="226" r="6" fill="#1a1408" stroke="#5a4a30" stroke-width="1.2"/>'+
-    '<circle id="shoulder-r" cx="142" cy="226" r="6" fill="#1a1408" stroke="#5a4a30" stroke-width="1.2"/>'+
-    '<circle id="hip-l" cx="78" cy="578" r="6" fill="#1a1408" stroke="#5a4a30" stroke-width="1.2"/>'+
-    '<circle id="hip-r" cx="122" cy="578" r="6" fill="#1a1408" stroke="#5a4a30" stroke-width="1.2"/>';
+    // Шея — короткая, сразу от верха SVG (под головой)
+    '<rect x="92" y="0" width="16" height="22" fill="url(#db-skin)" stroke="#2a1808" stroke-width="1.2"/>'+
+    // Туловище-комбинезон
+    '<path d="M58 22 L 142 22 Q 154 90, 150 200 L 50 200 Q 46 90, 58 22 Z" fill="url(#db-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
+    '<circle cx="100" cy="50" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".6"/>'+
+    '<circle cx="100" cy="80" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".6"/>'+
+    '<circle cx="100" cy="110" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".6"/>'+
+    '<circle cx="100" cy="140" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".6"/>'+
+    '<circle cx="100" cy="170" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".6"/>'+
+    // Шарниры — плечи у верха торса, бёдра у низа
+    '<circle id="shoulder-l" cx="58" cy="34" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
+    '<circle id="shoulder-r" cx="142" cy="34" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
+    '<circle id="hip-l" cx="76" cy="198" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
+    '<circle id="hip-r" cx="124" cy="198" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>';
   document.body.insertBefore(body, document.body.firstChild);
+
+  // Привязываем верх #dollBody к нижней границе .stage (где низ головы),
+  // чтобы шея сразу прилегала. Пересчитываем при resize.
+  function syncDollBodyTop(){
+    var stage = document.querySelector('.stage');
+    if (!stage) return;
+    var r = stage.getBoundingClientRect();
+    body.style.top = Math.round(r.bottom - 6) + 'px';
+  }
+  syncDollBodyTop();
+  window.addEventListener('load', syncDollBodyTop);
+  window.addEventListener('resize', syncDollBodyTop);
 
   // 2) Конечности (overlay поверх чата).
   var overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
