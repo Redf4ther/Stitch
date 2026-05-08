@@ -85,9 +85,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 .sbtn:active{background:rgba(255,255,255,.05)}
 .sbtn:disabled{background:#d8cce8;opacity:.5;box-shadow:none}
 .img-msg{max-width:200px;border-radius:12px;margin-top:4px;display:block}
-.set-block{transition:opacity .3s ease}
-#settingsCard.dimmed .set-block{opacity:.2}
-#settingsCard.dimmed .set-block.active{opacity:1}
 </style>
 
 </head>
@@ -102,7 +99,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v490</span></div>
+<div class="title">Стич · Claude <span class="build">v491</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -185,11 +182,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 <div id="settingsPanel" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;padding:0 13px">
   <div id="settingsBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(12px) saturate(140%);-webkit-backdrop-filter:blur(12px) saturate(140%);-webkit-mask-image:radial-gradient(ellipse 220px 260px at 50% 50%, transparent 0%, transparent 60%, #000 100%);mask-image:radial-gradient(ellipse 220px 260px at 50% 50%, transparent 0%, transparent 60%, #000 100%);transition:opacity .25s ease,background .25s ease"></div>
   <div id="settingsCard" style="position:relative;background:rgba(60,64,72,.85);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:18px;width:100%;max-width:380px;color:#fff;box-shadow:0 14px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18);transition:background .25s ease,border-color .25s ease,box-shadow .25s ease">
-    <div class="set-block" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff;opacity:.85">Настройки</div>
       <button id="settingsClose" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;opacity:.7;padding:0;-webkit-tap-highlight-color:transparent">✕</button>
     </div>
-    <button class="set-block" id="voicesBtn" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;font-size:15px;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent">
+    <button id="voicesBtn" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;font-size:15px;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M11 5L6 9H2v6h4l5 4V5z"/>
         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
@@ -197,19 +194,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
       </svg>
       <span>Голоса</span>
     </button>
-    <div class="set-block set-tone" style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px;cursor:pointer">
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон фона</div>
       <div id="tonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
     </div>
-    <div class="set-block set-tone" style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px;cursor:pointer">
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон кнопок</div>
       <div id="btnTonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
     </div>
-    <div class="set-block set-tone" style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px;cursor:pointer">
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон сообщений</div>
       <div id="msgTonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
     </div>
-    <div class="set-block set-tone" style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px;cursor:pointer">
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон Стича</div>
       <div id="asstTonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
     </div>
@@ -379,79 +376,8 @@ function showVoicePanel(name, steps, onDone) {
     bd.style.backdropFilter = 'none';
     bd.style.webkitBackdropFilter = 'none';
   }
-  function openS(){
-    if (sp) sp.style.display = 'flex';
-    restoreBackdrop();
-    var card = document.getElementById('settingsCard');
-    if (card) {
-      card.classList.remove('dimmed');
-      Array.prototype.forEach.call(card.querySelectorAll('.set-block.active'), function(s){ s.classList.remove('active'); });
-    }
-  }
+  function openS(){ if (sp) sp.style.display = 'flex'; restoreBackdrop(); }
   function closeS(){ if (sp) sp.style.display = 'none'; }
-  function focusBlock(picker){
-    var card = document.getElementById('settingsCard');
-    if (!card) return;
-    var section = picker.closest ? picker.closest('.set-block') : null;
-    if (!section) return;
-    card.classList.add('dimmed');
-    Array.prototype.forEach.call(card.querySelectorAll('.set-block'), function(s){
-      s.classList.toggle('active', s === section);
-    });
-  }
-  // В dimmed-режиме любой клик ВНЕ активной секции — просто возвращает
-  // меню в обычный вид (без применения каких-либо действий). Capture-phase,
-  // чтобы перехватить event до color-кружков других секций — иначе их
-  // click-handler сработал бы и сменил цвет/active. stopPropagation +
-  // preventDefault гасит дальнейшие listener'ы.
-  var card0 = document.getElementById('settingsCard');
-  if (card0 && !card0._undimWired) {
-    card0._undimWired = true;
-    function undim(){
-      card0.classList.remove('dimmed');
-      Array.prototype.forEach.call(card0.querySelectorAll('.set-block.active'), function(s){ s.classList.remove('active'); });
-      restoreBackdrop();
-    }
-    function handleCardClick(e){
-      var dimmed = card0.classList.contains('dimmed');
-      var block = e.target.closest && e.target.closest('.set-block');
-      var isColorBtn = e.target.closest && e.target.closest('#tonePicker, #btnTonePicker, #msgTonePicker, #asstTonePicker') && e.target.tagName === 'BUTTON';
-      if (isColorBtn) {
-        // Клик по цвету в полупрозрачной плашке (не активной) → undim,
-        // выбор не применяется. В активной плашке или normal-режиме —
-        // отдаём color-handler-у, он сделает focusBlock + смену цвета.
-        if (dimmed && block && !block.classList.contains('active')) {
-          e.stopPropagation();
-          e.preventDefault();
-          undim();
-        }
-        return;
-      }
-      if (block && block.classList.contains('set-tone')) {
-        if (!dimmed) {
-          // normal режим — клик по плашке включает dim на ней.
-          e.stopPropagation();
-          e.preventDefault();
-          var picker = block.querySelector('#tonePicker, #btnTonePicker, #msgTonePicker, #asstTonePicker');
-          if (picker) { focusBlock(picker); killBackdrop(); }
-          return;
-        }
-        // dimmed режим:
-        if (block.classList.contains('active')) return; // тап по padding активной — ничего
-        // тап по полупрозрачной плашке → возвращаем меню в полный вид.
-        e.stopPropagation();
-        e.preventDefault();
-        undim();
-        return;
-      }
-      if (!dimmed) return;
-      if (block && block.classList.contains('active')) return;
-      e.stopPropagation();
-      e.preventDefault();
-      undim();
-    }
-    card0.addEventListener('click', handleCardClick, true);
-  }
   if (sb2 && !sb2._wired) { sb2._wired = true; sb2.addEventListener('click', function(){ haptic(); openS(); }); }
   if (sc && !sc._wired) { sc._wired = true; sc.addEventListener('click', function(){ haptic(); closeS(); }); }
   if (bd && !bd._wired) { bd._wired = true; bd.addEventListener('click', closeS); }
@@ -508,7 +434,6 @@ function showVoicePanel(name, steps, onDone) {
         localStorage.setItem(TONE_KEY, t.c);
         refreshRings(t.c);
         killBackdrop();
-        focusBlock(picker);
       });
       picker.appendChild(b);
     });
@@ -550,7 +475,6 @@ function showVoicePanel(name, steps, onDone) {
         localStorage.setItem(BTN_KEY, t.c);
         refreshBtnRings(t.c);
         killBackdrop();
-        focusBlock(btnPicker);
       });
       btnPicker.appendChild(b);
     });
@@ -584,7 +508,6 @@ function showVoicePanel(name, steps, onDone) {
         localStorage.setItem(MSG_KEY, t.c);
         refreshMsgRings(t.c);
         killBackdrop();
-        focusBlock(msgPicker);
       });
       msgPicker.appendChild(b);
     });
@@ -618,7 +541,6 @@ function showVoicePanel(name, steps, onDone) {
         localStorage.setItem(ASST_KEY, t.c);
         refreshAsstRings(t.c);
         killBackdrop();
-        focusBlock(asstPicker);
       });
       asstPicker.appendChild(b);
     });
