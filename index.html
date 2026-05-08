@@ -97,7 +97,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v429</span></div>
+<div class="title">Стич · Claude <span class="build">v430</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -1167,6 +1167,22 @@ micBtn.addEventListener('lostpointercapture', function(e){ micRelease(e); });
 micBtn.addEventListener('touchend', function(e){ micRelease(e); }, {passive:true});
 micBtn.addEventListener('touchcancel', function(e){ micRelease(e); }, {passive:true});
 micBtn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+// Slide-to-cancel: если палец во время удержания вышел за пределы кнопки
+// (с небольшим люфтом 12px), отменяем запись и возвращаем UI в idle —
+// как будто кнопку и не нажимали. Whisper не вызывается, потому что
+// listenAborted=true перехватывается в audioRec.onstop.
+micBtn.addEventListener('pointermove', function(e){
+  if (state !== 'listening') return;
+  var r = micBtn.getBoundingClientRect();
+  var slack = 12;
+  var inside = e.clientX >= r.left - slack && e.clientX <= r.right + slack
+            && e.clientY >= r.top - slack && e.clientY <= r.bottom + slack;
+  if (!inside) {
+    listenAborted = true;
+    try { if (e.pointerId != null && micBtn.releasePointerCapture) micBtn.releasePointerCapture(e.pointerId); } catch(_){}
+    stopListening();
+  }
+});
 // Window-level safety nets in case the host (Telegram WebView) swallows
 // every event that hit the button itself.
 window.addEventListener('pointerup', function(){ if (state==='listening') stopListening(); });
