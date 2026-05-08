@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v527</span></div>
+<div class="title">Стич · Claude <span class="build">v528</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2035,32 +2035,57 @@ async function askWithImages(photos, userText) {
   function easeOut(t){ return 1 - Math.pow(1 - t, 3); }
 
   // Каждое НОВОЕ сообщение цепляется одной конечностью по очереди из своего
-  // пула. Внутри пула round-robin: arm → leg → arm → leg. Если конечность,
-  // которая по очереди следует, не подходит для зоны bubble (рука внизу или
-  // нога вверху), пропускаем её и берём следующую в пуле. Старые bubble не
-  // перепривязываются — они остаются с теми конечностями, что были, пока
-  // новое сообщение не перехватит конкретную конечность.
+  // пула. Затем заполняем все свободные конечности подходящими старыми
+  // сообщениями — конечности не висят зря, если есть за что хвататься.
   window.dollAttach = function(){
     var bubbles = document.querySelectorAll('#chat .bbl');
     var last = bubbles[bubbles.length - 1];
-    if (!last) return;
-    // Уже привязано?
-    for (var i = 0; i < LIMBS.length; i++) if (LIMBS[i].bubble === last) return;
-    var isUser = last.classList && last.classList.contains('u');
-    var pool = isUser ? POOL_USER : POOL_ASST;
-    var counterRef = isUser ? 'R' : 'L';
-    var counter = isUser ? attachOrderR : attachOrderL;
-    for (var k = 0; k < pool.length; k++) {
-      var idx = (counter + k) % pool.length;
-      var L = pool[idx];
-      if (bubblePoint(last, L)) {
-        L.bubble = last;
-        if (counterRef === 'R') attachOrderR = idx + 1;
-        else attachOrderL = idx + 1;
-        return;
+    if (last) {
+      var alreadyAttached = false;
+      for (var i = 0; i < LIMBS.length; i++) if (LIMBS[i].bubble === last) { alreadyAttached = true; break; }
+      if (!alreadyAttached) {
+        var isUser = last.classList && last.classList.contains('u');
+        var pool = isUser ? POOL_USER : POOL_ASST;
+        var counter = isUser ? attachOrderR : attachOrderL;
+        for (var k = 0; k < pool.length; k++) {
+          var idx = (counter + k) % pool.length;
+          var L = pool[idx];
+          if (bubblePoint(last, L)) {
+            L.bubble = last;
+            if (isUser) attachOrderR = idx + 1; else attachOrderL = idx + 1;
+            break;
+          }
+        }
       }
     }
+    fillFreeLimbs();
   };
+
+  // Заполняем все свободные конечности подходящими сообщениями. Идём по
+  // bubbles от свежих к старым, для каждого ищем первую свободную конечность
+  // подходящей стороны+зоны и привязываем.
+  function fillFreeLimbs(){
+    var taken = [];
+    LIMBS.forEach(function(L){ if (L.bubble) taken.push(L.bubble); });
+    var free = LIMBS.filter(function(L){ return !L.bubble; });
+    if (!free.length) return;
+    var bubbles = Array.prototype.slice.call(document.querySelectorAll('#chat .bbl')).reverse();
+    for (var i = 0; i < bubbles.length && free.length; i++) {
+      var b = bubbles[i];
+      if (taken.indexOf(b) !== -1) continue;
+      var isUser = b.classList && b.classList.contains('u');
+      for (var j = 0; j < free.length; j++) {
+        var L = free[j];
+        var rightSide = L.sideSign > 0;
+        if (isUser !== rightSide) continue;
+        if (!bubblePoint(b, L)) continue;
+        L.bubble = b;
+        taken.push(b);
+        free.splice(j, 1);
+        break;
+      }
+    }
+  }
 
   // Low-pass smoothing — плавность. 0.08 даёт неспешное перецепление —
   // конечность плавно отпускает старое сообщение и переходит на новое
