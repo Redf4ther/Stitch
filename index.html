@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v569</span></div>
+<div class="title">Стич · Claude <span class="build">v570</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -216,27 +216,45 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон Стича</div>
       <div id="asstTonePicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:3px 3px 5px;-webkit-overflow-scrolling:touch"></div>
     </div>
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Одежда</div>
+      <div id="clothTonePicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:3px 3px 5px;-webkit-overflow-scrolling:touch"></div>
+    </div>
+    <button id="toggleTests" style="margin-top:12px;display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;font-size:15px;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent">
+      <span style="flex:1;text-align:left">Тест-кнопки</span>
+      <span id="toggleTestsState" style="font-size:13px;opacity:.7">выкл</span>
+    </button>
   </div>
 </div>
 
 <input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="display:none"/>
 <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
 
-<!-- Тест-кнопки для куклы: добавляют bubble без вызова API. Фиксированы над
-     mic-рядом: левая (стич) у левого края, правая (я) у правого. -->
-<button id="testAsst" style="position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:rgba(40,140,220,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto">+ стич</button>
-<button id="testUser" style="position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:rgba(220,80,140,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto">+ я</button>
+<!-- Тест-кнопки для куклы (по умолчанию скрыты, включаются в настройках). -->
+<button id="testAsst" style="display:none;position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.04) 55%,rgba(0,0,0,.08));border:1px solid rgba(255,255,255,.32);color:#fff;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.45);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%)">+ стич</button>
+<button id="testUser" style="display:none;position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.04) 55%,rgba(0,0,0,.08));border:1px solid rgba(255,255,255,.32);color:#fff;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.45);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%)">+ я</button>
 <script>
 (function(){
   var asstLines = ['ага.', 'смотри сюда.', 'попробуем.', 'мысль интересная.', 'класс.', 'это любопытно...', 'хм.', 'не уверен.'];
   var userLines = ['ну?', 'давай.', 'окей', 'и что?', 'хорошо', 'попробую', 'ага', 'понял'];
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
-  document.getElementById('testAsst').addEventListener('click', function(){
-    if (typeof addMsg === 'function') addMsg('a', pick(asstLines));
-  });
-  document.getElementById('testUser').addEventListener('click', function(){
-    if (typeof addMsg === 'function') addMsg('u', pick(userLines));
-  });
+  var bA = document.getElementById('testAsst');
+  var bU = document.getElementById('testUser');
+  bA.addEventListener('click', function(){ if (typeof addMsg === 'function') addMsg('a', pick(asstLines)); });
+  bU.addEventListener('click', function(){ if (typeof addMsg === 'function') addMsg('u', pick(userLines)); });
+  // Переключатель из settings.
+  var TEST_KEY = 'stitch_show_tests';
+  function applyTestVisibility(on){
+    bA.style.display = on ? '' : 'none';
+    bU.style.display = on ? '' : 'none';
+  }
+  applyTestVisibility(localStorage.getItem(TEST_KEY) === '1');
+  window.toggleTestButtons = function(){
+    var on = !(localStorage.getItem(TEST_KEY) === '1');
+    localStorage.setItem(TEST_KEY, on ? '1' : '0');
+    applyTestVisibility(on);
+    return on;
+  };
 })();
 </script>
 
@@ -660,6 +678,65 @@ function showVoicePanel(name, steps, onDone) {
       asstPicker.appendChild(b);
     });
     refreshAsstRings(savedAsst);
+  }
+  // Тон одежды куклы: red rgba(60,40,30,.5) → solid hex выбранного тона.
+  // Применяется через JS на element #dollTorso (он создаётся позже, в IIFE).
+  var CLOTH_TONES = [{n:'Бурый', c:'default'}].concat(TONES.slice(1));
+  var CLOTH_KEY = 'stitch_cloth_tint';
+  var savedCloth = localStorage.getItem(CLOTH_KEY) || 'default';
+  function applyClothTint(c){
+    var t = document.getElementById('dollTorso');
+    if (!t) return;
+    t.setAttribute('fill', c === 'default' ? 'url(#d-cloth)' : c);
+  }
+  applyClothTint(savedCloth);
+  // На случай если #dollTorso ещё не создан — повторим после load.
+  window.addEventListener('load', function(){ applyClothTint(savedCloth); });
+  var clothPicker = document.getElementById('clothTonePicker');
+  if (clothPicker && !clothPicker._wired) {
+    clothPicker._wired = true;
+    function refreshClothRings(active){
+      Array.prototype.forEach.call(clothPicker.children, function(b){
+        var on = b.dataset.tone === active;
+        b.style.boxShadow = on
+          ? '0 0 0 2px rgba(255,255,255,.95), inset 0 1px 1px rgba(255,255,255,.4), inset 0 -2px 4px rgba(0,0,0,.4)'
+          : 'inset 0 1px 1px rgba(255,255,255,.35), inset 0 -2px 4px rgba(0,0,0,.45)';
+      });
+    }
+    CLOTH_TONES.forEach(function(t){
+      var b = document.createElement('button');
+      b.dataset.tone = t.c;
+      b.title = t.n;
+      var bg = (t.c === 'default')
+        ? 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), #2a2620'
+        : 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), '+t.c;
+      b.style.cssText = 'width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;background:'+bg+';transition:transform .15s';
+      b.addEventListener('click', function(){
+        haptic();
+        applyClothTint(t.c);
+        savedCloth = t.c;
+        localStorage.setItem(CLOTH_KEY, t.c);
+        refreshClothRings(t.c);
+        killBackdrop();
+      });
+      clothPicker.appendChild(b);
+    });
+    refreshClothRings(savedCloth);
+  }
+  // Переключатель тест-кнопок (window.toggleTestButtons определён ниже).
+  var tt = document.getElementById('toggleTests');
+  var ttState = document.getElementById('toggleTestsState');
+  function refreshTestState(){
+    if (ttState) ttState.textContent = (localStorage.getItem('stitch_show_tests') === '1') ? 'вкл' : 'выкл';
+  }
+  refreshTestState();
+  if (tt && !tt._wired) {
+    tt._wired = true;
+    tt.addEventListener('click', function(){
+      haptic();
+      if (window.toggleTestButtons) window.toggleTestButtons();
+      refreshTestState();
+    });
   }
 })();
 // Camera button haptic on press (label triggers a hidden file input on tap).
@@ -1940,8 +2017,8 @@ async function askWithImages(photos, userText) {
     // Stub-элементы MC/MO/MT/TG/TOP/BOT для совместимости со старым drawMouth.
     '<g id="MC" style="display:none"></g>'+
     '<g id="MO" style="display:none"><path id="MT"/><ellipse id="TG"/><path id="TOP"/><path id="BOT"/></g>'+
-    // Торс
-    '<path d="M68 208 L 152 208 Q 168 290, 162 460 L 58 460 Q 52 290, 68 208 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
+    // Торс — id для перекраски одежды через JS.
+    '<path id="dollTorso" d="M68 208 L 152 208 Q 168 290, 162 460 L 58 460 Q 52 290, 68 208 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
     '<circle cx="110" cy="234" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
     '<circle cx="110" cy="270" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
     '<circle cx="110" cy="306" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
@@ -1980,10 +2057,11 @@ async function askWithImages(photos, userText) {
       '<stop offset="55%" stop-color="#c8b0a0"/>'+
       '<stop offset="100%" stop-color="#3a2818"/>'+
     '</radialGradient></defs>'+
-    '<ellipse id="hand-l" rx="12" ry="6" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1" class="hand"/>'+
-    '<ellipse id="hand-r" rx="12" ry="6" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1" class="hand"/>'+
-    '<ellipse id="foot-l" rx="14" ry="9" fill="#181410" stroke="#3a3028" stroke-width="1" class="foot"/>'+
-    '<ellipse id="foot-r" rx="14" ry="9" fill="#181410" stroke="#3a3028" stroke-width="1" class="foot"/>';
+    // Кисти-варежки и сапожки — стилизованные ellipse с обводкой и бликом.
+    '<ellipse id="hand-l" rx="13" ry="9" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.2" class="hand"/>'+
+    '<ellipse id="hand-r" rx="13" ry="9" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.2" class="hand"/>'+
+    '<ellipse id="foot-l" rx="16" ry="10" fill="#1a1208" stroke="#3a3028" stroke-width="1.2" class="foot"/>'+
+    '<ellipse id="foot-r" rx="16" ry="10" fill="#1a1208" stroke="#3a3028" stroke-width="1.2" class="foot"/>';
   document.body.appendChild(hands);
 
   // L1/L2 — длины верхнего/нижнего сегмента в screen-px.
