@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v522</span></div>
+<div class="title">Стич · Claude <span class="build">v523</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2001,7 +2001,15 @@ async function askWithImages(photos, userText) {
         if (y > micTop) return null;
       }
     }
-    var x = L.sideSign < 0 ? Math.round(r.left + 24) : Math.round(r.right - 24);
+    // Рука — ближний к плечу угол bubble; нога — противоположный (дальний).
+    var nearLeft = Math.round(r.left + 24);
+    var nearRight = Math.round(r.right - 24);
+    var x;
+    if (!L.isLeg) {
+      x = L.sideSign < 0 ? nearLeft : nearRight;
+    } else {
+      x = L.sideSign < 0 ? nearRight : nearLeft;
+    }
     return {x:x, y:y};
   }
   // Свободно висящая конечность — строго вниз от плеча (без боковой
