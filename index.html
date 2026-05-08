@@ -101,7 +101,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v497</span></div>
+<div class="title">Стич · Claude <span class="build">v498</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -455,7 +455,21 @@ function showVoicePanel(name, steps, onDone) {
     {n:'Фуксия',     c:'#a83a90'},
     {n:'Малина',     c:'#b03070'},
     {n:'Роза',       c:'#c04a7a'},
-    {n:'Коралл',     c:'#c45070'}
+    {n:'Коралл',     c:'#c45070'},
+    // iOS System Colors — официальная палитра Apple, все 13 базовых тонов.
+    {n:'Apple Red',     c:'#FF3B30'},
+    {n:'Apple Orange',  c:'#FF9500'},
+    {n:'Apple Yellow',  c:'#FFCC00'},
+    {n:'Apple Green',   c:'#34C759'},
+    {n:'Apple Mint',    c:'#00C7BE'},
+    {n:'Apple Teal',    c:'#30B0C7'},
+    {n:'Apple Cyan',    c:'#32ADE6'},
+    {n:'Apple Blue',    c:'#007AFF'},
+    {n:'Apple Indigo',  c:'#5856D6'},
+    {n:'Apple Purple',  c:'#AF52DE'},
+    {n:'Apple Pink',    c:'#FF2D55'},
+    {n:'Apple Brown',   c:'#A2845E'},
+    {n:'Apple Gray',    c:'#8E8E93'}
   ];
   var TONE_KEY = 'stitch_bg_tone';
   function applyTone(c){ document.documentElement.style.setProperty('--bg-tone', c); }
