@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v577</span></div>
+<div class="title">Стич · Claude <span class="build">v578</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -787,6 +787,79 @@ function showVoicePanel(name, steps, onDone) {
   if (c && !c._hapticWired) { c._hapticWired = true; c.addEventListener('pointerdown', function(){ haptic(); }); }
 })();
 
+// Независимый fallback init для cloth-палитры и тест-кнопок переключателя
+// (на случай если settings IIFE упал раньше из-за чего-то ещё). Через 0ms
+// чтобы дождаться парсинга всего HTML.
+setTimeout(function(){
+  var clothPicker = document.getElementById('clothTonePicker');
+  if (clothPicker && !clothPicker._fbWired && clothPicker.children.length === 0) {
+    clothPicker._fbWired = true;
+    var TONES_FALLBACK = [
+      {n:'Бурый', c:'default'},
+      {n:'Красный', c:'#c41030'}, {n:'Алый', c:'#dc2030'}, {n:'Кирпич', c:'#a04030'},
+      {n:'Манго', c:'#f4862c'}, {n:'Янтарь', c:'#e8a830'}, {n:'Солнце', c:'#f4c020'},
+      {n:'Лимон', c:'#d4d020'}, {n:'Лайм', c:'#7ac84a'}, {n:'Изумруд', c:'#1ec88a'},
+      {n:'Мята', c:'#50c8a0'}, {n:'Бирюза', c:'#1ec0c8'}, {n:'Небо', c:'#4ab8e0'},
+      {n:'Океан', c:'#3080c8'}, {n:'Кобальт', c:'#3060c0'}, {n:'Сапфир', c:'#2848a0'},
+      {n:'Индиго', c:'#5a3aa8'}, {n:'Лаванда', c:'#8060c8'}, {n:'Сирень', c:'#a060c0'},
+      {n:'Орхидея', c:'#c050b0'}, {n:'Фуксия', c:'#d04098'}, {n:'Малина', c:'#c83870'},
+      {n:'Роза', c:'#e060a0'}, {n:'Коралл', c:'#f0708a'},
+      {n:'Apple Red', c:'#FF3B30'}, {n:'Apple Orange', c:'#FF9500'}, {n:'Apple Yellow', c:'#FFCC00'},
+      {n:'Apple Green', c:'#34C759'}, {n:'Apple Mint', c:'#00C7BE'}, {n:'Apple Teal', c:'#30B0C7'},
+      {n:'Apple Cyan', c:'#32ADE6'}, {n:'Apple Blue', c:'#007AFF'}, {n:'Apple Indigo', c:'#5856D6'},
+      {n:'Apple Purple', c:'#AF52DE'}, {n:'Apple Pink', c:'#FF2D55'}, {n:'Apple Brown', c:'#A2845E'},
+      {n:'Графит', c:'#3a3a4a'}, {n:'Уголь', c:'#1c1c1e'}
+    ];
+    var CLOTH_KEY = 'stitch_cloth_tint';
+    var savedCloth = localStorage.getItem(CLOTH_KEY) || 'default';
+    function applyTorso(c){
+      var t = document.getElementById('dollTorso');
+      if (t) t.setAttribute('fill', c === 'default' ? 'url(#d-cloth)' : c);
+    }
+    applyTorso(savedCloth);
+    function refreshRings(active){
+      Array.prototype.forEach.call(clothPicker.children, function(b){
+        var on = b.dataset.tone === active;
+        b.style.boxShadow = on
+          ? '0 0 0 2px rgba(255,255,255,.95), inset 0 1px 1px rgba(255,255,255,.4), inset 0 -2px 4px rgba(0,0,0,.4)'
+          : 'inset 0 1px 1px rgba(255,255,255,.35), inset 0 -2px 4px rgba(0,0,0,.45)';
+      });
+    }
+    TONES_FALLBACK.forEach(function(t){
+      var b = document.createElement('button');
+      b.dataset.tone = t.c;
+      b.title = t.n;
+      var bg = (t.c === 'default')
+        ? 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), #2a2620'
+        : 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), '+t.c;
+      b.style.cssText = 'width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;background:'+bg+';transition:transform .15s;flex-shrink:0';
+      b.addEventListener('click', function(){
+        try { haptic(); } catch(_){}
+        applyTorso(t.c);
+        savedCloth = t.c;
+        localStorage.setItem(CLOTH_KEY, t.c);
+        refreshRings(t.c);
+      });
+      clothPicker.appendChild(b);
+    });
+    refreshRings(savedCloth);
+  }
+  var tt = document.getElementById('toggleTests');
+  var ttState = document.getElementById('toggleTestsState');
+  if (tt && !tt._fbWired) {
+    tt._fbWired = true;
+    function refreshState(){
+      if (ttState) ttState.textContent = (localStorage.getItem('stitch_show_tests') === '1') ? 'вкл' : 'выкл';
+    }
+    refreshState();
+    tt.addEventListener('click', function(){
+      try { haptic(); } catch(_){}
+      if (window.toggleTestButtons) window.toggleTestButtons();
+      refreshState();
+    });
+  }
+}, 0);
+
 // If no key yet, replace the welcome bubble with a request to send one in
 // chat. The user pastes/types an sk-... message and saveKeyFromMessage
 // picks it up.
@@ -1440,7 +1513,8 @@ async function startListening() {
       var data = await r.json();
       if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
       var t = ((data.text || '') + '').trim();
-      if (!t || isWhisperHallucination(t)) return;
+      if (!t) { errEl.textContent = 'Тихо, не услышал — попробуй ещё раз'; return; }
+      if (isWhisperHallucination(t)) { errEl.textContent = 'Не разобрал — попробуй ещё раз'; return; }
       if (window.pendingPhotos && window.pendingPhotos.length) {
         sendPhotosWith(window.pendingPhotos.slice(), t);
         cancelAllPhotos();
