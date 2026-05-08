@@ -37,10 +37,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 }
 /* Кукла — единый SVG fixed позади чата. Висит на верёвочке от потолка,
    тихо качается dangleDoll. Голова + шея + торс + шарниры плеч/бёдер. */
-#doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px);left:50%;width:220px;height:540px;pointer-events:none;z-index:1;display:block;transform:translateX(-50%);transform-origin:50% 0}
-/* Руки/ноги (path) ПОД телом куклы (z:0, #doll z:1). Path может пересекать
-   зону торса — он скрывается за телом куклы, виден только участок снаружи. */
-#dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px);left:50%;width:220px;height:540px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% 0}
+/* Руки/ноги (path) ПОВЕРХ тела куклы (z:1, #doll z:0) — конечности
+   соединяются поверх тела, без visual gap. Шарниры-кружочки скрыты. */
+#dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:15;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 #dollLimbs .leg{stroke:#1a1610;stroke-width:22;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 /* Кисти/стопы — ПЕРЕД сообщениями (z:5, выше .below). */
@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v555</span></div>
+<div class="title">Стич · Claude <span class="build">v557</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1925,7 +1925,7 @@ async function askWithImages(photos, userText) {
     // Боковые прорези соединяются с улыбкой-прорезью на верхушке челюсти.
     '<path id="MS" d="M88 160 Q98 168 110 168 Q122 168 132 160 L 132 180 Q122 184 110 184 Q98 184 88 180 Z" fill="#1a0a04"/>'+
     '<g id="dollJaw">'+
-      '<path id="jawShape" d="M88 160 Q98 168 110 168 Q122 168 132 160 L 132 180 Q122 184 110 184 Q98 184 88 180 Z" fill="#5a3c28"/>'+
+      '<path id="jawShape" d="M88 160 Q98 168 110 168 Q122 168 132 160 L 132 180 Q122 184 110 184 Q98 184 88 180 Z" fill="#3a2818"/>'+
     '</g>'+
     // Три прорези — вертикальные по бокам и горизонтальная улыбка на стыке.
     // Все три соединяются и образуют контур по которому раскрывается рот.
@@ -1943,12 +1943,11 @@ async function askWithImages(photos, userText) {
     '<circle cx="110" cy="342" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
     '<circle cx="110" cy="378" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
     '<circle cx="110" cy="414" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    // Шарниры — на самых гранях торса (центр конечности = край тела,
-    // половина руки/ноги под одеждой, половина наружу).
-    '<circle id="shoulder-l" cx="68" cy="226" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
-    '<circle id="shoulder-r" cx="152" cy="226" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
-    '<circle id="hip-l" cx="84" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
-    '<circle id="hip-r" cx="136" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>';
+    // Шарниры — невидимые маркеры для JS shoulderPoint() (fill/stroke:none).
+    '<circle id="shoulder-l" cx="68" cy="226" r="5" fill="none" stroke="none"/>'+
+    '<circle id="shoulder-r" cx="152" cy="226" r="5" fill="none" stroke="none"/>'+
+    '<circle id="hip-l" cx="84" cy="454" r="5" fill="none" stroke="none"/>'+
+    '<circle id="hip-r" cx="136" cy="454" r="5" fill="none" stroke="none"/>';
   document.body.insertBefore(doll, document.body.firstChild);
   // Плавный переход челюсти при открытии/закрытии рта.
   var jawEl = doll.querySelector('#dollJaw');
