@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v524</span></div>
+<div class="title">Стич · Claude <span class="build">v525</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1970,9 +1970,11 @@ async function askWithImages(photos, userText) {
     L.handEl = hands.querySelector('#'+L.handId);
   });
   // Пулы по сторонам: левые конечности — для assistant (left bubble),
-  // правые — для user (right bubble). Внутри пула рука и нога.
+  // правые — для user (right bubble). Round-robin по пулу при каждом новом
+  // сообщении (по очереди рука → нога → рука → нога).
   var POOL_ASST = [LIMBS[0], LIMBS[2]]; // arm-l, leg-l
   var POOL_USER = [LIMBS[1], LIMBS[3]]; // arm-r, leg-r
+  var attachOrderL = 0, attachOrderR = 0;
 
   function shoulderPoint(svgId){
     var c = document.getElementById(svgId);
@@ -2032,27 +2034,38 @@ async function askWithImages(photos, userText) {
   }
   function easeOut(t){ return 1 - Math.pow(1 - t, 3); }
 
-  // Перераспределение: пройти по всем .bbl от новых к старым и назначить
-  // каждому свободную конечность из соответствующего пула. Так конечности
-  // всегда висят на самых свежих доступных сообщениях. Если конечность
-  // отцепилась (новое сообщение перецепило руку), освободившееся старое
-  // сообщение получит другую свободную конечность из пула.
+  // Каждое НОВОЕ сообщение цепляется одной конечностью по очереди из своего
+  // пула. Внутри пула round-robin: arm → leg → arm → leg. Если конечность,
+  // которая по очереди следует, не подходит для зоны bubble (рука внизу или
+  // нога вверху), пропускаем её и берём следующую в пуле. Старые bubble не
+  // перепривязываются — они остаются с теми конечностями, что были, пока
+  // новое сообщение не перехватит конкретную конечность.
   window.dollAttach = function(){
-    var bubbles = Array.prototype.slice.call(document.querySelectorAll('#chat .bbl')).reverse();
-    LIMBS.forEach(function(L){ L.bubble = null; });
-    var asstFree = POOL_ASST.slice();
-    var userFree = POOL_USER.slice();
-    for (var i = 0; i < bubbles.length && (asstFree.length || userFree.length); i++) {
-      var b = bubbles[i];
-      var isUser = b.classList && b.classList.contains('u');
-      var pool = isUser ? userFree : asstFree;
-      if (pool.length) pool.shift().bubble = b;
+    var bubbles = document.querySelectorAll('#chat .bbl');
+    var last = bubbles[bubbles.length - 1];
+    if (!last) return;
+    // Уже привязано?
+    for (var i = 0; i < LIMBS.length; i++) if (LIMBS[i].bubble === last) return;
+    var isUser = last.classList && last.classList.contains('u');
+    var pool = isUser ? POOL_USER : POOL_ASST;
+    var counterRef = isUser ? 'R' : 'L';
+    var counter = isUser ? attachOrderR : attachOrderL;
+    for (var k = 0; k < pool.length; k++) {
+      var idx = (counter + k) % pool.length;
+      var L = pool[idx];
+      if (bubblePoint(last, L)) {
+        L.bubble = last;
+        if (counterRef === 'R') attachOrderR = idx + 1;
+        else attachOrderL = idx + 1;
+        return;
+      }
     }
   };
 
-  // Low-pass smoothing — плавность. 0.12 даёт неторопливое хватание/отпускание
-  // конечности (~0.7s до полного догона цели), как у тряпичной куклы.
-  var SMOOTH = 0.12;
+  // Low-pass smoothing — плавность. 0.08 даёт неспешное перецепление —
+  // конечность плавно отпускает старое сообщение и переходит на новое
+  // (~1.2s до полного догона цели).
+  var SMOOTH = 0.08;
   function tick(){
     LIMBS.forEach(function(L){
       if (L.bubble && !document.body.contains(L.bubble)) L.bubble = null;
