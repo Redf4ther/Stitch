@@ -102,7 +102,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v481</span></div>
+<div class="title">Стич · Claude <span class="build">v482</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -407,7 +407,17 @@ function showVoicePanel(name, steps, onDone) {
       var dimmed = card0.classList.contains('dimmed');
       var block = e.target.closest && e.target.closest('.set-block');
       var isColorBtn = e.target.closest && e.target.closest('#tonePicker, #btnTonePicker, #msgTonePicker, #asstTonePicker') && e.target.tagName === 'BUTTON';
-      if (isColorBtn) return; // color-кружки сами делают focusBlock
+      if (isColorBtn) {
+        // Клик по цвету в полупрозрачной плашке (не активной) → undim,
+        // выбор не применяется. В активной плашке или normal-режиме —
+        // отдаём color-handler-у, он сделает focusBlock + смену цвета.
+        if (dimmed && block && !block.classList.contains('active')) {
+          e.stopPropagation();
+          e.preventDefault();
+          undim();
+        }
+        return;
+      }
       if (block && block.classList.contains('set-tone')) {
         if (!dimmed) {
           // normal режим — клик по плашке включает dim на ней.
