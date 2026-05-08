@@ -64,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.5;background:#1c1c1e;border:none;color:#e6e8eb;box-shadow:none}
-.bbl.u .bi{background:#2c2c2e;border:none;color:#ffffff;border-radius:16px 16px 4px 16px;box-shadow:none}
+.bbl.u .bi{background:var(--msg-tint, #2c2c2e);border:none;color:#ffffff;border-radius:16px 16px 4px 16px;box-shadow:none;transition:background .35s ease}
 .cur::after{content:‘▋’;color:#7c5cff;animation:cur .4s steps(1) infinite}
 .err{flex-shrink:0;font-size:11px;color:#e84a5f;padding:0 14px;text-align:center}
 .err:not(:empty){padding:2px 14px}
@@ -97,7 +97,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v463</span></div>
+<div class="title">Стич · Claude <span class="build">v464</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -199,6 +199,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
     <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон кнопок</div>
       <div id="btnTonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
+    </div>
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон сообщений</div>
+      <div id="msgTonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
     </div>
   </div>
 </div>
@@ -468,6 +472,39 @@ function showVoiceToast(name) {
       btnPicker.appendChild(b);
     });
     refreshBtnRings(savedBtn);
+  }
+  // Тон user-сообщений (правые пузыри). Default — тёмно-серый #2c2c2e.
+  var MSG_TONES = [{n:'Серый', c:'#2c2c2e'}].concat(TONES.slice(1));
+  var MSG_KEY = 'stitch_msg_tint';
+  function applyMsgTint(c){ document.documentElement.style.setProperty('--msg-tint', c); }
+  var savedMsg = localStorage.getItem(MSG_KEY) || '#2c2c2e';
+  applyMsgTint(savedMsg);
+  var msgPicker = document.getElementById('msgTonePicker');
+  if (msgPicker && !msgPicker._wired) {
+    msgPicker._wired = true;
+    function refreshMsgRings(active){
+      Array.prototype.forEach.call(msgPicker.children, function(b){
+        var on = b.dataset.tone === active;
+        b.style.boxShadow = on
+          ? '0 0 0 2px rgba(255,255,255,.95), inset 0 1px 1px rgba(255,255,255,.4), inset 0 -2px 4px rgba(0,0,0,.4)'
+          : 'inset 0 1px 1px rgba(255,255,255,.35), inset 0 -2px 4px rgba(0,0,0,.45)';
+      });
+    }
+    MSG_TONES.forEach(function(t){
+      var b = document.createElement('button');
+      b.dataset.tone = t.c;
+      b.title = t.n;
+      b.style.cssText = 'width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;background:radial-gradient(circle at 30% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 45%), '+t.c+';transition:transform .15s';
+      b.addEventListener('click', function(){
+        haptic();
+        applyMsgTint(t.c);
+        localStorage.setItem(MSG_KEY, t.c);
+        refreshMsgRings(t.c);
+        killBackdrop();
+      });
+      msgPicker.appendChild(b);
+    });
+    refreshMsgRings(savedMsg);
   }
 })();
 // Camera button haptic on press (label triggers a hidden file input on tap).
