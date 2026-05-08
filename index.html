@@ -36,9 +36,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
   35%{transform:translateY(2.5px) scaleY(2.8)}
   70%{transform:translateY(1.5px) scaleY(1.6)}
 }
-/* Тело куклы — компактный SVG, висит сразу под головой по центру экрана.
-   Шарниры внутри (плечи + бёдра) — статичны, не подёргиваются с .head. */
-#dollBody{position:fixed;left:50%;transform:translateX(-50%);width:200px;height:340px;pointer-events:none;z-index:0;display:block}
+/* Кукла — единый SVG fixed позади чата. Висит на верёвочке от потолка,
+   тихо качается dangleDoll. Голова + шея + торс + шарниры плеч/бёдер. */
+#doll{position:fixed;left:50%;width:220px;height:540px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% 0;animation:dangleDoll 5s ease-in-out infinite}
+@keyframes dangleDoll{
+  0%,100%{transform:translateX(-50%) rotate(-1.2deg)}
+  50%{transform:translateX(-50%) rotate(1.2deg)}
+}
 /* Конечности — над чатом/кнопками, но ниже settings panel'и. */
 #dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:11;stroke-linecap:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
@@ -125,50 +129,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v501</span></div>
+<div class="title">Стич · Claude <span class="build">v502</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
-      <div class="head" id="head">
-        <svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="overflow:visible">
-          <defs>
-            <radialGradient id="d-skin" cx="40%" cy="30%" r="75%">
-              <stop offset="0%" stop-color="#f4e8d8"/>
-              <stop offset="55%" stop-color="#c8b0a0"/>
-              <stop offset="100%" stop-color="#3a2818"/>
-            </radialGradient>
-            <filter id="dollSoft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.5"/></filter>
-          </defs>
-
-          <!-- Верёвочка от потолка до головы -->
-          <line x1="100" y1="-220" x2="100" y2="14" stroke="#8a7a60" stroke-width="1.5"/>
-          <circle cx="100" cy="14" r="3" fill="#5a4a30"/>
-
-          <!-- Голова — занимает почти весь viewBox -->
-          <ellipse cx="100" cy="104" rx="86" ry="92" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.5"/>
-
-          <!-- Глаза -->
-          <ellipse cx="72" cy="100" rx="13" ry="18" fill="#020202"/>
-          <ellipse cx="128" cy="100" rx="13" ry="18" fill="#020202"/>
-          <circle cx="69" cy="94" r="2.2" fill="#90a0b0" opacity=".6"/>
-          <circle cx="125" cy="94" r="2.2" fill="#90a0b0" opacity=".6"/>
-          <ellipse cx="72" cy="124" rx="13" ry="4" fill="rgba(40,20,30,.5)" filter="url(#dollSoft)"/>
-          <ellipse cx="128" cy="124" rx="13" ry="4" fill="rgba(40,20,30,.5)" filter="url(#dollSoft)"/>
-
-          <!-- Брови -->
-          <path d="M58 78 L 86 74" stroke="#3a2010" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M114 74 L 142 78" stroke="#3a2010" stroke-width="2.2" stroke-linecap="round"/>
-
-          <!-- Носик -->
-          <path d="M100 130 L 96 148 L 104 148" stroke="#6a4030" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-
-          <!-- Рот — простая горизонтальная полосочка -->
-          <line x1="74" y1="166" x2="126" y2="166" stroke="#1a0c08" stroke-width="2.5" stroke-linecap="round"/>
-
-          <!-- Stub'ы для совместимости со старым JS-кодом анимации Стича. -->
-          <g id="MC" style="display:none"></g>
-          <g id="MO" style="display:none"><path id="MS"/><path id="MT"/><ellipse id="TG"/><path id="TOP"/><path id="BOT"/></g>
-        </svg>
-      </div>
+      <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
+           оставлен для совместимости (setState ставит/снимает классы). -->
+      <div class="head" id="head"></div>
     </div>
   </div>
   <div class="below">
@@ -721,13 +687,15 @@ var shapes = ['normal','normal','wide','normal','tube','normal','wide','tube','n
 var openPos = [0.3,0.5,0.7,0.9,0.4,0.75,0.55];
 
 function drawMouth(a, shape) {
+  if (!MC || !MO) return;
   if (a < 0.04) { MC.style.display=''; MO.style.display='none'; return; }
   MC.style.display='none'; MO.style.display='';
-  var cx=150, cy=235, w, h;
-  if (shape==='tube') { w=18+a*10; h=a*40; }
-  else if (shape==='wide') { w=52+a*16; h=a*14; }
-  else { w=42+a*16; h=a*26; }
-  var L=cx-w/2, R=cx+w/2, bY=cy+h, th=shape==='tube'?3+a*5:5+a*8;
+  // Координаты под голову куклы: cx=110, cy=174 в SVG #doll (220x540).
+  var cx=110, cy=174, w, h;
+  if (shape==='tube') { w=12+a*7; h=a*26; }
+  else if (shape==='wide') { w=34+a*10; h=a*9; }
+  else { w=28+a*10; h=a*17; }
+  var L=cx-w/2, R=cx+w/2, bY=cy+h, th=shape==='tube'?2+a*3:3+a*5;
   MS.setAttribute('d','M'+L+' '+cy+' Q'+cx+' '+(cy-6)+' '+R+' '+cy+' Q'+(R-4)+' '+bY+' '+cx+' '+(bY+2)+' Q'+(L+4)+' '+bY+' '+L+' '+cy+'Z');
   if (a>0.5) { MT.setAttribute('d','M'+(cx-14)+' '+cy+' Q'+(cx-8)+' '+(cy-2)+' '+(cx-2)+' '+(cy-1)+' L'+(cx+2)+' '+(cy-1)+' Q'+(cx+8)+' '+(cy-2)+' '+(cx+14)+' '+cy+' Q'+(cx+7)+' '+(cy+th)+' '+cx+' '+(cy+th+1)+' Q'+(cx-7)+' '+(cy+th)+' '+(cx-14)+' '+cy+'Z'); MT.style.display=''; }
   else { MT.style.display='none'; }
@@ -1870,57 +1838,95 @@ async function askWithImages(photos, userText) {
 }
 
 // ── Кукла-марионетка ──
-// Голова — внутри .head SVG (она качается вместе со Стич-iB-анимацией).
-// Тело куклы (шея, торс, бёдра) — отдельный fixed-SVG #dollBody на весь
-// экран ПОЗАДИ чата. Шарниры (плечи + бёдра) находятся в этом теле и
-// СТАТИЧНЫ (не качаются с головой → руки не подёргиваются).
-// Конечности (#dollLimbs) — ещё один fixed-SVG ПОВЕРХ чата.
+// #doll — единый fixed-SVG позади чата (голова + верёвочка + шея + торс +
+// шарниры). Качается dangleDoll целиком, как висящая на нитке. Шарниры
+// (плечи + бёдра) внутри #doll → screen-coord двигается с rotate, поэтому
+// конечности сглаживаются low-pass фильтром в tick() (без подёргиваний).
+// Конечности — отдельный full-screen overlay #dollLimbs поверх чата.
 (function(){
-  // 1) Тело куклы — компактное, висит под головой.
-  var body = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  body.id = 'dollBody';
-  body.setAttribute('viewBox', '0 0 200 340');
-  body.setAttribute('preserveAspectRatio', 'xMidYMin meet');
-  body.innerHTML =
+  // 1) Кукла целиком.
+  var doll = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  doll.id = 'doll';
+  doll.setAttribute('viewBox', '0 0 220 540');
+  doll.setAttribute('preserveAspectRatio', 'xMidYMin meet');
+  doll.style.overflow = 'visible';
+  doll.innerHTML =
     '<defs>'+
-      '<radialGradient id="db-skin" cx="40%" cy="30%" r="75%">'+
+      '<radialGradient id="d-skin" cx="40%" cy="30%" r="75%">'+
         '<stop offset="0%" stop-color="#f4e8d8"/>'+
         '<stop offset="55%" stop-color="#c8b0a0"/>'+
         '<stop offset="100%" stop-color="#3a2818"/>'+
       '</radialGradient>'+
-      '<radialGradient id="db-cloth" cx="50%" cy="30%" r="80%">'+
+      '<radialGradient id="d-cloth" cx="50%" cy="30%" r="80%">'+
         '<stop offset="0%" stop-color="#605a52"/>'+
         '<stop offset="60%" stop-color="#2a2620"/>'+
         '<stop offset="100%" stop-color="#0a0806"/>'+
       '</radialGradient>'+
+      '<filter id="d-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.5"/></filter>'+
     '</defs>'+
-    // Шея — короткая, сразу от верха SVG (под головой)
-    '<rect x="92" y="0" width="16" height="22" fill="url(#db-skin)" stroke="#2a1808" stroke-width="1.2"/>'+
-    // Туловище-комбинезон
-    '<path d="M58 22 L 142 22 Q 154 90, 150 200 L 50 200 Q 46 90, 58 22 Z" fill="url(#db-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
-    '<circle cx="100" cy="50" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".6"/>'+
-    '<circle cx="100" cy="80" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".6"/>'+
-    '<circle cx="100" cy="110" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".6"/>'+
-    '<circle cx="100" cy="140" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".6"/>'+
-    '<circle cx="100" cy="170" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".6"/>'+
-    // Шарниры — плечи у верха торса, бёдра у низа
-    '<circle id="shoulder-l" cx="58" cy="34" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
-    '<circle id="shoulder-r" cx="142" cy="34" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
-    '<circle id="hip-l" cx="76" cy="198" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
-    '<circle id="hip-r" cx="124" cy="198" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>';
-  document.body.insertBefore(body, document.body.firstChild);
+    // Верёвочка от потолка до головы
+    '<line x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
+    '<circle cx="110" cy="50" r="3" fill="#5a4a30"/>'+
+    // Голова
+    '<ellipse cx="110" cy="120" rx="64" ry="70" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.5"/>'+
+    // Глаза
+    '<ellipse cx="86" cy="118" rx="9" ry="13" fill="#020202"/>'+
+    '<ellipse cx="134" cy="118" rx="9" ry="13" fill="#020202"/>'+
+    '<circle cx="84" cy="113" r="1.6" fill="#90a0b0" opacity=".6"/>'+
+    '<circle cx="132" cy="113" r="1.6" fill="#90a0b0" opacity=".6"/>'+
+    '<ellipse cx="86" cy="135" rx="9" ry="3" fill="rgba(40,20,30,.5)" filter="url(#d-soft)"/>'+
+    '<ellipse cx="134" cy="135" rx="9" ry="3" fill="rgba(40,20,30,.5)" filter="url(#d-soft)"/>'+
+    // Брови
+    '<path d="M70 96 L 92 92" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
+    '<path d="M128 92 L 150 96" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
+    // Носик
+    '<path d="M110 144 L 106 158 L 114 158" stroke="#6a4030" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
+    // Рот: MC (улыбка-смайл) и MO (открытый — рисуется JS-ом drawMouth).
+    '<g id="MC">'+
+      '<path d="M88 168 Q98 178 110 180 Q122 178 132 168" stroke="#3a1810" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
+      '<circle cx="84" cy="170" r="1.8" fill="#a04030" opacity=".35"/>'+
+      '<circle cx="136" cy="170" r="1.8" fill="#a04030" opacity=".35"/>'+
+    '</g>'+
+    '<g id="MO" style="display:none">'+
+      '<path id="MS" fill="#0a0408"/>'+
+      '<path id="MT" fill="#fff8ec"/>'+
+      '<ellipse id="TG" fill="#c03858" opacity=".85"/>'+
+      '<path id="TOP" stroke="#3a1810" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
+      '<path id="BOT" stroke="#3a1810" stroke-width="1.8" fill="none" stroke-linecap="round"/>'+
+    '</g>'+
+    // Шея (под головой)
+    '<rect x="102" y="184" width="16" height="24" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
+    // Торс
+    '<path d="M68 208 L 152 208 Q 168 290, 162 460 L 58 460 Q 52 290, 68 208 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
+    '<circle cx="110" cy="234" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="270" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="306" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="342" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="378" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="414" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    // Шарниры
+    '<circle id="shoulder-l" cx="68" cy="222" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
+    '<circle id="shoulder-r" cx="152" cy="222" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
+    '<circle id="hip-l" cx="84" cy="458" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
+    '<circle id="hip-r" cx="136" cy="458" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>';
+  document.body.insertBefore(doll, document.body.firstChild);
 
-  // Привязываем верх #dollBody к нижней границе .stage (где низ головы),
-  // чтобы шея сразу прилегала. Пересчитываем при resize.
-  function syncDollBodyTop(){
-    var stage = document.querySelector('.stage');
-    if (!stage) return;
-    var r = stage.getBoundingClientRect();
-    body.style.top = Math.round(r.bottom - 6) + 'px';
+  // Привязываем верх #doll к низу .top (после кнопки настроек+title), чтобы
+  // голова куклы была примерно на месте Стича. Пересчитывается на resize.
+  function syncDollTop(){
+    var top = document.querySelector('.top');
+    if (!top) return;
+    var r = top.getBoundingClientRect();
+    doll.style.top = Math.round(r.top - 30) + 'px';
   }
-  syncDollBodyTop();
-  window.addEventListener('load', syncDollBodyTop);
-  window.addEventListener('resize', syncDollBodyTop);
+  syncDollTop();
+  window.addEventListener('load', syncDollTop);
+  window.addEventListener('resize', syncDollTop);
+
+  // Перехватываем drawMouth: переписываем под новые координаты в #doll
+  // (cx=110, cy=170 в SVG-coords) — рот меньше Стича, точно под носом.
+  if (typeof window.drawMouth !== 'function' && typeof drawMouth === 'function') window.drawMouth = drawMouth;
+  // (drawMouth перезапишется ниже, см. блок DOLL_MOUTH).
 
   // 2) Конечности (overlay поверх чата).
   var overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -1995,29 +2001,22 @@ async function askWithImages(photos, userText) {
     if (!bubble) return;
     var idx = attachOrder % LIMBS.length;
     attachOrder++;
-    var L = LIMBS[idx];
-    L.bubble = bubble;
-    if (L.cur) { L.startX = L.cur.x; L.startY = L.cur.y; L.t0 = performance.now(); }
+    LIMBS[idx].bubble = bubble;
   };
 
+  // Low-pass smoothing: cur догоняет goal с фактором SMOOTH каждый кадр.
+  // Это даёт плавное следование без жёсткого easing-restart на каждое
+  // обновление goal. Подходит для качающейся куклы: shoulder двигается на
+  // 1-3px каждый кадр (dangleDoll), и cur плавно повторяет это движение.
+  var SMOOTH = 0.18;
   function tick(){
-    var now = performance.now();
     LIMBS.forEach(function(L){
       if (L.bubble && !document.body.contains(L.bubble)) L.bubble = null;
       var goal = (L.bubble) ? bubblePoint(L.bubble, L) : dangleGoal(L);
       if (!goal) goal = dangleGoal(L);
-      // Threshold чтобы 1px-jitter от subpixel-rounding не перезапускал easing.
-      if (Math.abs(goal.x - L.goalX) > 1 || Math.abs(goal.y - L.goalY) > 1) {
-        L.goalX = goal.x; L.goalY = goal.y;
-      }
-      if (!L.cur) {
-        L.cur = {x:goal.x, y:goal.y};
-        L.startX = goal.x; L.startY = goal.y;
-        L.t0 = now - L.dur;
-      }
-      var k = easeOut(Math.min(1, (now - L.t0)/L.dur));
-      L.cur.x = L.startX + (L.goalX - L.startX) * k;
-      L.cur.y = L.startY + (L.goalY - L.startY) * k;
+      if (!L.cur) L.cur = {x:goal.x, y:goal.y};
+      L.cur.x += (goal.x - L.cur.x) * SMOOTH;
+      L.cur.y += (goal.y - L.cur.y) * SMOOTH;
       var s = shoulderPoint(L.shoulderId);
       L.pathEl.setAttribute('d', quadPath(s, L.cur));
       L.handEl.setAttribute('cx', L.cur.x);
