@@ -131,7 +131,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v515</span></div>
+<div class="title">Стич · Claude <span class="build">v516</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2039,10 +2039,17 @@ async function askWithImages(photos, userText) {
       var attached = !!bp;
       var goal = bp || dangleGoal(L);
       if (!L.cur) L.cur = {x:goal.x, y:goal.y};
-      L.cur.x += (goal.x - L.cur.x) * SMOOTH;
-      L.cur.y += (goal.y - L.cur.y) * SMOOTH;
+      // Свободно висящая конечность движется СИНХРОННО с плечом — cur=goal
+      // мгновенно, чтобы рука не тянулась за качающимся телом. Привязка к
+      // bubble — мягко догоняем (smoothing для плавного перехода).
+      if (attached) {
+        L.cur.x += (goal.x - L.cur.x) * SMOOTH;
+        L.cur.y += (goal.y - L.cur.y) * SMOOTH;
+      } else {
+        L.cur.x = goal.x;
+        L.cur.y = goal.y;
+      }
       var s = shoulderPoint(L.shoulderId);
-      // Привязана к bubble — рисуем дугу с провисом; висит свободно — прямая.
       var d = attached
         ? quadPath(s, L.cur)
         : ('M '+s.x+' '+s.y+' L '+L.cur.x+' '+L.cur.y);
