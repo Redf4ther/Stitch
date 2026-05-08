@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v546</span></div>
+<div class="title">Стич · Claude <span class="build">v547</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1953,6 +1953,16 @@ async function askWithImages(photos, userText) {
     '<circle id="hip-l" cx="84" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>'+
     '<circle id="hip-r" cx="136" cy="454" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>';
   document.body.insertBefore(doll, document.body.firstChild);
+  // Привязываем MC/MO/MS/MT/TG/TOP/BOT теперь когда они в DOM. Раньше JS
+  // получал их getElementById на старте (до создания #doll) и получал null,
+  // поэтому drawMouth ничего не рисовал → рот не открывался при talk.
+  MC = doll.querySelector('#MC');
+  MO = doll.querySelector('#MO');
+  MS = doll.querySelector('#MS');
+  MT = doll.querySelector('#MT');
+  TG = doll.querySelector('#TG');
+  TOP = doll.querySelector('#TOP');
+  BOT = doll.querySelector('#BOT');
 
   // top позиционируется через CSS (env(safe-area-inset-top) + 14px) —
   // отступ под notch/dynamic island. Позиция стабильна, JS не нужен.
