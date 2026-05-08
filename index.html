@@ -15,8 +15,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#ffffff}
 .build{font-size:10px;opacity:.6;margin-left:4px}
 .stage{position:relative;width:160px;height:160px;margin-top:2px}
-.glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(30,90,180,.3) 0%,transparent 68%);animation:gI 3s ease-in-out infinite}
-.glow.on{animation:gT .22s ease-in-out infinite}
+.glow{display:none}
 .head{position:absolute;inset:0;animation:iB 3.5s ease-in-out infinite;overflow:visible}
 .head.talk{animation:tN .33s ease-in-out infinite}
 .head.listen{animation:lT .6s ease-in-out infinite}
@@ -128,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v545</span></div>
+<div class="title">Стич · Claude <span class="build">v546</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -731,23 +730,19 @@ var currentShape = 'normal';
 var shapes = ['normal','normal','wide','normal','tube','normal','wide','tube','normal'];
 var openPos = [0.3,0.5,0.7,0.9,0.4,0.75,0.55];
 
-function drawMouth(a, shape) {
+function drawMouth(a) {
   if (!MC || !MO) return;
   if (a < 0.04) { MC.style.display=''; MO.style.display='none'; return; }
   MC.style.display='none'; MO.style.display='';
-  // Координаты под голову куклы: cx=110, cy=168 в SVG #doll (220x540).
-  var cx=110, cy=168, w, h;
-  if (shape==='tube') { w=12+a*7; h=a*26; }
-  else if (shape==='wide') { w=34+a*10; h=a*9; }
-  else { w=28+a*10; h=a*17; }
-  var L=cx-w/2, R=cx+w/2, bY=cy+h, th=shape==='tube'?2+a*3:3+a*5;
-  MS.setAttribute('d','M'+L+' '+cy+' Q'+cx+' '+(cy-6)+' '+R+' '+cy+' Q'+(R-4)+' '+bY+' '+cx+' '+(bY+2)+' Q'+(L+4)+' '+bY+' '+L+' '+cy+'Z');
-  if (a>0.5) { MT.setAttribute('d','M'+(cx-14)+' '+cy+' Q'+(cx-8)+' '+(cy-2)+' '+(cx-2)+' '+(cy-1)+' L'+(cx+2)+' '+(cy-1)+' Q'+(cx+8)+' '+(cy-2)+' '+(cx+14)+' '+cy+' Q'+(cx+7)+' '+(cy+th)+' '+cx+' '+(cy+th+1)+' Q'+(cx-7)+' '+(cy+th)+' '+(cx-14)+' '+cy+'Z'); MT.style.display=''; }
-  else { MT.style.display='none'; }
-  if (a>0.35) { TG.setAttribute('cx',cx); TG.setAttribute('cy',cy+h*0.65); TG.setAttribute('rx',10+a*4); TG.setAttribute('ry',4+a*5); TG.style.display=''; }
-  else { TG.style.display='none'; }
-  TOP.setAttribute('d','M'+L+' '+cy+' Q'+cx+' '+(cy-8)+' '+R+' '+cy);
-  BOT.setAttribute('d','M'+L+' '+cy+' Q'+(L+6)+' '+(bY+2)+' '+cx+' '+(bY+3)+' Q'+(R-6)+' '+(bY+2)+' '+R+' '+cy);
+  // Деревянная челюсть: верх рта зафиксирован на линии улыбки (cy=168),
+  // нижняя кромка опускается на amount пропорционально амплитуде. MS — чёрная
+  // зона между челюстями (открытый рот). TOP/BOT — кромки в цвете бровей.
+  var cx=110, cyTop=168, w=22;
+  var bottomDrop = 4 + a * 18;
+  var L=cx-w, R=cx+w, bY=cyTop+bottomDrop;
+  MS.setAttribute('d', 'M'+L+' '+cyTop+' L'+R+' '+cyTop+' Q'+(R-3)+' '+bY+' '+cx+' '+(bY+1)+' Q'+(L+3)+' '+bY+' '+L+' '+cyTop+' Z');
+  TOP.setAttribute('d', 'M'+L+' '+cyTop+' L'+R+' '+cyTop);
+  BOT.setAttribute('d', 'M'+L+' '+cyTop+' Q'+(L+4)+' '+(bY+1)+' '+cx+' '+(bY+2)+' Q'+(R-4)+' '+(bY+1)+' '+R+' '+cyTop);
 }
 
 function mLoop(t) {
@@ -1930,21 +1925,18 @@ async function askWithImages(photos, userText) {
     '<path d="M110 138 L 106 152 L 114 152" stroke="#6a4030" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
     // Деревянная челюсть — тонкие прорези по углам рта (петли распила),
     // имитирует чревовещательскую куклу.
-    '<line x1="86" y1="160" x2="82" y2="180" stroke="#3a1a08" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>'+
-    '<line x1="134" y1="160" x2="138" y2="180" stroke="#3a1a08" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>'+
-    // Рот Стича: смайл-улыбка с двумя голубыми точками-щёчками. MO рисуется
-    // JS-ом drawMouth (синий контур, белые зубы, красный язык — как у Стича).
+    '<line x1="86" y1="160" x2="82" y2="180" stroke="#3a2010" stroke-width="1.3" stroke-linecap="round" opacity=".8"/>'+
+    '<line x1="134" y1="160" x2="138" y2="180" stroke="#3a2010" stroke-width="1.3" stroke-linecap="round" opacity=".8"/>'+
+    // Рот в цвет бровей. MC — закрытый смайл, MO — открытый рот (drawMouth).
     '<g id="MC">'+
-      '<path d="M88 162 Q98 172 110 174 Q122 172 132 162" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+
-      '<circle cx="84" cy="164" r="2" fill="#3a70b0" opacity=".4"/>'+
-      '<circle cx="136" cy="164" r="2" fill="#3a70b0" opacity=".4"/>'+
+      '<path d="M88 162 Q98 172 110 174 Q122 172 132 162" stroke="#3a2010" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+
     '</g>'+
     '<g id="MO" style="display:none">'+
-      '<path id="MS" fill="#06101e"/>'+
-      '<path id="MT" fill="#ffffff"/>'+
-      '<ellipse id="TG" fill="#c03858" opacity=".85"/>'+
-      '<path id="TOP" stroke="#18305a" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+
-      '<path id="BOT" stroke="#18305a" stroke-width="2" fill="none" stroke-linecap="round"/>'+
+      '<path id="MS" fill="#1a0a04"/>'+
+      '<path id="MT" style="display:none"/>'+
+      '<ellipse id="TG" style="display:none"/>'+
+      '<path id="TOP" stroke="#3a2010" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
+      '<path id="BOT" stroke="#3a2010" stroke-width="2" fill="none" stroke-linecap="round"/>'+
     '</g>'+
     // Торс
     '<path d="M68 208 L 152 208 Q 168 290, 162 460 L 58 460 Q 52 290, 68 208 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
