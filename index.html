@@ -129,7 +129,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v506</span></div>
+<div class="title">Стич · Claude <span class="build">v507</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -224,11 +224,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 <input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="display:none"/>
 <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
 
-<!-- Тест-кнопки для куклы: добавляют bubble без вызова API. -->
-<div id="testBar" style="position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 8px);left:8px;display:flex;flex-direction:column;gap:6px;z-index:50;pointer-events:auto">
-  <button id="testAsst" style="background:rgba(40,140,220,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 10px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent">+ стич</button>
-  <button id="testUser" style="background:rgba(220,80,140,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 10px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent">+ я</button>
-</div>
+<!-- Тест-кнопки для куклы: добавляют bubble без вызова API. Фиксированы над
+     mic-рядом: левая (стич) у левого края, правая (я) у правого. -->
+<button id="testAsst" style="position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 200px);background:rgba(40,140,220,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto">+ стич</button>
+<button id="testUser" style="position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 200px);background:rgba(220,80,140,.55);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto">+ я</button>
 <script>
 (function(){
   var asstLines = ['ага.', 'смотри сюда.', 'попробуем.', 'мысль интересная.', 'класс.', 'это любопытно...', 'хм.', 'не уверен.'];
