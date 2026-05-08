@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v549</span></div>
+<div class="title">Стич · Claude <span class="build">v550</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2037,7 +2037,8 @@ async function askWithImages(photos, userText) {
     } else {
       var text = (bi.textContent || '').trim();
       if (text.length > 15) {
-        x = Math.round(r.left + r.width / 2);
+        // Длинное сообщение — нога садится у боковой стенки экрана.
+        x = L.sideSign < 0 ? 10 : window.innerWidth - 10;
       } else {
         x = L.sideSign < 0 ? Math.round(r.right) : Math.round(r.left);
       }
