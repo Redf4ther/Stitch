@@ -43,11 +43,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
   0%,100%{transform:translateX(-50%) rotate(-1.2deg)}
   50%{transform:translateX(-50%) rotate(1.2deg)}
 }
-/* Конечности — над чатом/кнопками, но ниже settings panel'и. */
+/* Сами руки/ноги (path) ПОЗАДИ сообщений (z:1, ниже .below z:4). */
 #dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:11;stroke-linecap:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 #dollLimbs .leg{stroke:#1a1610;stroke-width:16;stroke-linecap:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
-#dollLimbs .hand,#dollLimbs .foot{filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
+/* Кисти/стопы — ПЕРЕД сообщениями (z:5, выше .below). */
+#dollHands{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+#dollHands .hand,#dollHands .foot{filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
 @keyframes iB{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-5px) rotate(.3deg)}}
 @keyframes tN{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-3px) rotate(.8deg)}}
 @keyframes lT{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
@@ -129,7 +131,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v511</span></div>
+<div class="title">Стич · Claude <span class="build">v512</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1932,24 +1934,30 @@ async function askWithImages(photos, userText) {
   // top позиционируется через CSS (env(safe-area-inset-top) + 14px) —
   // отступ под notch/dynamic island. Позиция стабильна, JS не нужен.
 
-  // 2) Конечности — overlay позади сообщений (z-index:1, под .below z:4).
+  // 2) Руки/ноги (path) — позади сообщений (z:1).
   var overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   overlay.id = 'dollLimbs';
   overlay.innerHTML =
+    '<path id="arm-l" class="arm"/>'+
+    '<path id="arm-r" class="arm"/>'+
+    '<path id="leg-l" class="leg"/>'+
+    '<path id="leg-r" class="leg"/>';
+  document.body.appendChild(overlay);
+
+  // 3) Кисти/стопы (ellipse) — поверх сообщений (z:5).
+  var hands = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  hands.id = 'dollHands';
+  hands.innerHTML =
     '<defs><radialGradient id="dl-skin" cx="40%" cy="30%" r="75%">'+
       '<stop offset="0%" stop-color="#f4e8d8"/>'+
       '<stop offset="55%" stop-color="#c8b0a0"/>'+
       '<stop offset="100%" stop-color="#3a2818"/>'+
     '</radialGradient></defs>'+
-    '<path id="arm-l" class="arm"/>'+
-    '<path id="arm-r" class="arm"/>'+
-    '<path id="leg-l" class="leg"/>'+
-    '<path id="leg-r" class="leg"/>'+
     '<ellipse id="hand-l" rx="12" ry="6" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1" class="hand"/>'+
     '<ellipse id="hand-r" rx="12" ry="6" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1" class="hand"/>'+
     '<ellipse id="foot-l" rx="14" ry="9" fill="#181410" stroke="#3a3028" stroke-width="1" class="foot"/>'+
     '<ellipse id="foot-r" rx="14" ry="9" fill="#181410" stroke="#3a3028" stroke-width="1" class="foot"/>';
-  document.body.appendChild(overlay);
+  document.body.appendChild(hands);
 
   var LIMBS = [
     {pathId:'arm-l', handId:'hand-l', shoulderId:'shoulder-l', isLeg:false, sideSign:-1},
@@ -1962,7 +1970,7 @@ async function askWithImages(photos, userText) {
     L.startX = 0; L.startY = 0; L.goalX = 0; L.goalY = 0;
     L.t0 = 0; L.dur = 600;
     L.pathEl = overlay.querySelector('#'+L.pathId);
-    L.handEl = overlay.querySelector('#'+L.handId);
+    L.handEl = hands.querySelector('#'+L.handId);
   });
   var attachOrderL = 0, attachOrderR = 0;
 
