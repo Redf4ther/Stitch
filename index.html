@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v575</span></div>
+<div class="title">Стич · Claude <span class="build">v576</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2161,11 +2161,13 @@ async function askWithImages(photos, userText) {
       x = L.sideSign < 0 ? Math.round(r.left + 24) : Math.round(r.right - 24);
     } else {
       var text = (bi.textContent || '').trim();
-      if (text.length > 8) {
-        // Длинное сообщение — нога садится на уровне ~5-й буквы (≈45px
-        // при font-size 15) от дальнего края bubble внутрь.
-        var charOffset = 45;
-        x = L.sideSign < 0 ? Math.round(r.right - charOffset) : Math.round(r.left + charOffset);
+      if (text.length > 5) {
+        // Длинное сообщение — нога садится на уровне ~5-й буквы (≈50px)
+        // от СТАБИЛЬНОГО края bubble (того, который не двигается при росте
+        // текста). assistant растёт вправо от .left, user — влево от .right.
+        // Поэтому нога не уезжает за растущим текстом во время typewriter'а.
+        var charOffset = 50;
+        x = L.sideSign < 0 ? Math.round(r.left + charOffset) : Math.round(r.right - charOffset);
       } else {
         x = L.sideSign < 0 ? Math.round(r.right) : Math.round(r.left);
       }
