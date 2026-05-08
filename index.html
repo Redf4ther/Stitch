@@ -97,7 +97,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v464</span></div>
+<div class="title">Стич · Claude <span class="build">v465</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -170,7 +170,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
       </div>
       <div class="irow" style="gap:8px;align-items:center;width:100%;min-height:36px;background:transparent;border:none;border-radius:0;padding:0;box-shadow:none">
         <textarea class="inp" id="inp" placeholder="Напечатай вопрос..." rows="1" style="flex:1;background:transparent!important;border:none!important;padding:0 0 0 4px;margin:0;resize:none;font-family:inherit;line-height:1.4;max-height:120px;overflow-y:auto;-webkit-appearance:none;appearance:none;border-radius:0;outline:none;box-shadow:none"></textarea>
-        <button class="sbtn" id="sb" style="display:none;flex-shrink:0;margin-right:9px;opacity:0;transform:scale(.6);transform-origin:center;transition:opacity .22s ease,transform .22s cubic-bezier(.16,.7,.3,1.2);background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),var(--btn-tint, transparent);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1)">➤</button>
+        <button class="sbtn" id="sb" style="display:none;flex-shrink:0;margin-right:9px;opacity:0;transform:scale(.7);transform-origin:center;transition:opacity .38s ease-out,transform .38s cubic-bezier(.22,.61,.36,1);background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),var(--btn-tint, transparent);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1)">➤</button>
       </div>
     </div>
   </div>
@@ -1385,12 +1385,12 @@ function syncSendVisibility(){
     });
   } else {
     sb.style.opacity = '0';
-    sb.style.transform = 'scale(.6)';
+    sb.style.transform = 'scale(.7)';
     if (_sbHideTimer) clearTimeout(_sbHideTimer);
     _sbHideTimer = setTimeout(function(){
-      if (!inp.value.trim()) sb.style.display = 'none';
+      if (!inp.value.trim() && !(window.pendingPhotos && window.pendingPhotos.length)) sb.style.display = 'none';
       _sbHideTimer = null;
-    }, 230);
+    }, 400);
   }
 }
 inp.addEventListener('input', function() {
