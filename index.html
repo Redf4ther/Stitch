@@ -34,9 +34,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 .hold-ring{position:fixed;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.12);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.28);box-shadow:0 10px 30px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.32);pointer-events:none;z-index:50;transform:translate(-50%,-50%);opacity:0;transition:opacity .15s linear;will-change:opacity}
 .hold-ring.visible{opacity:.85;animation:ringPop .22s cubic-bezier(.16,.7,.3,1)}
 .hold-ring.busy{background:rgba(255,144,67,.18);border-color:rgba(255,160,90,.45)}
-#voiceToast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.04) 55%,rgba(0,0,0,.1) 100%),rgba(40,40,50,.55);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);color:#fff;padding:11px 20px;border-radius:16px;font-size:15px;font-weight:500;z-index:200;opacity:0;transition:opacity .25s ease;pointer-events:none;letter-spacing:.5px;border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 24px rgba(0,0,0,.35),inset .5px .5px 0 rgba(255,255,255,.4),inset -.5px -.5px 0 rgba(0,0,0,.12)}
-#voiceToast.show{opacity:1}
-#voiceCountdown{position:fixed;top:38%;left:50%;width:92px;height:92px;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.04) 55%,rgba(0,0,0,.12) 100%),rgba(124,92,255,.4);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);color:#fff;display:flex;align-items:center;justify-content:center;font-size:46px;font-weight:700;z-index:201;pointer-events:none;border:1px solid rgba(255,255,255,.1);box-shadow:0 8px 28px rgba(124,92,255,.35),inset .5px .5px 0 rgba(255,255,255,.5),inset -.5px -.5px 0 rgba(0,0,0,.18);transform:translate(-50%,-50%) scale(.6);opacity:0;transition:transform .15s ease,opacity .15s ease}
+#voicePanel{position:fixed;top:44%;left:50%;min-width:160px;padding:18px 26px 22px;border-radius:22px;background:linear-gradient(135deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.04) 55%,rgba(0,0,0,.12) 100%),rgba(124,92,255,.4);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);color:#fff;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:201;pointer-events:none;border:1px solid rgba(255,255,255,.1);box-shadow:0 10px 32px rgba(0,0,0,.4),inset .5px .5px 0 rgba(255,255,255,.5),inset -.5px -.5px 0 rgba(0,0,0,.18);transform:translate(-50%,-50%) scale(.7);opacity:0;transition:transform .2s cubic-bezier(.16,.7,.3,1.1),opacity .2s ease}
+#voicePanel.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#voicePanel .vp-name{font-size:14px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;opacity:.78;line-height:1}
+#voicePanel .vp-count{font-size:54px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;min-height:54px;display:flex;align-items:center}
 #voiceCountdown.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .ring-cam{position:absolute;top:0;left:50%;width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.32);box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.32);transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;transition:background .15s,border-color .15s,box-shadow .15s,transform .15s}
 .ring-cam.armed{background:rgba(0,221,255,.4);border-color:rgba(0,221,255,.95);box-shadow:0 6px 28px rgba(0,221,255,.7),inset 0 1px 0 rgba(255,255,255,.32);transform:translate(-50%,-50%) scale(1.18)}
@@ -97,7 +98,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v468</span></div>
+<div class="title">Стич · Claude <span class="build">v469</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -260,11 +261,10 @@ function cycleVoice() {
   var i = VOICES.indexOf(currentVoice);
   currentVoice = VOICES[(i + 1) % VOICES.length];
   localStorage.setItem(KEY_VOICE, currentVoice);
-  showVoiceToast(currentVoice);
   // Pre-fetch the sample so by the time the countdown ends, audio is
   // ready to play immediately.
   var urlPromise = fetchPreviewUrl(currentVoice);
-  runCountdown(3, function() {
+  showVoicePanel(currentVoice, 3, function() {
     urlPromise.then(function(url) { if (url) playPreviewUrl(url); });
   });
 }
@@ -314,44 +314,37 @@ function playPreviewUrl(url) {
   currentAudio = audio;
   audio.play().catch(endPreview);
 }
-function runCountdown(steps, onDone) {
-  var el = document.getElementById('voiceCountdown');
+// Один общий стеклянный popup: имя голоса сверху, цифра-отсчёт снизу.
+// Сначала показывается с именем, потом тикает countdown в той же карточке,
+// в конце скрывается. Заменяет два независимых элемента (toast+countdown).
+function showVoicePanel(name, steps, onDone) {
+  var el = document.getElementById('voicePanel');
   if (!el) {
     el = document.createElement('div');
-    el.id = 'voiceCountdown';
+    el.id = 'voicePanel';
+    el.innerHTML = '<div class="vp-name"></div><div class="vp-count"></div>';
     document.body.appendChild(el);
   }
+  var nameEl = el.querySelector('.vp-name');
+  var countEl = el.querySelector('.vp-count');
+  nameEl.textContent = name;
+  countEl.textContent = String(steps);
+  void el.offsetHeight;
+  el.classList.add('show');
   var i = steps;
   function tick() {
+    i--;
     if (i <= 0) {
+      countEl.textContent = '';
       el.classList.remove('show');
-      setTimeout(function(){ try { el.remove(); } catch(_){} }, 200);
-      onDone();
+      setTimeout(function(){ try { el.remove(); } catch(_){} }, 220);
+      onDone && onDone();
       return;
     }
-    el.textContent = String(i);
-    el.classList.add('show');
-    i--;
+    countEl.textContent = String(i);
     setTimeout(tick, 700);
   }
-  tick();
-}
-var voiceToastTimer = null;
-function showVoiceToast(name) {
-  var t = document.getElementById('voiceToast');
-  if (!t) {
-    t = document.createElement('div');
-    t.id = 'voiceToast';
-    document.body.appendChild(t);
-  }
-  t.textContent = 'Голос: ' + name;
-  // Force reflow before adding class so transition kicks in.
-  void t.offsetHeight;
-  t.classList.add('show');
-  if (voiceToastTimer) clearTimeout(voiceToastTimer);
-  voiceToastTimer = setTimeout(function() {
-    t.classList.remove('show');
-  }, 5000);
+  setTimeout(tick, 700);
 }
 // Settings panel: hamburger button toggles a glass card with a single
 // "Голоса" row that cycles the TTS voice via the existing cycleVoice().
