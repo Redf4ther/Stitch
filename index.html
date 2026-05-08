@@ -97,7 +97,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#2d2240;f
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v433</span></div>
+<div class="title">Стич · Claude <span class="build">v434</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -391,6 +391,16 @@ var chat = document.getElementById('chat');
 var errEl = document.getElementById('err');
 var inp = document.getElementById('inp');
 var sb = document.getElementById('sb');
+// При тапе по чату снимаем фокус с textarea, чтобы caret не "вылетал" из
+// поля ввода (в iOS WebView он визуально оставался поверх чата при тапах
+// по сообщениям, пока фокус был у inp). Закрывает заодно клавиатуру.
+(function(){
+  var chatEl = document.getElementById('chat');
+  if (!chatEl) return;
+  chatEl.addEventListener('pointerdown', function(){
+    if (document.activeElement === inp) inp.blur();
+  }, {passive:true});
+})();
 var micBtn = document.getElementById('micBtn');
 var micHint = document.getElementById('micHint');
 // True only after MediaRecorder.start() has actually fired — used to flip
