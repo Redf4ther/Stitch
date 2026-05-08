@@ -38,13 +38,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 }
 /* Кукла — единый SVG fixed позади чата. Висит на верёвочке от потолка,
    тихо качается dangleDoll. Голова + шея + торс + шарниры плеч/бёдер. */
-#doll{position:fixed;left:50%;width:220px;height:540px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% 0;animation:dangleDoll 5s ease-in-out infinite}
+#doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 14px);left:50%;width:220px;height:540px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% 0;animation:dangleDoll 5s ease-in-out infinite}
 @keyframes dangleDoll{
   0%,100%{transform:translateX(-50%) rotate(-1.2deg)}
   50%{transform:translateX(-50%) rotate(1.2deg)}
 }
 /* Конечности — над чатом/кнопками, но ниже settings panel'и. */
-#dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+#dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:11;stroke-linecap:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 #dollLimbs .leg{stroke:#1a1610;stroke-width:16;stroke-linecap:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 #dollLimbs .hand,#dollLimbs .foot{filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
@@ -129,7 +129,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v502</span></div>
+<div class="title">Стич · Claude <span class="build">v503</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1867,6 +1867,8 @@ async function askWithImages(photos, userText) {
     // Верёвочка от потолка до головы
     '<line x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
     '<circle cx="110" cy="50" r="3" fill="#5a4a30"/>'+
+    // Шея — рисуется ДО головы (за ней, перекрывается головой сверху)
+    '<rect x="102" y="170" width="16" height="40" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
     // Голова
     '<ellipse cx="110" cy="120" rx="64" ry="70" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.5"/>'+
     // Глаза
@@ -1894,8 +1896,6 @@ async function askWithImages(photos, userText) {
       '<path id="TOP" stroke="#3a1810" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
       '<path id="BOT" stroke="#3a1810" stroke-width="1.8" fill="none" stroke-linecap="round"/>'+
     '</g>'+
-    // Шея (под головой)
-    '<rect x="102" y="184" width="16" height="24" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
     // Торс
     '<path d="M68 208 L 152 208 Q 168 290, 162 460 L 58 460 Q 52 290, 68 208 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
     '<circle cx="110" cy="234" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
@@ -1911,24 +1911,10 @@ async function askWithImages(photos, userText) {
     '<circle id="hip-r" cx="136" cy="458" r="5" fill="#1a1408" stroke="#5a4a30" stroke-width="1"/>';
   document.body.insertBefore(doll, document.body.firstChild);
 
-  // Привязываем верх #doll к низу .top (после кнопки настроек+title), чтобы
-  // голова куклы была примерно на месте Стича. Пересчитывается на resize.
-  function syncDollTop(){
-    var top = document.querySelector('.top');
-    if (!top) return;
-    var r = top.getBoundingClientRect();
-    doll.style.top = Math.round(r.top - 30) + 'px';
-  }
-  syncDollTop();
-  window.addEventListener('load', syncDollTop);
-  window.addEventListener('resize', syncDollTop);
+  // top позиционируется через CSS (env(safe-area-inset-top) + 14px) —
+  // отступ под notch/dynamic island. Позиция стабильна, JS не нужен.
 
-  // Перехватываем drawMouth: переписываем под новые координаты в #doll
-  // (cx=110, cy=170 в SVG-coords) — рот меньше Стича, точно под носом.
-  if (typeof window.drawMouth !== 'function' && typeof drawMouth === 'function') window.drawMouth = drawMouth;
-  // (drawMouth перезапишется ниже, см. блок DOLL_MOUTH).
-
-  // 2) Конечности (overlay поверх чата).
+  // 2) Конечности — overlay позади сообщений (z-index:1, под .below z:4).
   var overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   overlay.id = 'dollLimbs';
   overlay.innerHTML =
@@ -2004,11 +1990,12 @@ async function askWithImages(photos, userText) {
     LIMBS[idx].bubble = bubble;
   };
 
-  // Low-pass smoothing: cur догоняет goal с фактором SMOOTH каждый кадр.
-  // Это даёт плавное следование без жёсткого easing-restart на каждое
-  // обновление goal. Подходит для качающейся куклы: shoulder двигается на
-  // 1-3px каждый кадр (dangleDoll), и cur плавно повторяет это движение.
-  var SMOOTH = 0.18;
+  // Low-pass smoothing с большим фактором (0.4) — конечность плотно следует
+  // за плечом куклы (которое качается с dangleDoll), без видимой задержки.
+  // Goal из bubblePoint всё равно стабилен (bubble в screen-space не дрожит),
+  // jitter создавался только из-за движения плеча — оно теперь "запаздывает"
+  // максимум на 1-2px, что незаметно для глаза.
+  var SMOOTH = 0.4;
   function tick(){
     LIMBS.forEach(function(L){
       if (L.bubble && !document.body.contains(L.bubble)) L.bubble = null;
