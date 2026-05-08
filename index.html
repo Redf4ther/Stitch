@@ -127,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v551</span></div>
+<div class="title">Стич · Claude <span class="build">v552</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -736,7 +736,7 @@ function drawMouth(a) {
   // Деревянная кукла: подбородок (отдельный SVG-кусок) опускается вниз
   // на amount пропорционально амплитуде. Между ним и статичными прорезями
   // открывается тёмная зона MS под ним — это и есть "рот".
-  var down = a < 0.04 ? 0 : 4 + a * 12;
+  var down = a < 0.04 ? 0 : 2 + a * 8;
   jaw.style.transform = 'translateY('+down+'px)';
   jaw.style.transformBox = 'fill-box';
   jaw.style.transformOrigin = '50% 0';
@@ -1927,6 +1927,8 @@ async function askWithImages(photos, userText) {
     '<path id="MS" d="M88 160 L 88 180 Q98 184 110 184 Q122 184 132 180 L 132 160 Q110 158 88 160 Z" fill="#1a0a04"/>'+
     '<g id="dollJaw">'+
       '<path id="jawShape" d="M88 160 L 88 180 Q98 184 110 184 Q122 184 132 180 L 132 160 Q110 158 88 160 Z" fill="url(#d-skin)"/>'+
+      // Прорезь-улыбка поперёк подбородка — третья щель деревянной куклы.
+      '<path d="M93 168 Q110 173 127 168" stroke="#3a2010" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".85"/>'+
     '</g>'+
     // Прорези — вертикальные, статичные, на стыке подбородка и щёк.
     '<line x1="88" y1="160" x2="88" y2="180" stroke="#3a2010" stroke-width="1.3" stroke-linecap="round" opacity=".85"/>'+
