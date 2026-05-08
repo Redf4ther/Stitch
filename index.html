@@ -2039,7 +2039,7 @@ async function askWithImages(photos, userText) {
       x = L.sideSign < 0 ? Math.round(r.left + 24) : Math.round(r.right - 24);
     } else {
       var text = (bi.textContent || '').trim();
-      if (text.length > 15) {
+      if (text.length > 5) {
         // Длинное сообщение — нога садится на уровне ~10-й буквы от
         // ближайшего края экрана (~100px при font-size 15).
         var fromEdge = 100;
