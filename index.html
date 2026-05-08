@@ -97,7 +97,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v441</span></div>
+<div class="title">Стич · Claude <span class="build">v442</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -138,8 +138,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <div id="photoThumbs" style="display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0"></div>
         <button onclick="cancelAllPhotos()" style="background:#fff;border:1px solid #c0c0c0;color:#222;width:24px;height:24px;border-radius:50%;font-size:14px;line-height:1;cursor:pointer;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.2)">✕</button>
       </div>
-      <div style="display:flex;align-items:center;width:100%;justify-content:center;gap:8px">
-        <button class="mic-btn" id="micBtn" style="width:calc(100% - 70px);height:54px;border-radius:27px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.06) 100%);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1)">
+      <div style="display:flex;align-items:center;width:100%;gap:8px">
+        <button class="mic-btn" id="micBtn" style="flex:1;min-width:0;height:54px;border-radius:27px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.06) 100%);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1)">
           <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="8.5" y="2.5" width="7" height="13" rx="3.5"/>
             <path d="M19 11a7 7 0 0 1-14 0"/>
@@ -1298,8 +1298,6 @@ function handleFiles(files) {
 function resetCamButton() {
   var cb = document.getElementById('camBtn');
   cb.classList.remove('neon');
-  cb.style.background = '#008db0';
-  cb.style.boxShadow = '';
   cb.setAttribute('for', 'fileInputCamera');
   var cc = document.getElementById('centerCam');
   var cp = document.getElementById('centerPaw');
