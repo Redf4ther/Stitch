@@ -85,6 +85,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 .sbtn:active{background:rgba(255,255,255,.05)}
 .sbtn:disabled{background:#d8cce8;opacity:.5;box-shadow:none}
 .img-msg{max-width:200px;border-radius:12px;margin-top:4px;display:block}
+#tonePicker::-webkit-scrollbar,#btnTonePicker::-webkit-scrollbar,#msgTonePicker::-webkit-scrollbar,#asstTonePicker::-webkit-scrollbar{display:none}
+#tonePicker > button,#btnTonePicker > button,#msgTonePicker > button,#asstTonePicker > button{flex-shrink:0}
 </style>
 
 </head>
@@ -99,7 +101,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v493</span></div>
+<div class="title">Стич · Claude <span class="build">v494</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <div class="head" id="head">
@@ -196,19 +198,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
     </button>
     <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон фона</div>
-      <div id="tonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
+      <div id="tonePicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:2px;-webkit-overflow-scrolling:touch"></div>
     </div>
     <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон кнопок</div>
-      <div id="btnTonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
+      <div id="btnTonePicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:2px;-webkit-overflow-scrolling:touch"></div>
     </div>
     <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон сообщений</div>
-      <div id="msgTonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
+      <div id="msgTonePicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:2px;-webkit-overflow-scrolling:touch"></div>
     </div>
     <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон Стича</div>
-      <div id="asstTonePicker" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start"></div>
+      <div id="asstTonePicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:2px;-webkit-overflow-scrolling:touch"></div>
     </div>
   </div>
 </div>
@@ -395,16 +397,37 @@ function showVoicePanel(name, steps, onDone) {
   // белого кольца. Сохраняется в localStorage, применяется на старте.
   var TONES = [
     {n:'Чёрный',     c:'#000000'},
+    {n:'Уголь',      c:'#2a2a2a'},
     {n:'Графит',     c:'#1c1c2a'},
+    {n:'Сланец',     c:'#3a3a4a'},
     {n:'Полуночный', c:'#1f2a5a'},
+    {n:'Сапфир',     c:'#1a3a8a'},
+    {n:'Кобальт',    c:'#2a4a8a'},
     {n:'Океан',      c:'#1a4d7a'},
+    {n:'Серо-синий', c:'#3a4a5a'},
     {n:'Бирюза',     c:'#1f6a6a'},
+    {n:'Аквамарин',  c:'#2a8a8a'},
     {n:'Мята',       c:'#1f6a52'},
+    {n:'Изумруд',    c:'#1a4a3a'},
     {n:'Лес',        c:'#2e5a3a'},
+    {n:'Тёмный лес', c:'#1a3a2a'},
+    {n:'Оливка',     c:'#5a6a2a'},
+    {n:'Хаки',       c:'#6a5a2a'},
+    {n:'Песок',      c:'#6a5a4a'},
     {n:'Закат',      c:'#7a4a2a'},
+    {n:'Терракот',   c:'#8a4a2a'},
+    {n:'Шоколад',    c:'#5a3a2a'},
+    {n:'Магма',      c:'#6a3a3a'},
+    {n:'Винный',     c:'#5a1a2a'},
+    {n:'Бордо',      c:'#6a1a3a'},
     {n:'Коралл',     c:'#8a3a52'},
     {n:'Роза',       c:'#7a3a6a'},
-    {n:'Лаванда',    c:'#4a3a7a'}
+    {n:'Фуксия',     c:'#6a2a5a'},
+    {n:'Слива',      c:'#4a1a5a'},
+    {n:'Сирень',     c:'#6a3a8a'},
+    {n:'Аметист',    c:'#5a3a7a'},
+    {n:'Лаванда',    c:'#4a3a7a'},
+    {n:'Денди',      c:'#4a3a5a'}
   ];
   var TONE_KEY = 'stitch_bg_tone';
   function applyTone(c){ document.documentElement.style.setProperty('--bg-tone', c); }
