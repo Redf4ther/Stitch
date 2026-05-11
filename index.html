@@ -134,7 +134,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v614</span></div>
+<div class="title">Стич · Claude <span class="build">v615</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2709,13 +2709,25 @@ async function askWithImages(photos, userText) {
     }
   }
 
-  // Ease-in-out по таймеру — плавное движение без рывков. Если цель
-  // меняется значительно (>4px от прошлой цели), запускаем новый переход
-  // со своей длительностью и кубической ease-in-out кривой.
+  // Каждые 5-20 секунд активная конечность переезжает в новую случайную
+  // точку на том же сообщении (плавно через ease-in-out).
+  function scheduleRepick(L, now){
+    L.repickAt = (now || performance.now()) + 5000 + Math.random() * 15000;
+  }
   function tick(){
     var now = performance.now();
     LIMBS.forEach(function(L){
       if (L.bubble && !document.body.contains(L.bubble)) L.bubble = null;
+      // Периодический re-pick: новая случайная точка на текущем bubble.
+      if (L.bubble && L.repickAt && now > L.repickAt) {
+        var off = pickRandomOff(L.bubble, L);
+        if (off) L.relOff = off;
+        scheduleRepick(L, now);
+      } else if (L.bubble && !L.repickAt) {
+        scheduleRepick(L, now);
+      } else if (!L.bubble) {
+        L.repickAt = 0;
+      }
       var bp = L.bubble ? bubblePoint(L.bubble, L) : null;
       var attached = !!bp;
       var goal = bp || dangleGoal(L);
@@ -2723,22 +2735,19 @@ async function askWithImages(photos, userText) {
       if (!L.trans) L.trans = {sx:L.cur.x, sy:L.cur.y, gx:goal.x, gy:goal.y, t0:now, dur:1};
       var goalShift = Math.hypot(goal.x - L.trans.gx, goal.y - L.trans.gy);
       if (goalShift > 4) {
-        // Новый переход — от текущей позиции к новой цели с длительностью,
-        // зависящей от расстояния.
         var dist = Math.hypot(goal.x - L.cur.x, goal.y - L.cur.y);
         L.trans = {
           sx: L.cur.x, sy: L.cur.y,
           gx: goal.x,  gy: goal.y,
           t0: now,
-          dur: Math.min(1100, Math.max(350, 250 + dist * 2.5))
+          dur: Math.min(1800, Math.max(700, 500 + dist * 3.5))
         };
       } else {
-        // Цель сместилась слегка (typewriter растёт) — апдейтим её без
-        // перезапуска перехода.
         L.trans.gx = goal.x; L.trans.gy = goal.y;
       }
       var t = Math.min(1, (now - L.trans.t0) / L.trans.dur);
-      var e = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+      // Сглаженная sine-кривая ease-in-out (плавнее cubic).
+      var e = 0.5 - 0.5 * Math.cos(Math.PI * t);
       L.cur.x = L.trans.sx + (L.trans.gx - L.trans.sx) * e;
       L.cur.y = L.trans.sy + (L.trans.gy - L.trans.sy) * e;
       var s = shoulderPoint(L.shoulderId);
