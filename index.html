@@ -144,7 +144,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v621</span></div>
+<div class="title">Стич · Claude <span class="build">v622</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2179,10 +2179,11 @@ async function askWithImages(photos, userText) {
       '</radialGradient>'+
       '<filter id="d-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.5"/></filter>'+
     // Чёрный матовый шарик-шарнир (плечо/бедро/локоть/колено).
-    '<radialGradient id="d-joint" cx="50%" cy="50%" r="50%">'+
-      '<stop offset="0%"  stop-color="#1f1c16"/>'+
-      '<stop offset="80%" stop-color="#14110d"/>'+
-      '<stop offset="100%" stop-color="#0a0806"/>'+
+    '<radialGradient id="d-joint" cx="32%" cy="28%" r="75%">'+
+      '<stop offset="0%"  stop-color="#807870"/>'+
+      '<stop offset="35%" stop-color="#4a4438"/>'+
+      '<stop offset="75%" stop-color="#2a2620"/>'+
+      '<stop offset="100%" stop-color="#100c08"/>'+
     '</radialGradient>'+
     '</defs>'+
     '<line x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
@@ -2657,22 +2658,40 @@ async function askWithImages(photos, userText) {
     // Приоритет 2: re-pick случайной привязанной конечности.
     var attached = LIMBS.filter(function(L){ return L.bubble; });
     if (!attached.length) return false;
-    var L2 = attached[Math.floor(Math.random() * attached.length)];
-    if (Math.random() < 0.35) {
-      var rightSide2 = L2.sideSign > 0;
-      var others = bubblesForSide(rightSide2).filter(function(b){
-        if (b === L2.bubble) return false;
-        return !LIMBS.some(function(o){ return o !== L2 && o.bubble === b; });
-      });
-      if (others.length) {
-        var pick = others[Math.floor(Math.random() * others.length)];
-        var noff = pickRandomOff(pick, L2);
-        if (noff) { L2.bubble = pick; L2.relOff = noff; return true; }
+    // Перебираем привязанных в случайном порядке, пытаемся реально сменить
+    // позицию (≠ текущей). Если ни одна не сдвинется — пропускаем шаг.
+    var shuffled = attached.slice().sort(function(){ return Math.random() - 0.5; });
+    for (var ai = 0; ai < shuffled.length; ai++) {
+      var L2 = shuffled[ai];
+      if (Math.random() < 0.35) {
+        var rightSide2 = L2.sideSign > 0;
+        var others = bubblesForSide(rightSide2).filter(function(b){
+          if (b === L2.bubble) return false;
+          return !LIMBS.some(function(o){ return o !== L2 && o.bubble === b; });
+        });
+        if (others.length) {
+          var pick = others[Math.floor(Math.random() * others.length)];
+          var noff = pickRandomOff(pick, L2);
+          if (noff) { L2.bubble = pick; L2.relOff = noff; return true; }
+        }
       }
+      // Внутри того же bubble — обязательно другая точка.
+      var newOff = pickDifferentOff(L2.bubble, L2, L2.relOff);
+      if (newOff) { L2.relOff = newOff; return true; }
     }
-    var off2 = pickRandomOff(L2.bubble, L2);
-    if (off2) { L2.relOff = off2; return true; }
     return false;
+  }
+  // Подбираем такую точку, которая ощутимо отличается от текущей (минимум
+  // 0.18 в нормализованных координатах = ~18% от размера bubble).
+  function pickDifferentOff(b, L, current){
+    for (var a = 0; a < 8; a++) {
+      var off = pickRandomOff(b, L);
+      if (!off) return null;
+      if (!current) return off;
+      var dx = off.rx - current.rx, dy = off.ry - current.ry;
+      if (Math.hypot(dx, dy) > 0.18) return off;
+    }
+    return null;
   }
 
   window.dollAttach = function(){
