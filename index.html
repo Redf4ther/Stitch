@@ -144,7 +144,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v628</span></div>
+<div class="title">Стич · Claude <span class="build">v629</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2410,12 +2410,21 @@ async function askWithImages(photos, userText) {
   // 2) Руки/ноги (path) — позади сообщений (z:1).
   var overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   overlay.id = 'dollLimbs';
+  // Шарик + горизонтальная еле заметная прорезь (две половинки).
+  function jg(id, r){
+    return '<g id="'+id+'">'+
+      '<circle r="'+r+'" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+      '<line x1="'+(-r+1)+'" y1="0" x2="'+(r-1)+'" y2="0" '+
+            'stroke="#000" stroke-width=".5" stroke-linecap="round" opacity=".55"/>'+
+    '</g>';
+  }
   overlay.innerHTML =
     '<defs>'+
-      '<radialGradient id="d-joint-overlay" cx="50%" cy="50%" r="50%">'+
-        '<stop offset="0%"  stop-color="#222222"/>'+
-        '<stop offset="80%" stop-color="#0d0d0d"/>'+
-        '<stop offset="100%" stop-color="#020202"/>'+
+      '<radialGradient id="d-joint-overlay" cx="32%" cy="28%" r="75%">'+
+        '<stop offset="0%"  stop-color="#807870"/>'+
+        '<stop offset="35%" stop-color="#4a4438"/>'+
+        '<stop offset="75%" stop-color="#2a2620"/>'+
+        '<stop offset="100%" stop-color="#100c08"/>'+
       '</radialGradient>'+
     '</defs>'+
     '<path id="arm-l" class="arm"/>'+
@@ -2427,15 +2436,12 @@ async function askWithImages(photos, userText) {
     '<path id="arm-r-hl" class="arm-hl"/>'+
     '<path id="leg-l-hl" class="leg-hl"/>'+
     '<path id="leg-r-hl" class="leg-hl"/>'+
-    // Шарики-шарниры локтей/коленей и плеч/бёдер (позиция обновляется в tick).
-    '<circle id="joint-arm-l" r="8" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-arm-r" r="8" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-leg-l" r="12.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-leg-r" r="12.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-shoulder-l" r="8" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-shoulder-r" r="8" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-hip-l" r="12.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-hip-r" r="12.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>';
+    // Шарики-шарниры с еле заметной прорезью посередине (как сборные).
+    // Группа transform-translated в tick. jg() выше определён локально.
+    jg('joint-arm-l', 8) + jg('joint-arm-r', 8) +
+    jg('joint-leg-l', 12.5) + jg('joint-leg-r', 12.5) +
+    jg('joint-shoulder-l', 8) + jg('joint-shoulder-r', 8) +
+    jg('joint-hip-l', 12.5) + jg('joint-hip-r', 12.5);
   document.body.appendChild(overlay);
 
   // 3) Кисти/стопы (ellipse) — поверх сообщений (z:5).
@@ -2722,11 +2728,11 @@ async function askWithImages(photos, userText) {
 
   function tick(){
     var now = performance.now();
-    // Обновляем позиции шариков-шарниров на плечах/бёдрах (на экранных координатах).
+    // Обновляем позиции шариков-шарниров на плечах/бёдрах.
     ['shoulder-l','shoulder-r','hip-l','hip-r'].forEach(function(id){
       var p = shoulderPoint(id);
       var el = overlay.querySelector('#joint-'+id);
-      if (el && p.x) { el.setAttribute('cx', p.x); el.setAttribute('cy', p.y); }
+      if (el && p.x) el.setAttribute('transform', 'translate('+p.x+' '+p.y+')');
     });
     LIMBS.forEach(function(L){
       if (L.bubble && !document.body.contains(L.bubble)) L.bubble = null;
@@ -2779,8 +2785,7 @@ async function askWithImages(photos, userText) {
           'M '+(s.x+hx)+' '+(s.y+2)+' L '+(j.x+hx)+' '+(j.y+2)+' L '+(L.cur.x+hx)+' '+(L.cur.y+2));
       }
       if (L.jointEl) {
-        L.jointEl.setAttribute('cx', j.x);
-        L.jointEl.setAttribute('cy', j.y);
+        L.jointEl.setAttribute('transform', 'translate('+j.x+' '+j.y+')');
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
