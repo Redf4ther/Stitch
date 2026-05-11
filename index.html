@@ -42,8 +42,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 /* Руки/ноги (path) ПОВЕРХ тела куклы (z:1, #doll z:0) — конечности
    соединяются поверх тела, без visual gap. Шарниры-кружочки скрыты. */
 #dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
-#dollLimbs .arm{stroke:#2a2620;stroke-width:18;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
-#dollLimbs .leg{stroke:#1a1610;stroke-width:26;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+#dollLimbs .arm{stroke:#2a2620;stroke-width:14;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+#dollLimbs .leg{stroke:#1a1610;stroke-width:22;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+/* Сплющенные локти/колени — тканевые «комочки» в местах сгиба. */
+#dollLimbs .joint{filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+#dollLimbs .joint-arm{fill:#2a2620;stroke:#4a4138;stroke-width:.6}
+#dollLimbs .joint-leg{fill:#1a1610;stroke:#3a302a;stroke-width:.6}
+/* Тонкий тканевый блик вдоль рукавов/штанов. */
+#dollLimbs .arm-hl{stroke:rgba(255,255,255,.10);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;fill:none}
+#dollLimbs .leg-hl{stroke:rgba(255,255,255,.08);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;fill:none}
 /* Кисти/стопы — ПЕРЕД сообщениями (z:5, выше .below). */
 #dollHands{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
 #dollHands .hand,#dollHands .foot{filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
@@ -128,7 +135,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v589</span></div>
+<div class="title">Стич · Claude <span class="build">v590</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2211,6 +2218,10 @@ async function askWithImages(photos, userText) {
     '<g id="MO" style="display:none"><path id="MT"/><ellipse id="TG"/><path id="TOP"/><path id="BOT"/></g>'+
     // Костюм — облегает основание шеи, плечи спускаются от шеи.
     '<path id="dollTorso" d="M72 222 Q 88 210 103 200 L 117 200 Q 132 210 148 222 Q 154 275 148 355 L 72 355 Q 66 275 72 222 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.20)" stroke-width="1.2"/>'+
+    // Плечевые «комочки» — сплющенные накладки на стыке руки и тела, того
+    // же цвета что костюм. Чуть выходят за контур торса.
+    '<ellipse cx="72" cy="225" rx="15" ry="10" fill="url(#d-cloth)" stroke="rgba(180,170,150,.18)" stroke-width=".8"/>'+
+    '<ellipse cx="148" cy="225" rx="15" ry="10" fill="url(#d-cloth)" stroke="rgba(180,170,150,.18)" stroke-width=".8"/>'+
     // Воротничок-вырез — узкая V прямо у шеи.
     '<path d="M104 202 L 110 214 L 116 202" stroke="rgba(200,190,170,.35)" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
     // Центральная застёжка-шов
@@ -2303,7 +2314,17 @@ async function askWithImages(photos, userText) {
     '<path id="arm-l" class="arm"/>'+
     '<path id="arm-r" class="arm"/>'+
     '<path id="leg-l" class="leg"/>'+
-    '<path id="leg-r" class="leg"/>';
+    '<path id="leg-r" class="leg"/>'+
+    // Тканевые блики поверх рукавов/штанов (рисуются после толстой основы).
+    '<path id="arm-l-hl" class="arm-hl"/>'+
+    '<path id="arm-r-hl" class="arm-hl"/>'+
+    '<path id="leg-l-hl" class="leg-hl"/>'+
+    '<path id="leg-r-hl" class="leg-hl"/>'+
+    // Сплющенные «комочки» в локтях/коленях — позиционируются в tick().
+    '<ellipse id="joint-arm-l" class="joint joint-arm" rx="9" ry="6"/>'+
+    '<ellipse id="joint-arm-r" class="joint joint-arm" rx="9" ry="6"/>'+
+    '<ellipse id="joint-leg-l" class="joint joint-leg" rx="14" ry="8"/>'+
+    '<ellipse id="joint-leg-r" class="joint joint-leg" rx="14" ry="8"/>';
   document.body.appendChild(overlay);
 
   // 3) Кисти/стопы (ellipse) — поверх сообщений (z:5).
@@ -2336,6 +2357,8 @@ async function askWithImages(photos, userText) {
     L.t0 = 0; L.dur = 600;
     L.pathEl = overlay.querySelector('#'+L.pathId);
     L.handEl = hands.querySelector('#'+L.handId);
+    L.hlEl   = overlay.querySelector('#'+L.pathId+'-hl');
+    L.jointEl = overlay.querySelector('#joint-'+(L.isLeg?'leg':'arm')+'-'+(L.sideSign<0?'l':'r'));
   });
   // Пулы по сторонам. Рука встречается дважды в пуле (arm, arm, leg) —
   // 2/3 шансов что новое сообщение возьмёт именно руку. Нога подбирает
@@ -2525,17 +2548,27 @@ async function askWithImages(photos, userText) {
         L.cur.y = s.y + ddy / dd * maxD;
       }
       var d;
+      // Всегда считаем joint (для эллипса сустава). Висящая конечность —
+      // joint чуть ниже середины (лёгкий тканевый «комочек» на сгибе).
+      var j = attached
+        ? twoBoneJoint(s, L.cur, L.L1, L.L2, L.sideSign)
+        : {x: (s.x + L.cur.x) / 2 + L.sideSign * 2, y: (s.y + L.cur.y) / 2 + 6};
       if (attached) {
-        // Тряпичная конечность: Q-кривая через joint как control point.
-        // Joint вычисляется через 2-bone IK — он понимает куда сгибаться,
-        // но визуально сгиб мягкий, без жёсткого шарнира. Как у Вуди из
-        // Toy Story: рука гнётся плавной дугой к локтю и кисти.
-        var j = twoBoneJoint(s, L.cur, L.L1, L.L2, L.sideSign);
         d = 'M '+s.x+' '+s.y+' Q '+j.x+' '+j.y+' '+L.cur.x+' '+L.cur.y;
       } else {
         d = 'M '+s.x+' '+s.y+' L '+L.cur.x+' '+L.cur.y;
       }
       L.pathEl.setAttribute('d', d);
+      if (L.hlEl) {
+        // Тканевый блик — чуть смещён в сторону, к свету.
+        var hx = L.sideSign * -2;  // блик с внутренней стороны
+        L.hlEl.setAttribute('d',
+          'M '+(s.x+hx)+' '+(s.y+2)+' Q '+(j.x+hx)+' '+(j.y+2)+' '+(L.cur.x+hx)+' '+(L.cur.y+2));
+      }
+      if (L.jointEl) {
+        L.jointEl.setAttribute('cx', j.x);
+        L.jointEl.setAttribute('cy', j.y);
+      }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
     });
