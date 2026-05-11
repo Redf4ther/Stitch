@@ -144,7 +144,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v620</span></div>
+<div class="title">Стич · Claude <span class="build">v621</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2178,11 +2178,11 @@ async function askWithImages(photos, userText) {
         '<stop offset="100%" stop-color="#0a0806"/>'+
       '</radialGradient>'+
       '<filter id="d-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.5"/></filter>'+
-    // Деревянный шарик-шарнир (плечо/бедро/локоть/колено).
-    '<radialGradient id="d-joint" cx="35%" cy="30%" r="80%">'+
-      '<stop offset="0%"  stop-color="#a07a4a"/>'+
-      '<stop offset="50%" stop-color="#6a4520"/>'+
-      '<stop offset="100%" stop-color="#2a1a08"/>'+
+    // Чёрный матовый шарик-шарнир (плечо/бедро/локоть/колено).
+    '<radialGradient id="d-joint" cx="50%" cy="50%" r="50%">'+
+      '<stop offset="0%"  stop-color="#1f1c16"/>'+
+      '<stop offset="80%" stop-color="#14110d"/>'+
+      '<stop offset="100%" stop-color="#0a0806"/>'+
     '</radialGradient>'+
     '</defs>'+
     '<line x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
@@ -2411,10 +2411,10 @@ async function askWithImages(photos, userText) {
   overlay.id = 'dollLimbs';
   overlay.innerHTML =
     '<defs>'+
-      '<radialGradient id="d-joint-overlay" cx="35%" cy="30%" r="80%">'+
-        '<stop offset="0%"  stop-color="#a07a4a"/>'+
-        '<stop offset="50%" stop-color="#6a4520"/>'+
-        '<stop offset="100%" stop-color="#2a1a08"/>'+
+      '<radialGradient id="d-joint-overlay" cx="50%" cy="50%" r="50%">'+
+        '<stop offset="0%"  stop-color="#222222"/>'+
+        '<stop offset="80%" stop-color="#0d0d0d"/>'+
+        '<stop offset="100%" stop-color="#020202"/>'+
       '</radialGradient>'+
     '</defs>'+
     '<path id="arm-l" class="arm"/>'+
