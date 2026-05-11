@@ -39,6 +39,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 /* Кукла — единый SVG fixed позади чата. Висит на верёвочке от потолка,
    тихо качается dangleDoll. Голова + шея + торс + шарниры плеч/бёдер. */
 #doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px);left:50%;width:220px;height:540px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% 0}
+/* Едва заметное покачивание на верёвочке когда меняется положение конечности. */
+@keyframes swayDoll {
+  0%, 100% { transform: translateX(-50%) rotate(0deg); }
+  30% { transform: translateX(-50%) rotate(0.35deg); }
+  70% { transform: translateX(-50%) rotate(-0.35deg); }
+}
 /* Руки/ноги (path) ПОВЕРХ тела куклы (z:1, #doll z:0) — конечности
    соединяются поверх тела, без visual gap. Шарниры-кружочки скрыты. */
 #dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
@@ -134,7 +140,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v615</span></div>
+<div class="title">Стич · Claude <span class="build">v616</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2663,9 +2669,17 @@ async function askWithImages(photos, userText) {
       if (!off) continue;
       bindLimb(L, b);
       L.relOff = off;
+      triggerSway();
       break;
     }
     if (attachQueue.length) attachTimer = setTimeout(processAttachQueue, ATTACH_STEP_MS);
+  }
+  // Лёгкое покачивание куклы на верёвочке при перестановке конечности.
+  function triggerSway(){
+    if (!doll) return;
+    doll.style.animation = 'none';
+    void doll.offsetHeight;
+    doll.style.animation = 'swayDoll 1.8s ease-in-out';
   }
   function clearAttachQueue(){
     attachQueue.length = 0;
@@ -2720,8 +2734,29 @@ async function askWithImages(photos, userText) {
       if (L.bubble && !document.body.contains(L.bubble)) L.bubble = null;
       // Периодический re-pick: новая случайная точка на текущем bubble.
       if (L.bubble && L.repickAt && now > L.repickAt) {
-        var off = pickRandomOff(L.bubble, L);
-        if (off) L.relOff = off;
+        // С шансом 35% — переезжаем на ДРУГОЕ видимое сообщение нужной стороны.
+        var moved = false;
+        if (Math.random() < 0.35) {
+          var rightSide = L.sideSign > 0;
+          var others = Array.prototype.slice.call(document.querySelectorAll('#chat .bbl'))
+                          .filter(function(b){
+                            if (b === L.bubble) return false;
+                            var bIsUser = b.classList && b.classList.contains('u');
+                            if (bIsUser !== rightSide) return false;
+                            // не занято другой конечностью
+                            return !LIMBS.some(function(o){ return o !== L && o.bubble === b; });
+                          });
+          if (others.length) {
+            var pick = others[Math.floor(Math.random() * others.length)];
+            var noff = pickRandomOff(pick, L);
+            if (noff) { L.bubble = pick; L.relOff = noff; moved = true; }
+          }
+        }
+        if (!moved) {
+          var off = pickRandomOff(L.bubble, L);
+          if (off) L.relOff = off;
+        }
+        triggerSway();
         scheduleRepick(L, now);
       } else if (L.bubble && !L.repickAt) {
         scheduleRepick(L, now);
