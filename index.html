@@ -134,7 +134,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v607</span></div>
+<div class="title">Стич · Claude <span class="build">v608</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -335,8 +335,27 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 <button id="testUser" style="display:none;position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.04) 55%,rgba(0,0,0,.08));border:1px solid rgba(255,255,255,.32);color:#fff;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.45);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%)">+ я</button>
 <script>
 (function(){
-  var asstLines = ['ага.', 'смотри сюда.', 'попробуем.', 'мысль интересная.', 'класс.', 'это любопытно...', 'хм.', 'не уверен.'];
-  var userLines = ['ну?', 'давай.', 'окей', 'и что?', 'хорошо', 'попробую', 'ага', 'понял'];
+  // Длинные тестовые реплики, ~80 символов каждая.
+  var asstLines = [
+    'Хорошо, давай разберём это вместе по шагам, чтобы тебе было точно понятно.',
+    'Смотри сюда — попробуй прочитать ещё раз и сказать что именно непонятно.',
+    'Интересная мысль! А что если посмотреть на эту задачу с другой стороны?',
+    'Класс, ты на верном пути, осталось только аккуратно записать ответ ниже.',
+    'Это любопытно — расскажи мне, как ты пришёл к такому выводу, пожалуйста.',
+    'Хм, давай попробуем разобрать вопрос на маленькие части и решим по очереди.',
+    'Не уверен, попробуй ещё раз — может быть нужно перечитать условие задачи.',
+    'Бум! Точно так! Ты сам сообразил, и это самое главное в обучении, молодец.'
+  ];
+  var userLines = [
+    'Я не очень понял, что тут делать, можешь объяснить попроще на каком-то примере?',
+    'Давай, я готов, попробую — только подскажи с чего лучше начинать решать это.',
+    'Окей, кажется я уловил идею, но мне нужно проверить себя на похожем задании.',
+    'А что если попробовать так — взять число и просто прибавить к нему ещё одно?',
+    'Хорошо, тогда я попробую решить сам, а ты потом проверишь правильно или нет.',
+    'Попробую ещё раз, потому что в прошлый раз я кажется ошибся в самом начале.',
+    'Ага, теперь понятно — спасибо, что объяснил так подробно и медленно, помогло.',
+    'Понял, давай тогда перейдём к следующей задаче и посмотрим как у меня выйдет.'
+  ];
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
   var bA = document.getElementById('testAsst');
   var bU = document.getElementById('testUser');
