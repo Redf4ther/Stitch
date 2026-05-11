@@ -135,7 +135,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v593</span></div>
+<div class="title">Стич · Claude <span class="build">v594</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -322,18 +322,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
     });
   }
 
-  // Тест-кнопки переключатель.
-  var tt = document.getElementById('toggleTests');
-  var ttState = document.getElementById('toggleTestsState');
-  function refreshState(){
-    if (ttState) ttState.textContent = (localStorage.getItem('stitch_show_tests') === '1') ? 'вкл' : 'выкл';
-  }
-  refreshState();
-  if (tt) tt.addEventListener('click', function(){
-    try { if (typeof haptic === 'function') haptic(); } catch(_){}
-    if (window.toggleTestButtons) window.toggleTestButtons();
-    refreshState();
-  });
+  // (Тест-кнопки переключатель вешается во второй IIFE рядом с другими
+  // настройками — здесь дубль НЕ нужен, иначе два listener'а кликают по очереди
+  // и тогглят state дважды → визуально ничего не меняется.)
 })();
 </script>
 
