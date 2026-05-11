@@ -35,6 +35,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
   35%{transform:translateY(2.5px) scaleY(2.8)}
   70%{transform:translateY(1.5px) scaleY(1.6)}
 }
+#dollHead{transform-box:fill-box;transform-origin:50% 100%}
 /* Кукла — единый SVG fixed позади чата. Висит на верёвочке от потолка,
    тихо качается dangleDoll. Голова + шея + торс + шарниры плеч/бёдер. */
 #doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px);left:50%;width:220px;height:540px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% 0}
@@ -127,7 +128,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v587</span></div>
+<div class="title">Стич · Claude <span class="build">v588</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -220,6 +221,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Одежда</div>
       <div id="clothTonePicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:3px 3px 5px;-webkit-overflow-scrolling:touch"></div>
     </div>
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Стиль куклы</div>
+      <div id="dollStylePicker" style="display:flex;gap:8px">
+        <button data-style="cute" style="flex:1;padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">Милая</button>
+        <button data-style="classic" style="flex:1;padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">Классика</button>
+      </div>
+    </div>
     <button id="toggleTests" style="margin-top:12px;display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;font-size:15px;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent">
       <span style="flex:1;text-align:left">Тест-кнопки</span>
       <span id="toggleTestsState" style="font-size:13px;opacity:.7">выкл</span>
@@ -285,6 +293,27 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
     clothPicker.appendChild(b);
   });
   refreshRings(savedCloth);
+
+  // Переключатель стиля куклы.
+  var dsp = document.getElementById('dollStylePicker');
+  if (dsp) {
+    function refreshDollStyle(){
+      var cur = localStorage.getItem('stitch_doll_style') || 'cute';
+      Array.prototype.forEach.call(dsp.children, function(b){
+        var on = b.dataset.style === cur;
+        b.style.background = on ? 'rgba(255,255,255,.20)' : 'rgba(255,255,255,.08)';
+        b.style.borderColor = on ? 'rgba(255,255,255,.45)' : 'rgba(255,255,255,.18)';
+      });
+    }
+    refreshDollStyle();
+    Array.prototype.forEach.call(dsp.children, function(b){
+      b.addEventListener('click', function(){
+        try { if (typeof haptic === 'function') haptic(); } catch(_){}
+        if (typeof window.setDollStyle === 'function') window.setDollStyle(b.dataset.style);
+        refreshDollStyle();
+      });
+    });
+  }
 
   // Тест-кнопки переключатель.
   var tt = document.getElementById('toggleTests');
@@ -2082,15 +2111,26 @@ async function askWithImages(photos, userText) {
   doll.setAttribute('viewBox', '0 0 220 540');
   doll.setAttribute('preserveAspectRatio', 'xMidYMin meet');
   doll.style.overflow = 'visible';
-  doll.innerHTML =
+  // Два стиля куклы. По умолчанию — 'cute' (новый), 'classic' = старый.
+  // Переключается в настройках; перерисовка через rerenderDoll().
+  function dollCuteHTML() { return ''+
     '<defs>'+
       // userSpaceOnUse: gradient в общих SVG-coords, чтобы один и тот же оттенок
       // лежал на голове и на подбородке в общей зоне (без видимой границы).
       // Центр около cx=86 cy=88 (40% bbox головы), r=130 покрывает всю голову.
-      '<radialGradient id="d-skin" cx="86" cy="88" r="130" gradientUnits="userSpaceOnUse">'+
-        '<stop offset="0%" stop-color="#f4e8d8"/>'+
-        '<stop offset="55%" stop-color="#c8b0a0"/>'+
-        '<stop offset="100%" stop-color="#3a2818"/>'+
+      // Фарфоровая загорелая кожа — базовый тон.
+      '<radialGradient id="d-skin" cx="92" cy="92" r="120" gradientUnits="userSpaceOnUse">'+
+        '<stop offset="0%"  stop-color="#ffd9a8"/>'+
+        '<stop offset="40%" stop-color="#e7a86c"/>'+
+        '<stop offset="75%" stop-color="#bf7a3e"/>'+
+        '<stop offset="100%" stop-color="#7a4520"/>'+
+      '</radialGradient>'+
+      // Мягкий фарфоровый «свет» — гладкая полусфера блика в верхней-левой
+      // части головы, без видимых границ.
+      '<radialGradient id="d-sheen" cx="82" cy="80" r="58" gradientUnits="userSpaceOnUse">'+
+        '<stop offset="0%"  stop-color="#fff7e4" stop-opacity=".78"/>'+
+        '<stop offset="45%" stop-color="#fff0d0" stop-opacity=".25"/>'+
+        '<stop offset="100%" stop-color="#fff0d0" stop-opacity="0"/>'+
       '</radialGradient>'+
       '<radialGradient id="d-cloth" cx="50%" cy="30%" r="80%">'+
         '<stop offset="0%" stop-color="#605a52"/>'+
@@ -2103,39 +2143,129 @@ async function askWithImages(photos, userText) {
     '<line x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
     '<circle cx="110" cy="50" r="3" fill="#5a4a30"/>'+
     // Шея — рисуется ДО головы (за ней, перекрывается головой сверху)
-    '<rect x="102" y="170" width="16" height="40" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
+    '<rect x="103" y="170" width="14" height="30" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
+    // Голова в группе — наклоняется при listening.
+    '<g id="dollHead">'+
+    // Уши — небольшие овалы по бокам, с тёмным внутренним углублением.
+    '<ellipse cx="54"  cy="124" rx="6.5" ry="10" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
+    '<ellipse cx="166" cy="124" rx="6.5" ry="10" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
+    '<path d="M54 119 Q56 124 54 130" stroke="#7a4a26" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
+    '<path d="M166 119 Q164 124 166 130" stroke="#7a4a26" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
     // Голова — почти круглая, чуть вытянута вверх
-    '<ellipse cx="110" cy="120" rx="60" ry="64" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.5"/>'+
+    '<ellipse cx="110" cy="120" rx="55" ry="60" fill="url(#d-skin)"/>'+
+    // Контур верхней части головы — ровно та же дуга, что и подбородок, одной толщины.
+    '<path d="M132 175 A 55 60 0 1 0 88 175" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+    // Фарфоровый блик — гладкая полусфера света, повторяет форму головы.
+    '<ellipse cx="110" cy="120" rx="55" ry="60" fill="url(#d-sheen)"/>'+
     // Глаза
+    // Глаза — карие с белыми белками
+    // Большие мультяшные глаза с толстой обводкой, тёмно-синяя радужка
+    // и крупный белый блик — стиль референса.
+    // Персиковый румянец под глазами — продолговатые овалы.
+    '<ellipse cx="84"  cy="134" rx="11" ry="4.5" fill="#f08868" opacity=".85" filter="url(#d-soft)"/>'+
+    '<ellipse cx="136" cy="134" rx="11" ry="4.5" fill="#f08868" opacity=".85" filter="url(#d-soft)"/>'+
+    '<circle id="eye-l"  cx="94"  cy="114" r="10.5" fill="#fff8ec" stroke="#1a0a04" stroke-width="0.8"/>'+
+    '<circle id="eye-r"  cx="126" cy="114" r="10.5" fill="#fff8ec" stroke="#1a0a04" stroke-width="0.8"/>'+
+    // Радужка
+    '<circle id="iris-l" cx="94"  cy="115.5" r="7.6" fill="#0e2440"/>'+
+    '<circle id="iris-r" cx="126" cy="115.5" r="7.6" fill="#0e2440"/>'+
+    // Лёгкий бликующий обод по верху радужки
+    '<circle cx="94"  cy="114" r="7.6" fill="none" stroke="#1a3a60" stroke-width=".8" opacity=".6"/>'+
+    '<circle cx="126" cy="114" r="7.6" fill="none" stroke="#1a3a60" stroke-width=".8" opacity=".6"/>'+
+    // Белые блики
+    '<ellipse cx="91"  cy="112" rx="3.2" ry="3.6" fill="#fff"/>'+
+    '<ellipse cx="123" cy="112" rx="3.2" ry="3.6" fill="#fff"/>'+
+    '<circle cx="97" cy="120" r="1.2" fill="#fff" opacity=".7"/>'+
+    '<circle cx="129" cy="120" r="1.2" fill="#fff" opacity=".7"/>'+
+    // Реснички — три коротких штриха на каждом глазу.
+    '<path d="M85 103 L 83 99"   stroke="#1a0a04" stroke-width="0.9" stroke-linecap="round"/>'+
+    '<path d="M90 102 L 89 98"   stroke="#1a0a04" stroke-width="0.9" stroke-linecap="round"/>'+
+    '<path d="M95 102 L 95 98"   stroke="#1a0a04" stroke-width="0.9" stroke-linecap="round"/>'+
+    '<path d="M135 103 L 137 99" stroke="#1a0a04" stroke-width="0.9" stroke-linecap="round"/>'+
+    '<path d="M130 102 L 131 98" stroke="#1a0a04" stroke-width="0.9" stroke-linecap="round"/>'+
+    '<path d="M125 102 L 125 98" stroke="#1a0a04" stroke-width="0.9" stroke-linecap="round"/>'+
+    // Брови чуть шире — лёгкие дуги «чайки».
+    '<path d="M87 96 Q94 91 101 96" stroke="#1a0a04" stroke-width="1.6" fill="none" stroke-linecap="round"/>'+
+    '<path d="M119 96 Q126 91 133 96" stroke="#1a0a04" stroke-width="1.6" fill="none" stroke-linecap="round"/>'+
+    // Носик-«кнопочка» (×3).
+    '<ellipse cx="110" cy="144" rx="7" ry="5.6" fill="#d68a4f" stroke="#7a4220" stroke-width="0.7"/>'+
+    '<ellipse cx="108" cy="141.5" rx="2.4" ry="1.6" fill="rgba(255,250,230,.7)"/>'+
+    // Подбородок-челюсть деревянной куклы. Верхняя кромка челюсти повторяет
+    // форму улыбки — именно по этой линии и открывается рот при talk.
+    // Боковые прорези соединяются с улыбкой-прорезью на верхушке челюсти.
+    '<path id="MS" d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="#1a0a04"/>'+
+    '<g id="dollJaw">'+
+      '<path id="jawShape" d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="url(#d-skin)"/>'+
+      '<path d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="url(#d-sheen)"/>'+
+      // Округлая дуга подбородка-челюсти (стыкуется с верхним контуром).
+    '<path d="M88 175 Q110 185 132 175" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+    '</g>'+
+    // Прорези по углам рта — от уголков до точки стыка с дугой головы.
+    '<line x1="88" y1="160" x2="88" y2="175" stroke="#2a1808" stroke-width="0.3" stroke-linecap="round"/>'+
+    '<line x1="132" y1="160" x2="132" y2="175" stroke="#2a1808" stroke-width="0.3" stroke-linecap="round"/>'+
+    // Горизонтальная улыбка-прорезь.
+    '<path d="M88 160 Q98 166 110 166 Q122 166 132 160" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+    '</g>'+   // /dollHead
+    // Stub-элементы MC/MO/MT/TG/TOP/BOT для совместимости со старым drawMouth.
+    '<g id="MC" style="display:none"></g>'+
+    '<g id="MO" style="display:none"><path id="MT"/><ellipse id="TG"/><path id="TOP"/><path id="BOT"/></g>'+
+    // Костюм — облегает основание шеи, плечи спускаются от шеи.
+    '<path id="dollTorso" d="M72 222 Q 88 210 103 200 L 117 200 Q 132 210 148 222 Q 154 275 148 355 L 72 355 Q 66 275 72 222 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.20)" stroke-width="1.2"/>'+
+    // Воротничок-вырез — узкая V прямо у шеи.
+    '<path d="M104 202 L 110 214 L 116 202" stroke="rgba(200,190,170,.35)" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
+    // Центральная застёжка-шов
+    '<line x1="110" y1="214" x2="110" y2="355" stroke="rgba(160,150,130,.25)" stroke-width="0.8"/>'+
+    // Пуговицы
+    '<circle cx="110" cy="238" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="268" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="298" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="328" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    // Шарниры — невидимые маркеры для JS shoulderPoint().
+    '<circle id="shoulder-l" cx="74" cy="222" r="5" fill="none" stroke="none"/>'+
+    '<circle id="shoulder-r" cx="146" cy="222" r="5" fill="none" stroke="none"/>'+
+    '<circle id="hip-l" cx="80" cy="349" r="5" fill="none" stroke="none"/>'+
+    '<circle id="hip-r" cx="140" cy="349" r="5" fill="none" stroke="none"/>';
+  }
+
+  // Старый «классический» стиль куклы. Размер головы подогнан к новому
+  // (rx=55 ry=60), остальные черты — как было до правок.
+  function dollClassicHTML() { return ''+
+    '<defs>'+
+      '<radialGradient id="d-skin" cx="86" cy="88" r="130" gradientUnits="userSpaceOnUse">'+
+        '<stop offset="0%" stop-color="#f4e8d8"/>'+
+        '<stop offset="55%" stop-color="#c8b0a0"/>'+
+        '<stop offset="100%" stop-color="#3a2818"/>'+
+      '</radialGradient>'+
+      '<radialGradient id="d-cloth" cx="50%" cy="30%" r="80%">'+
+        '<stop offset="0%" stop-color="#605a52"/>'+
+        '<stop offset="60%" stop-color="#2a2620"/>'+
+        '<stop offset="100%" stop-color="#0a0806"/>'+
+      '</radialGradient>'+
+      '<filter id="d-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.5"/></filter>'+
+    '</defs>'+
+    '<line x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
+    '<circle cx="110" cy="50" r="3" fill="#5a4a30"/>'+
+    '<rect x="102" y="170" width="16" height="40" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
+    '<ellipse cx="110" cy="120" rx="55" ry="60" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.5"/>'+
     '<ellipse cx="94" cy="112" rx="8" ry="11" fill="#020202"/>'+
     '<ellipse cx="126" cy="112" rx="8" ry="11" fill="#020202"/>'+
     '<circle cx="92" cy="108" r="1.6" fill="#90a0b0" opacity=".6"/>'+
     '<circle cx="124" cy="108" r="1.6" fill="#90a0b0" opacity=".6"/>'+
     '<ellipse cx="94" cy="126" rx="8" ry="2.6" fill="rgba(40,20,30,.5)" filter="url(#d-soft)"/>'+
     '<ellipse cx="126" cy="126" rx="8" ry="2.6" fill="rgba(40,20,30,.5)" filter="url(#d-soft)"/>'+
-    // Брови
     '<path d="M82 92 L 102 88" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
     '<path d="M118 88 L 138 92" stroke="#3a2010" stroke-width="1.6" stroke-linecap="round"/>'+
-    // Носик
     '<path d="M110 138 L 106 152 L 114 152" stroke="#6a4030" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
-    // Подбородок-челюсть деревянной куклы. Верхняя кромка челюсти повторяет
-    // форму улыбки — именно по этой линии и открывается рот при talk.
-    // Боковые прорези соединяются с улыбкой-прорезью на верхушке челюсти.
     '<path id="MS" d="M88 160 Q98 168 110 168 Q122 168 132 160 L 132 180 Q122 184 110 184 Q98 184 88 180 Z" fill="#1a0a04"/>'+
     '<g id="dollJaw">'+
       '<path id="jawShape" d="M88 160 Q98 168 110 168 Q122 168 132 160 L 132 180 Q122 184 110 184 Q98 184 88 180 Z" fill="url(#d-skin)"/>'+
-      // Нижняя дуга подбородка — той же толщины что контур головы.
       '<path d="M88 180 Q98 184 110 184 Q122 184 132 180" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
     '</g>'+
-    // Три прорези — вертикальные по бокам и горизонтальная улыбка на стыке.
-    // Все три соединяются и образуют контур по которому раскрывается рот.
     '<line x1="88" y1="160" x2="88" y2="180" stroke="#2a1808" stroke-width="0.5" stroke-linecap="round"/>'+
     '<line x1="132" y1="160" x2="132" y2="180" stroke="#2a1808" stroke-width="0.5" stroke-linecap="round"/>'+
     '<path d="M88 160 Q98 168 110 168 Q122 168 132 160" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
-    // Stub-элементы MC/MO/MT/TG/TOP/BOT для совместимости со старым drawMouth.
     '<g id="MC" style="display:none"></g>'+
     '<g id="MO" style="display:none"><path id="MT"/><ellipse id="TG"/><path id="TOP"/><path id="BOT"/></g>'+
-    // Торс — id для перекраски одежды через JS.
     '<path id="dollTorso" d="M68 208 L 152 208 Q 168 290, 162 460 L 58 460 Q 52 290, 68 208 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
     '<circle cx="110" cy="234" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
     '<circle cx="110" cy="270" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
@@ -2143,15 +2273,25 @@ async function askWithImages(photos, userText) {
     '<circle cx="110" cy="342" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
     '<circle cx="110" cy="378" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
     '<circle cx="110" cy="414" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    // Шарниры — невидимые маркеры для JS shoulderPoint() (fill/stroke:none).
     '<circle id="shoulder-l" cx="68" cy="226" r="5" fill="none" stroke="none"/>'+
     '<circle id="shoulder-r" cx="152" cy="226" r="5" fill="none" stroke="none"/>'+
     '<circle id="hip-l" cx="84" cy="454" r="5" fill="none" stroke="none"/>'+
     '<circle id="hip-r" cx="136" cy="454" r="5" fill="none" stroke="none"/>';
+  }
+
+  function currentDollStyle(){ return localStorage.getItem('stitch_doll_style') || 'cute'; }
+  function renderDoll(){
+    doll.innerHTML = currentDollStyle() === 'classic' ? dollClassicHTML() : dollCuteHTML();
+    var jawEl = doll.querySelector('#dollJaw');
+    if (jawEl) jawEl.style.transition = 'transform .08s ease-out';
+  }
+  renderDoll();
+  // Глобальный хук для смены стиля из настроек.
+  window.setDollStyle = function(s){
+    localStorage.setItem('stitch_doll_style', s === 'classic' ? 'classic' : 'cute');
+    renderDoll();
+  };
   document.body.insertBefore(doll, document.body.firstChild);
-  // Плавный переход челюсти при открытии/закрытии рта.
-  var jawEl = doll.querySelector('#dollJaw');
-  if (jawEl) jawEl.style.transition = 'transform .08s ease-out';
 
   // top позиционируется через CSS (env(safe-area-inset-top) + 14px) —
   // отступ под notch/dynamic island. Позиция стабильна, JS не нужен.
