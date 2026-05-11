@@ -134,7 +134,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v612</span></div>
+<div class="title">Стич · Claude <span class="build">v613</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2268,10 +2268,10 @@ async function askWithImages(photos, userText) {
     '<circle id="hip-l" cx="92" cy="349" r="5" fill="none" stroke="none"/>'+
     '<circle id="hip-r" cx="128" cy="349" r="5" fill="none" stroke="none"/>'+
     // Шарики-шарниры на плечах и бёдрах (декоративные, статичные).
-    '<circle cx="74" cy="222" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle cx="146" cy="222" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle cx="92" cy="349" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle cx="128" cy="349" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>';
+    '<circle cx="74" cy="222" r="7" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="146" cy="222" r="7" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="92" cy="349" r="11" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="128" cy="349" r="11" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>';
   }
 
   // Старый «классический» стиль куклы. Размер головы подогнан к новому
@@ -2333,10 +2333,10 @@ async function askWithImages(photos, userText) {
     '<circle id="shoulder-r" cx="146" cy="222" r="5" fill="none" stroke="none"/>'+
     '<circle id="hip-l" cx="92" cy="349" r="5" fill="none" stroke="none"/>'+
     '<circle id="hip-r" cx="128" cy="349" r="5" fill="none" stroke="none"/>'+
-    '<circle cx="74" cy="222" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle cx="146" cy="222" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle cx="92" cy="349" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle cx="128" cy="349" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>';
+    '<circle cx="74" cy="222" r="7" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="146" cy="222" r="7" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="92" cy="349" r="11" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="128" cy="349" r="11" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>';
   }
 
   function currentDollStyle(){ return localStorage.getItem('stitch_doll_style') || 'cute'; }
@@ -2427,10 +2427,10 @@ async function askWithImages(photos, userText) {
     '<path id="leg-l-hl" class="leg-hl"/>'+
     '<path id="leg-r-hl" class="leg-hl"/>'+
     // Шарики-шарниры локтей/коленей (позиция обновляется в tick).
-    '<circle id="joint-arm-l" r="4.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-arm-r" r="4.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-leg-l" r="5.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-leg-r" r="5.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>';
+    '<circle id="joint-arm-l" r="7" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-arm-r" r="7" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-leg-l" r="11" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-leg-r" r="11" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>';
   document.body.appendChild(overlay);
 
   // 3) Кисти/стопы (ellipse) — поверх сообщений (z:5).
