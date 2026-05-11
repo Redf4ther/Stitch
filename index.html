@@ -140,7 +140,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v616</span></div>
+<div class="title">Стич · Claude <span class="build">v617</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2588,92 +2588,9 @@ async function askWithImages(photos, userText) {
   // Каждое НОВОЕ сообщение цепляется одной конечностью по очереди из своего
   // пула. Затем заполняем все свободные конечности подходящими старыми
   // сообщениями — конечности не висят зря, если есть за что хвататься.
-  function bindLimb(L, b){
-    L.bubble = b;
-    L.relOff = pickRandomOff(b, L);  // случайная точка на bubble
-  }
-  function unbindLimb(L){
-    L.bubble = null;
-    L.relOff = null;
-  }
-  window.dollAttach = function(){
-    if (window._scrollLocked) return;
-    var bubbles = document.querySelectorAll('#chat .bbl');
-    var last = bubbles[bubbles.length - 1];
-    if (last) {
-      var alreadyAttached = LIMBS.some(function(L){ return L.bubble === last; })
-                         || attachQueue.some(function(q){ return q.b === last; });
-      if (!alreadyAttached) {
-        var isUser = last.classList && last.classList.contains('u');
-        var pool = isUser ? POOL_USER : POOL_ASST;
-        var counter = isUser ? attachOrderR : attachOrderL;
-        for (var k = 0; k < pool.length; k++) {
-          var idx = (counter + k) % pool.length;
-          var L = pool[idx];
-          if (L.bubble) continue;
-          if (attachQueue.some(function(q){ return q.L === L; })) continue;
-          if (pickRandomOff(last, L)) {
-            // Не привязываем сразу — ставим в общую очередь (3с задержка).
-            attachQueue.push({L: L, b: last});
-            if (isUser) attachOrderR = idx + 1; else attachOrderL = idx + 1;
-            break;
-          }
-        }
-      }
-    }
-    fillFreeLimbs();
-    // Гарантируем, что таймер очереди запущен.
-    if (attachQueue.length && !attachTimer) {
-      attachTimer = setTimeout(processAttachQueue, ATTACH_STEP_MS);
-    }
-  };
+  function bindLimb(L, b){ L.bubble = b; L.relOff = pickRandomOff(b, L); }
+  function unbindLimb(L){ L.bubble = null; L.relOff = null; }
 
-  // Отвязываем конечности от bubble, которые ушли за пределы viewport
-  // ИЛИ стали недосягаемы (bubblePoint вернул null). После — пытаемся
-  // заполнить свободные конечности видимыми сообщениями.
-  function pruneInvisibleAndFill(){
-    if (window._scrollLocked) return;
-    var changed = false;
-    LIMBS.forEach(function(L){
-      if (!L.bubble) return;
-      var bi = L.bubble.querySelector('.bi') || L.bubble;
-      var r = bi.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > window.innerHeight || !bubblePoint(L.bubble, L)) {
-        unbindLimb(L);
-        changed = true;
-      }
-    });
-    if (changed) fillFreeLimbs();
-  }
-
-  // Заполняем все свободные конечности подходящими сообщениями. Идём по
-  // bubbles от свежих к старым, для каждого ищем первую свободную конечность
-  // подходящей стороны+зоны и привязываем. Пока клавиатура поднята — пропуск.
-  // Очередь поочерёдной привязки конечностей: первая срабатывает сразу,
-  // каждая следующая — через STEP_MS после предыдущей. Приоритет: руки до ног.
-  var attachQueue = [];
-  var attachTimer = null;
-  var ATTACH_STEP_MS = 3000;
-  function processAttachQueue(){
-    attachTimer = null;
-    if (window._scrollLocked || window._kbdShown) {
-      attachQueue.length = 0;
-      return;
-    }
-    while (attachQueue.length) {
-      var item = attachQueue.shift();
-      var L = item.L, b = item.b;
-      if (L.bubble) continue;
-      if (!document.body.contains(b)) continue;
-      var off = pickRandomOff(b, L);
-      if (!off) continue;
-      bindLimb(L, b);
-      L.relOff = off;
-      triggerSway();
-      break;
-    }
-    if (attachQueue.length) attachTimer = setTimeout(processAttachQueue, ATTACH_STEP_MS);
-  }
   // Лёгкое покачивание куклы на верёвочке при перестановке конечности.
   function triggerSway(){
     if (!doll) return;
@@ -2681,88 +2598,98 @@ async function askWithImages(photos, userText) {
     void doll.offsetHeight;
     doll.style.animation = 'swayDoll 1.8s ease-in-out';
   }
-  function clearAttachQueue(){
-    attachQueue.length = 0;
-    if (attachTimer) { clearTimeout(attachTimer); attachTimer = null; }
-  }
 
-  function fillFreeLimbs(){
-    if (window._kbdShown || window._scrollLocked) return;
-    var taken = [];
-    LIMBS.forEach(function(L){ if (L.bubble) taken.push(L.bubble); });
-    // Сначала руки, потом ноги; уже в очереди — пропускаем.
+  // ── Единый таймер всех перемещений конечностей ─────────────────────
+  // Каждые STEP_MIN-STEP_MAX мс делается ОДНО действие из приоритетного
+  // списка: 1) привязать любую свободную конечность к подходящему bubble;
+  // 2) если свободных нет — переставить случайную привязанную в новую точку
+  // (или с шансом 35% переехать на другое сообщение). Только одно
+  // движение за раз.
+  var STEP_MIN = 3000, STEP_MAX = 5000;
+  var limbTimer = null;
+  function scheduleNextLimbStep(){
+    if (limbTimer) return;
+    var d = STEP_MIN + Math.random() * (STEP_MAX - STEP_MIN);
+    limbTimer = setTimeout(function(){
+      limbTimer = null;
+      if (window._scrollLocked || window._kbdShown) { scheduleNextLimbStep(); return; }
+      if (doOneLimbAction()) triggerSway();
+      scheduleNextLimbStep();
+    }, d);
+  }
+  function bubblesForSide(side){
+    return Array.prototype.slice.call(document.querySelectorAll('#chat .bbl')).filter(function(b){
+      var bi = b.querySelector('.bi') || b;
+      var r = bi.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) return false;
+      var bIsUser = b.classList && b.classList.contains('u');
+      return bIsUser === side;
+    });
+  }
+  function doOneLimbAction(){
+    // Приоритет 1: привязать свободную конечность (руки раньше ног).
     var free = LIMBS.filter(function(L){ return !L.bubble; })
                     .sort(function(a, b){ return (a.isLeg?1:0) - (b.isLeg?1:0); });
-    free = free.filter(function(L){
-      return !attachQueue.some(function(q){ return q.L === L; });
-    });
-    if (!free.length) return;
-
-    var bubbles = Array.prototype.slice.call(document.querySelectorAll('#chat .bbl')).reverse();
-    var queuedNow = [];
-    for (var i = 0; i < bubbles.length && free.length; i++) {
-      var b = bubbles[i];
-      if (taken.indexOf(b) !== -1) continue;
-      if (attachQueue.some(function(q){ return q.b === b; })) continue;
-      var isUser = b.classList && b.classList.contains('u');
-      for (var j = 0; j < free.length; j++) {
-        var L = free[j];
-        var rightSide = L.sideSign > 0;
-        if (isUser !== rightSide) continue;
+    for (var i = 0; i < free.length; i++) {
+      var L = free[i];
+      var rightSide = L.sideSign > 0;
+      var bubbles = bubblesForSide(rightSide).reverse();
+      for (var j = 0; j < bubbles.length; j++) {
+        var b = bubbles[j];
+        if (LIMBS.some(function(o){ return o.bubble === b; })) continue;
         var off = pickRandomOff(b, L);
         if (!off) continue;
-        queuedNow.push({L: L, b: b});
-        taken.push(b);
-        free.splice(j, 1);
-        break;
+        L.bubble = b; L.relOff = off;
+        return true;
       }
     }
-    queuedNow.forEach(function(item){ attachQueue.push(item); });
-    if (attachQueue.length && !attachTimer) {
-      attachTimer = setTimeout(processAttachQueue, ATTACH_STEP_MS);
+    // Приоритет 2: re-pick случайной привязанной конечности.
+    var attached = LIMBS.filter(function(L){ return L.bubble; });
+    if (!attached.length) return false;
+    var L2 = attached[Math.floor(Math.random() * attached.length)];
+    if (Math.random() < 0.35) {
+      var rightSide2 = L2.sideSign > 0;
+      var others = bubblesForSide(rightSide2).filter(function(b){
+        if (b === L2.bubble) return false;
+        return !LIMBS.some(function(o){ return o !== L2 && o.bubble === b; });
+      });
+      if (others.length) {
+        var pick = others[Math.floor(Math.random() * others.length)];
+        var noff = pickRandomOff(pick, L2);
+        if (noff) { L2.bubble = pick; L2.relOff = noff; return true; }
+      }
     }
+    var off2 = pickRandomOff(L2.bubble, L2);
+    if (off2) { L2.relOff = off2; return true; }
+    return false;
   }
 
-  // Каждые 5-20 секунд активная конечность переезжает в новую случайную
-  // точку на том же сообщении (плавно через ease-in-out).
-  function scheduleRepick(L, now){
-    L.repickAt = (now || performance.now()) + 5000 + Math.random() * 15000;
+  window.dollAttach = function(){
+    // Новое сообщение — единый таймер подцепит на следующем шаге.
+    scheduleNextLimbStep();
+  };
+  function pruneInvisibleAndFill(){
+    if (window._scrollLocked) return;
+    LIMBS.forEach(function(L){
+      if (!L.bubble) return;
+      var bi = L.bubble.querySelector('.bi') || L.bubble;
+      var r = bi.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight || !bubblePoint(L.bubble, L)) {
+        unbindLimb(L);
+      }
+    });
   }
+  function clearAttachQueue(){
+    if (limbTimer) { clearTimeout(limbTimer); limbTimer = null; }
+  }
+  function fillFreeLimbs(){
+    scheduleNextLimbStep();
+  }
+
   function tick(){
     var now = performance.now();
     LIMBS.forEach(function(L){
       if (L.bubble && !document.body.contains(L.bubble)) L.bubble = null;
-      // Периодический re-pick: новая случайная точка на текущем bubble.
-      if (L.bubble && L.repickAt && now > L.repickAt) {
-        // С шансом 35% — переезжаем на ДРУГОЕ видимое сообщение нужной стороны.
-        var moved = false;
-        if (Math.random() < 0.35) {
-          var rightSide = L.sideSign > 0;
-          var others = Array.prototype.slice.call(document.querySelectorAll('#chat .bbl'))
-                          .filter(function(b){
-                            if (b === L.bubble) return false;
-                            var bIsUser = b.classList && b.classList.contains('u');
-                            if (bIsUser !== rightSide) return false;
-                            // не занято другой конечностью
-                            return !LIMBS.some(function(o){ return o !== L && o.bubble === b; });
-                          });
-          if (others.length) {
-            var pick = others[Math.floor(Math.random() * others.length)];
-            var noff = pickRandomOff(pick, L);
-            if (noff) { L.bubble = pick; L.relOff = noff; moved = true; }
-          }
-        }
-        if (!moved) {
-          var off = pickRandomOff(L.bubble, L);
-          if (off) L.relOff = off;
-        }
-        triggerSway();
-        scheduleRepick(L, now);
-      } else if (L.bubble && !L.repickAt) {
-        scheduleRepick(L, now);
-      } else if (!L.bubble) {
-        L.repickAt = 0;
-      }
       var bp = L.bubble ? bubblePoint(L.bubble, L) : null;
       var attached = !!bp;
       var goal = bp || dangleGoal(L);
