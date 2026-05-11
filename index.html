@@ -52,7 +52,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 #dollLimbs .arm-hl{stroke:rgba(255,255,255,.10);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;fill:none}
 #dollLimbs .leg-hl{stroke:rgba(255,255,255,.08);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;fill:none}
 /* Кисти/стопы — ПЕРЕД сообщениями (z:5, выше .below). */
-#dollHands{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+/* Кисти/стопы СЗАДИ сообщений (z:1, тот же что #dollLimbs) — рука/нога
+   садится на верх bubble и нижняя часть кисти прячется за облачком,
+   создавая эффект «держит сверху». В отвязанном виде свисает за чатом. */
+#dollHands{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 #dollHands .hand,#dollHands .foot{filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
 @keyframes iB{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-5px) rotate(.3deg)}}
 @keyframes tN{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-3px) rotate(.8deg)}}
@@ -135,7 +138,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v599</span></div>
+<div class="title">Стич · Claude <span class="build">v600</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2481,8 +2484,9 @@ async function askWithImages(photos, userText) {
     if (dist > (L.L1 + L.L2) * 0.82) return null;
     return {x:x, y:y};
   }
-  // Выбрать рандомную точку внутри bi-блока bubble, которая в пределах
-  // вытянутой руки/ноги. До 10 попыток. Возвращает {rx, ry} (фракции) или null.
+  // Точка привязки — НАД сообщением: ry слегка отрицательный (выше верхнего
+  // края bubble), rx — любая позиция по ширине. До 10 попыток с проверкой
+  // досягаемости от плеча/бедра.
   function pickRandomOff(bubble, L){
     var bi = bubble.querySelector('.bi') || bubble;
     var r = bi.getBoundingClientRect();
@@ -2490,7 +2494,8 @@ async function askWithImages(photos, userText) {
     var maxR = (L.L1 + L.L2) * 0.82;
     for (var i = 0; i < 10; i++) {
       var rx = 0.08 + Math.random() * 0.84;
-      var ry = 0.10 + Math.random() * 0.80;
+      // Сидит чуть выше верхнего края (на 0..30% высоты bubble)
+      var ry = -(0.02 + Math.random() * 0.28);
       var px = r.left + r.width * rx;
       var py = r.top + r.height * ry;
       if (Math.hypot(px - sh.x, py - sh.y) <= maxR) return {rx: rx, ry: ry};
