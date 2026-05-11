@@ -144,7 +144,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v627</span></div>
+<div class="title">Стич · Claude <span class="build">v628</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2428,14 +2428,14 @@ async function askWithImages(photos, userText) {
     '<path id="leg-l-hl" class="leg-hl"/>'+
     '<path id="leg-r-hl" class="leg-hl"/>'+
     // Шарики-шарниры локтей/коленей и плеч/бёдер (позиция обновляется в tick).
-    '<circle id="joint-arm-l" r="7" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-arm-r" r="7" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-leg-l" r="11" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-leg-r" r="11" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-shoulder-l" r="7" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-shoulder-r" r="7" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-hip-l" r="11" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-    '<circle id="joint-hip-r" r="11" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>';
+    '<circle id="joint-arm-l" r="8" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-arm-r" r="8" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-leg-l" r="12.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-leg-r" r="12.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-shoulder-l" r="8" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-shoulder-r" r="8" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-hip-l" r="12.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-hip-r" r="12.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>';
   document.body.appendChild(overlay);
 
   // 3) Кисти/стопы (ellipse) — поверх сообщений (z:5).
