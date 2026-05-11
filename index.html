@@ -135,7 +135,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v597</span></div>
+<div class="title">Стич · Claude <span class="build">v598</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2291,17 +2291,21 @@ async function askWithImages(photos, userText) {
     '<path d="M88 160 Q98 168 110 168 Q122 168 132 160" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
     '<g id="MC" style="display:none"></g>'+
     '<g id="MO" style="display:none"><path id="MT"/><ellipse id="TG"/><path id="TOP"/><path id="BOT"/></g>'+
-    '<path id="dollTorso" d="M68 208 L 152 208 Q 168 290, 162 460 L 58 460 Q 52 290, 68 208 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.16)" stroke-width="1.2"/>'+
-    '<circle cx="110" cy="234" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="110" cy="270" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="110" cy="306" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="110" cy="342" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="110" cy="378" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="110" cy="414" r="2.4" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle id="shoulder-l" cx="68" cy="226" r="5" fill="none" stroke="none"/>'+
-    '<circle id="shoulder-r" cx="152" cy="226" r="5" fill="none" stroke="none"/>'+
-    '<circle id="hip-l" cx="84" cy="454" r="5" fill="none" stroke="none"/>'+
-    '<circle id="hip-r" cx="136" cy="454" r="5" fill="none" stroke="none"/>';
+    // Костюм/руки/ноги — те же размеры что в «милом» стиле, чтобы кукла
+    // была одинаковой пропорции независимо от стиля головы.
+    '<path id="dollTorso" d="M72 222 Q 88 210 103 200 L 117 200 Q 132 210 148 222 Q 154 275 148 355 L 72 355 Q 66 275 72 222 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.20)" stroke-width="1.2"/>'+
+    '<ellipse cx="72" cy="225" rx="15" ry="10" fill="url(#d-cloth)" stroke="rgba(180,170,150,.18)" stroke-width=".8"/>'+
+    '<ellipse cx="148" cy="225" rx="15" ry="10" fill="url(#d-cloth)" stroke="rgba(180,170,150,.18)" stroke-width=".8"/>'+
+    '<path d="M104 202 L 110 214 L 116 202" stroke="rgba(200,190,170,.35)" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
+    '<line x1="110" y1="214" x2="110" y2="355" stroke="rgba(160,150,130,.25)" stroke-width="0.8"/>'+
+    '<circle cx="110" cy="238" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="268" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="298" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="328" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle id="shoulder-l" cx="74" cy="222" r="5" fill="none" stroke="none"/>'+
+    '<circle id="shoulder-r" cx="146" cy="222" r="5" fill="none" stroke="none"/>'+
+    '<circle id="hip-l" cx="80" cy="349" r="5" fill="none" stroke="none"/>'+
+    '<circle id="hip-r" cx="140" cy="349" r="5" fill="none" stroke="none"/>';
   }
 
   function currentDollStyle(){ return localStorage.getItem('stitch_doll_style') || 'cute'; }
