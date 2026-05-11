@@ -134,7 +134,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v613</span></div>
+<div class="title">Стич · Claude <span class="build">v614</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2251,8 +2251,6 @@ async function askWithImages(photos, userText) {
     '<path id="dollTorso" d="M72 222 Q 88 210 103 200 L 117 200 Q 132 210 148 222 Q 154 275 148 355 L 72 355 Q 66 275 72 222 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.20)" stroke-width="1.2"/>'+
     // Плечевые «комочки» — сплющенные накладки на стыке руки и тела, того
     // же цвета что костюм. Чуть выходят за контур торса.
-    '<ellipse cx="72" cy="225" rx="15" ry="10" fill="url(#d-cloth)" stroke="rgba(180,170,150,.18)" stroke-width=".8"/>'+
-    '<ellipse cx="148" cy="225" rx="15" ry="10" fill="url(#d-cloth)" stroke="rgba(180,170,150,.18)" stroke-width=".8"/>'+
     // Воротничок-вырез — узкая V прямо у шеи.
     '<path d="M104 202 L 110 214 L 116 202" stroke="rgba(200,190,170,.35)" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
     // Центральная застёжка-шов
@@ -2321,8 +2319,6 @@ async function askWithImages(photos, userText) {
     // Костюм/руки/ноги — те же размеры что в «милом» стиле, чтобы кукла
     // была одинаковой пропорции независимо от стиля головы.
     '<path id="dollTorso" d="M72 222 Q 88 210 103 200 L 117 200 Q 132 210 148 222 Q 154 275 148 355 L 72 355 Q 66 275 72 222 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.20)" stroke-width="1.2"/>'+
-    '<ellipse cx="72" cy="225" rx="15" ry="10" fill="url(#d-cloth)" stroke="rgba(180,170,150,.18)" stroke-width=".8"/>'+
-    '<ellipse cx="148" cy="225" rx="15" ry="10" fill="url(#d-cloth)" stroke="rgba(180,170,150,.18)" stroke-width=".8"/>'+
     '<path d="M104 202 L 110 214 L 116 202" stroke="rgba(200,190,170,.35)" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
     '<line x1="110" y1="214" x2="110" y2="355" stroke="rgba(160,150,130,.25)" stroke-width="0.8"/>'+
     '<circle cx="110" cy="238" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
