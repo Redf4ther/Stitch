@@ -135,7 +135,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v595</span></div>
+<div class="title">Стич · Claude <span class="build">v596</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2317,36 +2317,50 @@ async function askWithImages(photos, userText) {
     renderDoll();
   };
 
-  // ── Анимация радужек: пока миниапп открыт и не свёрнут — глаза время
-  // от времени смотрят в разные стороны (одинаково в обоих стилях, т.к.
-  // зрачки лежат в группах #pupil-l/#pupil-r с общим transform-origin).
+  // ── Анимация радужек: глаза смотрят в одно из преднаписанных направлений
+  // (центр, лево, право, вверх, вниз и диагонали). Оба глаза двигаются
+  // синхронно. Раз в 15с–2мин (рандомно) выбирается новая позиция.
   (function animateIris(){
-    var RX = 2.5, RY = 1.6;     // максимальное смещение радужки от центра
-    var s = [{x:0,y:0,tx:0,ty:0,t0:0,dur:600,hold:1200},
-             {x:0,y:0,tx:0,ty:0,t0:0,dur:600,hold:1200}];
-    function pickTarget(i){
-      var p = s[i];
-      p.x = p.tx; p.y = p.ty;
-      p.tx = (Math.random() - 0.5) * 2 * RX;
-      p.ty = (Math.random() - 0.5) * 2 * RY;
-      p.t0 = performance.now();
-      p.dur = 350 + Math.random() * 500;                          // длительность движения ~0.35-0.85с
-      p.hold = 15000 + Math.random() * (120000 - 15000);          // пауза между движениями 15с-2мин
+    var POS = [
+      {x:  0,   y:  0},     // центр
+      {x: -2.5, y:  0},     // лево
+      {x:  2.5, y:  0},     // право
+      {x:  0,   y: -1.5},   // вверх
+      {x:  0,   y:  1.2},   // вниз
+      {x: -2,   y: -1},     // верх-лево
+      {x:  2,   y: -1},     // верх-право
+      {x: -2,   y:  1},     // низ-лево
+      {x:  2,   y:  1}      // низ-право
+    ];
+    var cur = {x: 0, y: 0};
+    var tgt = {x: 0, y: 0};
+    var t0 = 0, dur = 0, hold = 0;
+    function pickNext(){
+      // не сидеть на одной и той же позиции дважды подряд
+      var next; do { next = POS[Math.floor(Math.random() * POS.length)]; }
+      while (Math.abs(next.x - tgt.x) < 0.1 && Math.abs(next.y - tgt.y) < 0.1);
+      cur.x = tgt.x; cur.y = tgt.y;
+      tgt.x = next.x; tgt.y = next.y;
+      t0 = performance.now();
+      dur = 350 + Math.random() * 500;                  // 0.35-0.85с движение
+      hold = 15000 + Math.random() * (120000 - 15000);  // 15с-2мин пауза
     }
-    pickTarget(0); pickTarget(1);
+    pickNext();
+    function applyTransform(dx, dy){
+      ['pupil-l','pupil-r'].forEach(function(id){
+        var el = doll.querySelector('#'+id);
+        if (el) el.setAttribute('transform', 'translate('+dx.toFixed(2)+' '+dy.toFixed(2)+')');
+      });
+    }
     function tick(){
       if (!document.hidden) {
         var now = performance.now();
-        ['pupil-l','pupil-r'].forEach(function(id, i){
-          var p = s[i];
-          var t = Math.min(1, (now - p.t0) / p.dur);
-          var ease = 1 - Math.pow(1 - t, 3);
-          var dx = p.x + (p.tx - p.x) * ease;
-          var dy = p.y + (p.ty - p.y) * ease;
-          var el = doll.querySelector('#'+id);
-          if (el) el.setAttribute('transform', 'translate('+dx.toFixed(2)+' '+dy.toFixed(2)+')');
-          if (t >= 1 && (now - p.t0) > p.dur + p.hold) pickTarget(i);
-        });
+        var t = Math.min(1, (now - t0) / dur);
+        var ease = 1 - Math.pow(1 - t, 3);
+        var dx = cur.x + (tgt.x - cur.x) * ease;
+        var dy = cur.y + (tgt.y - cur.y) * ease;
+        applyTransform(dx, dy);
+        if (t >= 1 && (now - t0) > dur + hold) pickNext();
       }
       requestAnimationFrame(tick);
     }
