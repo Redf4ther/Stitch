@@ -144,7 +144,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v625</span></div>
+<div class="title">Стич · Claude <span class="build">v626</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2639,18 +2639,6 @@ async function askWithImages(photos, userText) {
     });
   }
   function doOneLimbAction(){
-    // Если на экране много сообщений, иногда «отдыхаем» — отпускаем случайную
-    // конечность висеть свободно, либо просто покачиваемся без действий.
-    var totalVisible = bubblesForSide(true).length + bubblesForSide(false).length;
-    if (totalVisible >= 4 && Math.random() < 0.30) {
-      var attached = LIMBS.filter(function(L){ return L.bubble; });
-      if (attached.length && Math.random() < 0.5) {
-        var Lrest = attached[Math.floor(Math.random() * attached.length)];
-        unbindLimb(Lrest);
-        return true;   // конечность отпустили — это действие, можно покачаться
-      }
-      return false;    // просто пропуск шага без действий и без качания
-    }
     // Приоритет 1: привязать свободную конечность (руки раньше ног).
     var free = LIMBS.filter(function(L){ return !L.bubble; })
                     .sort(function(a, b){ return (a.isLeg?1:0) - (b.isLeg?1:0); });
@@ -2675,7 +2663,11 @@ async function askWithImages(photos, userText) {
     var shuffled = attached.slice().sort(function(){ return Math.random() - 0.5; });
     for (var ai = 0; ai < shuffled.length; ai++) {
       var L2 = shuffled[ai];
-      if (Math.random() < 0.35) {
+      // Чем больше видимых сообщений — тем чаще переезжаем на другое (а не
+      // выбираем новую точку на том же).
+      var visN = bubblesForSide(L2.sideSign > 0).length;
+      var moveChance = Math.min(0.70, 0.30 + visN * 0.10);
+      if (Math.random() < moveChance) {
         var rightSide2 = L2.sideSign > 0;
         var others = bubblesForSide(rightSide2).filter(function(b){
           if (b === L2.bubble) return false;
