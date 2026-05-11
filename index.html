@@ -45,6 +45,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
   30% { transform: translateX(-50%) rotate(0.35deg); }
   70% { transform: translateX(-50%) rotate(-0.35deg); }
 }
+#doll.sway { animation: swayDoll 1.8s ease-in-out; }
 /* Руки/ноги (path) ПОВЕРХ тела куклы (z:1, #doll z:0) — конечности
    соединяются поверх тела, без visual gap. Шарниры-кружочки скрыты. */
 #dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
@@ -140,7 +141,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v617</span></div>
+<div class="title">Стич · Claude <span class="build">v618</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2592,11 +2593,18 @@ async function askWithImages(photos, userText) {
   function unbindLimb(L){ L.bubble = null; L.relOff = null; }
 
   // Лёгкое покачивание куклы на верёвочке при перестановке конечности.
+  // Через toggle класса .sway — animationend снимает класс, чтобы можно
+  // было сразу поставить заново на следующем перемещении.
   function triggerSway(){
     if (!doll) return;
-    doll.style.animation = 'none';
+    doll.classList.remove('sway');
     void doll.offsetHeight;
-    doll.style.animation = 'swayDoll 1.8s ease-in-out';
+    doll.classList.add('sway');
+  }
+  if (doll) {
+    doll.addEventListener('animationend', function(e){
+      if (e.animationName === 'swayDoll') doll.classList.remove('sway');
+    });
   }
 
   // ── Единый таймер всех перемещений конечностей ─────────────────────
@@ -2608,13 +2616,15 @@ async function askWithImages(photos, userText) {
   var STEP_MIN = 3000, STEP_MAX = 5000;
   var limbTimer = null;
   function scheduleNextLimbStep(){
-    if (limbTimer) return;
+    if (limbTimer) clearTimeout(limbTimer);
     var d = STEP_MIN + Math.random() * (STEP_MAX - STEP_MIN);
-    limbTimer = setTimeout(function(){
+    limbTimer = setTimeout(function tick(){
       limbTimer = null;
       if (window._scrollLocked || window._kbdShown) { scheduleNextLimbStep(); return; }
       if (doOneLimbAction()) triggerSway();
-      scheduleNextLimbStep();
+      // Безусловно ставим следующий шаг — таймер не должен останавливаться.
+      var d2 = STEP_MIN + Math.random() * (STEP_MAX - STEP_MIN);
+      limbTimer = setTimeout(tick, d2);
     }, d);
   }
   function bubblesForSide(side){
