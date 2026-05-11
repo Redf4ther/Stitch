@@ -135,7 +135,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v592</span></div>
+<div class="title">Стич · Claude <span class="build">v593</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -403,22 +403,17 @@ function haptic(){
 
 
 
-// ── Отчёт об ошибках в Telegram (dev) ────────────────────────────────
-// Любая JS-ошибка и любой необработанный reject уходит в чат RedFather
-// через бота Стич, чтобы было видно что пошло не так в проде.
-var ERR_BOT = '8168865126:AAGAwtQXCjYMcAfk4NhPpXQxhc0oc7ATASk';
-var ERR_CHAT = '682471692';
-var _errSent = 0;
+// ── Локальный лог ошибок ────────────────────────────────────────────
+// Ловим все ошибки и складываем в window.__stichErrors. Видны в Errors-
+// плашке снизу и в любой dev-консоли. В сеть не шлём (нет секретов в репо).
+window.__stichErrors = [];
 function reportErr(prefix, msg) {
-  if (_errSent++ > 30) return;
-  try {
-    var v = (document.querySelector('.build')||{}).textContent || '';
-    fetch('https://api.telegram.org/bot' + ERR_BOT + '/sendMessage', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({chat_id: ERR_CHAT, text: '⚠️ Стич ' + v + '\n' + prefix + ':\n' + String(msg).slice(0, 3500)})
-    }).catch(function(){});
-  } catch(_){}
+  var v = (document.querySelector('.build')||{}).textContent || '';
+  var s = '⚠️ Стич ' + v + '\n' + prefix + ':\n' + String(msg).slice(0, 3500);
+  window.__stichErrors.push(s);
+  try { console.error(s); } catch(_){}
+  // Виден в errEl до следующего setState.
+  try { if (typeof errEl !== 'undefined' && errEl) errEl.textContent = prefix + ': ' + String(msg).slice(0, 220); } catch(_){}
 }
 window.addEventListener('error', function(e){
   reportErr('JS error @ ' + (e.filename||'?') + ':' + (e.lineno||'?'),
