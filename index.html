@@ -138,7 +138,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v600</span></div>
+<div class="title">Стич · Claude <span class="build">v601</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2484,21 +2484,27 @@ async function askWithImages(photos, userText) {
     if (dist > (L.L1 + L.L2) * 0.82) return null;
     return {x:x, y:y};
   }
-  // Точка привязки — НАД сообщением: ry слегка отрицательный (выше верхнего
-  // края bubble), rx — любая позиция по ширине. До 10 попыток с проверкой
-  // досягаемости от плеча/бедра.
+  // Точка привязки — ЛЮБАЯ точка bubble (в т.ч. чуть выше верхнего края),
+  // куда конечность достаёт. Для рук дополнительно: точка не должна быть
+  // на противоположной стороне корпуса (рука не тянется через тело).
   function pickRandomOff(bubble, L){
     var bi = bubble.querySelector('.bi') || bubble;
     var r = bi.getBoundingClientRect();
     var sh = shoulderPoint(L.shoulderId);
     var maxR = (L.L1 + L.L2) * 0.82;
-    for (var i = 0; i < 10; i++) {
-      var rx = 0.08 + Math.random() * 0.84;
-      // Сидит чуть выше верхнего края (на 0..30% высоты bubble)
-      var ry = -(0.02 + Math.random() * 0.28);
+    var bodyMidX = window.innerWidth / 2;
+    var BODY_SLACK = 30;
+    for (var i = 0; i < 15; i++) {
+      var rx = 0.05 + Math.random() * 0.90;
+      var ry = -0.10 + Math.random() * 0.95;
       var px = r.left + r.width * rx;
       var py = r.top + r.height * ry;
-      if (Math.hypot(px - sh.x, py - sh.y) <= maxR) return {rx: rx, ry: ry};
+      if (Math.hypot(px - sh.x, py - sh.y) > maxR) continue;
+      if (!L.isLeg) {
+        if (L.sideSign < 0 && px > bodyMidX + BODY_SLACK) continue;
+        if (L.sideSign > 0 && px < bodyMidX - BODY_SLACK) continue;
+      }
+      return {rx: rx, ry: ry};
     }
     return null;
   }
