@@ -135,7 +135,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v598</span></div>
+<div class="title">Стич · Claude <span class="build">v599</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2461,30 +2461,41 @@ async function askWithImages(photos, userText) {
       var micTop = mic ? mic.getBoundingClientRect().top : window.innerHeight;
       if (y < midY || y > micTop) return null;
     }
-    // Рука — на ближний к плечу край (полочка). Нога — на ДАЛЬНИЙ край,
-    // ближе к центру/телу куклы, чтобы цеплялась за самый край сообщения.
-    // Если сообщение длинное (>15 символов) — нога садится на середину.
-    var x;
-    if (!L.isLeg) {
+    // Берём точку привязки внутри bubble — позиция выбрана при attach'е
+    // (L.relOff: доли 0..1 от ширины/высоты bi-блока), благодаря чему точка
+    // едет вместе с bubble во время typewriter'а и скролла. Если relOff не
+    // выбран — рука ставится на ближний край, нога — на верхнюю кромку.
+    var x, y;
+    if (L.relOff) {
+      x = Math.round(r.left + r.width * L.relOff.rx);
+      y = Math.round(r.top + r.height * L.relOff.ry);
+    } else if (!L.isLeg) {
       x = L.sideSign < 0 ? Math.round(r.left + 24) : Math.round(r.right - 24);
+      y = Math.round(r.top - 6);
     } else {
-      var text = (bi.textContent || '').trim();
-      if (text.length > 5) {
-        // Длинное сообщение — нога садится на уровне ~5-й буквы (≈50px)
-        // от СТАБИЛЬНОГО края bubble (того, который не двигается при росте
-        // текста). assistant растёт вправо от .left, user — влево от .right.
-        // Поэтому нога не уезжает за растущим текстом во время typewriter'а.
-        var charOffset = 50;
-        x = L.sideSign < 0 ? Math.round(r.left + charOffset) : Math.round(r.right - charOffset);
-      } else {
-        x = L.sideSign < 0 ? Math.round(r.right) : Math.round(r.left);
-      }
+      x = L.sideSign < 0 ? Math.round(r.right - 12) : Math.round(r.left + 12);
       y = Math.round(r.top);
     }
     var sh = shoulderPoint(L.shoulderId);
     var dist = Math.hypot(x - sh.x, y - sh.y);
     if (dist > (L.L1 + L.L2) * 0.82) return null;
     return {x:x, y:y};
+  }
+  // Выбрать рандомную точку внутри bi-блока bubble, которая в пределах
+  // вытянутой руки/ноги. До 10 попыток. Возвращает {rx, ry} (фракции) или null.
+  function pickRandomOff(bubble, L){
+    var bi = bubble.querySelector('.bi') || bubble;
+    var r = bi.getBoundingClientRect();
+    var sh = shoulderPoint(L.shoulderId);
+    var maxR = (L.L1 + L.L2) * 0.82;
+    for (var i = 0; i < 10; i++) {
+      var rx = 0.08 + Math.random() * 0.84;
+      var ry = 0.10 + Math.random() * 0.80;
+      var px = r.left + r.width * rx;
+      var py = r.top + r.height * ry;
+      if (Math.hypot(px - sh.x, py - sh.y) <= maxR) return {rx: rx, ry: ry};
+    }
+    return null;
   }
   // Свободно висящая конечность — строго вниз от плеча (без боковой
   // развёрнутости), чтобы рисовалась прямой линией, а не дугой. Длина рук
@@ -2522,7 +2533,16 @@ async function askWithImages(photos, userText) {
   // Каждое НОВОЕ сообщение цепляется одной конечностью по очереди из своего
   // пула. Затем заполняем все свободные конечности подходящими старыми
   // сообщениями — конечности не висят зря, если есть за что хвататься.
+  function bindLimb(L, b){
+    L.bubble = b;
+    L.relOff = pickRandomOff(b, L);  // случайная точка на bubble
+  }
+  function unbindLimb(L){
+    L.bubble = null;
+    L.relOff = null;
+  }
   window.dollAttach = function(){
+    if (window._scrollLocked) return;
     var bubbles = document.querySelectorAll('#chat .bbl');
     var last = bubbles[bubbles.length - 1];
     if (last) {
@@ -2535,8 +2555,9 @@ async function askWithImages(photos, userText) {
         for (var k = 0; k < pool.length; k++) {
           var idx = (counter + k) % pool.length;
           var L = pool[idx];
-          if (bubblePoint(last, L)) {
-            L.bubble = last;
+          var off = pickRandomOff(last, L);
+          if (off) {
+            bindLimb(L, last);
             if (isUser) attachOrderR = idx + 1; else attachOrderL = idx + 1;
             break;
           }
@@ -2550,13 +2571,14 @@ async function askWithImages(photos, userText) {
   // ИЛИ стали недосягаемы (bubblePoint вернул null). После — пытаемся
   // заполнить свободные конечности видимыми сообщениями.
   function pruneInvisibleAndFill(){
+    if (window._scrollLocked) return;
     var changed = false;
     LIMBS.forEach(function(L){
       if (!L.bubble) return;
       var bi = L.bubble.querySelector('.bi') || L.bubble;
       var r = bi.getBoundingClientRect();
       if (r.bottom < 0 || r.top > window.innerHeight || !bubblePoint(L.bubble, L)) {
-        L.bubble = null;
+        unbindLimb(L);
         changed = true;
       }
     });
@@ -2567,7 +2589,7 @@ async function askWithImages(photos, userText) {
   // bubbles от свежих к старым, для каждого ищем первую свободную конечность
   // подходящей стороны+зоны и привязываем. Пока клавиатура поднята — пропуск.
   function fillFreeLimbs(){
-    if (window._kbdShown) return;
+    if (window._kbdShown || window._scrollLocked) return;
     var taken = [];
     LIMBS.forEach(function(L){ if (L.bubble) taken.push(L.bubble); });
     var free = LIMBS.filter(function(L){ return !L.bubble; });
@@ -2581,8 +2603,10 @@ async function askWithImages(photos, userText) {
         var L = free[j];
         var rightSide = L.sideSign > 0;
         if (isUser !== rightSide) continue;
-        if (!bubblePoint(b, L)) continue;
-        L.bubble = b;
+        var off = pickRandomOff(b, L);
+        if (!off) continue;
+        bindLimb(L, b);
+        L.relOff = off;
         taken.push(b);
         free.splice(j, 1);
         break;
@@ -2649,12 +2673,25 @@ async function askWithImages(photos, userText) {
   });
 
   var chatEl = document.getElementById('chat');
+  var scrollTimer = null;
   if (chatEl) {
-    chatEl.addEventListener('scroll', pruneInvisibleAndFill, {passive:true});
+    chatEl.addEventListener('scroll', function(){
+      // На скролле отцепляем все конечности (руки висят свободно) и ждём
+      // 3 секунды простоя, прежде чем снова цепляться за ближайшие bubbles.
+      if (!window._scrollLocked) {
+        window._scrollLocked = true;
+        LIMBS.forEach(unbindLimb);
+      }
+      if (scrollTimer) clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(function(){
+        window._scrollLocked = false;
+        fillFreeLimbs();
+      }, 3000);
+    }, {passive:true});
   }
   // Периодическая страховка — на случай когда чат двигают не скроллом
   // (resize keyboard, layout shift). 250ms достаточно неспешно.
-  setInterval(pruneInvisibleAndFill, 250);
+  setInterval(function(){ if (!window._scrollLocked) pruneInvisibleAndFill(); }, 250);
 
   // Когда выезжает клавиатура — отцепляем конечности от всего (висят
   // свободно). visualViewport.height падает на высоту клавиатуры. Когда
