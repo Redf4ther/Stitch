@@ -44,10 +44,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 #dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:14;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 #dollLimbs .leg{stroke:#1a1610;stroke-width:22;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
-/* Сплющенные локти/колени — тканевые «комочки» в местах сгиба. */
-#dollLimbs .joint{filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
-#dollLimbs .joint-arm{fill:#2a2620;stroke:#4a4138;stroke-width:.6}
-#dollLimbs .joint-leg{fill:#1a1610;stroke:#3a302a;stroke-width:.6}
 /* Тонкий тканевый блик вдоль рукавов/штанов. */
 #dollLimbs .arm-hl{stroke:rgba(255,255,255,.10);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;fill:none}
 #dollLimbs .leg-hl{stroke:rgba(255,255,255,.08);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;fill:none}
@@ -138,7 +134,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v601</span></div>
+<div class="title">Стич · Claude <span class="build">v602</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2390,12 +2386,7 @@ async function askWithImages(photos, userText) {
     '<path id="arm-l-hl" class="arm-hl"/>'+
     '<path id="arm-r-hl" class="arm-hl"/>'+
     '<path id="leg-l-hl" class="leg-hl"/>'+
-    '<path id="leg-r-hl" class="leg-hl"/>'+
-    // Сплющенные «комочки» в локтях/коленях — позиционируются в tick().
-    '<ellipse id="joint-arm-l" class="joint joint-arm" rx="9" ry="6"/>'+
-    '<ellipse id="joint-arm-r" class="joint joint-arm" rx="9" ry="6"/>'+
-    '<ellipse id="joint-leg-l" class="joint joint-leg" rx="14" ry="8"/>'+
-    '<ellipse id="joint-leg-r" class="joint joint-leg" rx="14" ry="8"/>';
+    '<path id="leg-r-hl" class="leg-hl"/>';
   document.body.appendChild(overlay);
 
   // 3) Кисти/стопы (ellipse) — поверх сообщений (z:5).
@@ -2429,7 +2420,6 @@ async function askWithImages(photos, userText) {
     L.pathEl = overlay.querySelector('#'+L.pathId);
     L.handEl = hands.querySelector('#'+L.handId);
     L.hlEl   = overlay.querySelector('#'+L.pathId+'-hl');
-    L.jointEl = overlay.querySelector('#joint-'+(L.isLeg?'leg':'arm')+'-'+(L.sideSign<0?'l':'r'));
   });
   // Пулы по сторонам. Рука встречается дважды в пуле (arm, arm, leg) —
   // 2/3 шансов что новое сообщение возьмёт именно руку. Нога подбирает
@@ -2651,11 +2641,9 @@ async function askWithImages(photos, userText) {
         L.cur.y = s.y + ddy / dd * maxD;
       }
       var d;
-      // Всегда считаем joint (для эллипса сустава). Висящая конечность —
-      // joint чуть ниже середины (лёгкий тканевый «комочек» на сгибе).
       var j = attached
         ? twoBoneJoint(s, L.cur, L.L1, L.L2, L.sideSign)
-        : {x: (s.x + L.cur.x) / 2 + L.sideSign * 2, y: (s.y + L.cur.y) / 2 + 6};
+        : null;
       if (attached) {
         d = 'M '+s.x+' '+s.y+' Q '+j.x+' '+j.y+' '+L.cur.x+' '+L.cur.y;
       } else {
@@ -2663,14 +2651,11 @@ async function askWithImages(photos, userText) {
       }
       L.pathEl.setAttribute('d', d);
       if (L.hlEl) {
-        // Тканевый блик — чуть смещён в сторону, к свету.
-        var hx = L.sideSign * -2;  // блик с внутренней стороны
+        var hx = L.sideSign * -2;
         L.hlEl.setAttribute('d',
-          'M '+(s.x+hx)+' '+(s.y+2)+' Q '+(j.x+hx)+' '+(j.y+2)+' '+(L.cur.x+hx)+' '+(L.cur.y+2));
-      }
-      if (L.jointEl) {
-        L.jointEl.setAttribute('cx', j.x);
-        L.jointEl.setAttribute('cy', j.y);
+          attached
+            ? 'M '+(s.x+hx)+' '+(s.y+2)+' Q '+(j.x+hx)+' '+(j.y+2)+' '+(L.cur.x+hx)+' '+(L.cur.y+2)
+            : 'M '+(s.x+hx)+' '+(s.y+2)+' L '+(L.cur.x+hx)+' '+(L.cur.y+2));
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
