@@ -134,7 +134,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v602</span></div>
+<div class="title">Стич · Claude <span class="build">v603</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2503,8 +2503,10 @@ async function askWithImages(photos, userText) {
   // подобрана так, чтобы кисть оказывалась чуть ниже пояса.
   function dangleGoal(L){
     var s = shoulderPoint(L.shoulderId);
-    // Руки чуть согнуты в локтях — кисть до пояса; ноги — стоят прямо.
-    return {x: s.x, y: s.y + (L.isLeg ? 190 : 130)};
+    // Руки/ноги отклонены чуть в стороны от плеча и не вытянуты полностью —
+    // IK даёт видимый сгиб в локте/колене.
+    var lateral = L.sideSign * (L.isLeg ? 6 : 10);
+    return {x: s.x + lateral, y: s.y + (L.isLeg ? 175 : 110)};
   }
   // 2-bone IK: считает позицию локтя/колена так, чтобы upper-сегмент длиной
   // L1 от шарнира S и lower-сегмент длиной L2 до цели T соединялись в точке
@@ -2640,22 +2642,17 @@ async function askWithImages(photos, userText) {
         L.cur.x = s.x + ddx / dd * maxD;
         L.cur.y = s.y + ddy / dd * maxD;
       }
-      var d;
-      var j = attached
-        ? twoBoneJoint(s, L.cur, L.L1, L.L2, L.sideSign)
-        : null;
-      if (attached) {
-        d = 'M '+s.x+' '+s.y+' Q '+j.x+' '+j.y+' '+L.cur.x+' '+L.cur.y;
-      } else {
-        d = 'M '+s.x+' '+s.y+' L '+L.cur.x+' '+L.cur.y;
-      }
+      // Анатомическое сгибание: два прямых отрезка от плеча к локтю и от
+      // локтя к кисти. Локоть/колено вычисляется через 2-bone IK по L1/L2.
+      // bendSign — противоположен sideSign в SVG-coords (Y вниз): чтобы
+      // локоть/колено уходило НАРУЖУ (левая конечность — влево, правая — вправо).
+      var j = twoBoneJoint(s, L.cur, L.L1, L.L2, -L.sideSign);
+      var d = 'M '+s.x+' '+s.y+' L '+j.x+' '+j.y+' L '+L.cur.x+' '+L.cur.y;
       L.pathEl.setAttribute('d', d);
       if (L.hlEl) {
         var hx = L.sideSign * -2;
         L.hlEl.setAttribute('d',
-          attached
-            ? 'M '+(s.x+hx)+' '+(s.y+2)+' Q '+(j.x+hx)+' '+(j.y+2)+' '+(L.cur.x+hx)+' '+(L.cur.y+2)
-            : 'M '+(s.x+hx)+' '+(s.y+2)+' L '+(L.cur.x+hx)+' '+(L.cur.y+2));
+          'M '+(s.x+hx)+' '+(s.y+2)+' L '+(j.x+hx)+' '+(j.y+2)+' L '+(L.cur.x+hx)+' '+(L.cur.y+2));
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
