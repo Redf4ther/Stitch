@@ -134,7 +134,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v610</span></div>
+<div class="title">Стич · Claude <span class="build">v611</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2168,11 +2168,15 @@ async function askWithImages(photos, userText) {
         '<stop offset="100%" stop-color="#0a0806"/>'+
       '</radialGradient>'+
       '<filter id="d-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.5"/></filter>'+
+    // Деревянный шарик-шарнир (плечо/бедро/локоть/колено).
+    '<radialGradient id="d-joint" cx="35%" cy="30%" r="80%">'+
+      '<stop offset="0%"  stop-color="#a07a4a"/>'+
+      '<stop offset="50%" stop-color="#6a4520"/>'+
+      '<stop offset="100%" stop-color="#2a1a08"/>'+
+    '</radialGradient>'+
     '</defs>'+
-    // Верёвочка от потолка до головы
     '<line x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
     '<circle cx="110" cy="50" r="3" fill="#5a4a30"/>'+
-    // Шея — рисуется ДО головы (за ней, перекрывается головой сверху)
     '<rect x="103" y="170" width="14" height="30" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
     // Голова в группе — наклоняется при listening.
     '<g id="dollHead">'+
@@ -2262,7 +2266,12 @@ async function askWithImages(photos, userText) {
     '<circle id="shoulder-l" cx="74" cy="222" r="5" fill="none" stroke="none"/>'+
     '<circle id="shoulder-r" cx="146" cy="222" r="5" fill="none" stroke="none"/>'+
     '<circle id="hip-l" cx="92" cy="349" r="5" fill="none" stroke="none"/>'+
-    '<circle id="hip-r" cx="128" cy="349" r="5" fill="none" stroke="none"/>';
+    '<circle id="hip-r" cx="128" cy="349" r="5" fill="none" stroke="none"/>'+
+    // Шарики-шарниры на плечах и бёдрах (декоративные, статичные).
+    '<circle cx="74" cy="222" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="146" cy="222" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="92" cy="349" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="128" cy="349" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>';
   }
 
   // Старый «классический» стиль куклы. Размер головы подогнан к новому
@@ -2323,7 +2332,11 @@ async function askWithImages(photos, userText) {
     '<circle id="shoulder-l" cx="74" cy="222" r="5" fill="none" stroke="none"/>'+
     '<circle id="shoulder-r" cx="146" cy="222" r="5" fill="none" stroke="none"/>'+
     '<circle id="hip-l" cx="92" cy="349" r="5" fill="none" stroke="none"/>'+
-    '<circle id="hip-r" cx="128" cy="349" r="5" fill="none" stroke="none"/>';
+    '<circle id="hip-r" cx="128" cy="349" r="5" fill="none" stroke="none"/>'+
+    '<circle cx="74" cy="222" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="146" cy="222" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="92" cy="349" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle cx="128" cy="349" r="5" fill="url(#d-joint)" stroke="#1a1006" stroke-width=".6"/>';
   }
 
   function currentDollStyle(){ return localStorage.getItem('stitch_doll_style') || 'cute'; }
@@ -2397,15 +2410,27 @@ async function askWithImages(photos, userText) {
   var overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   overlay.id = 'dollLimbs';
   overlay.innerHTML =
+    '<defs>'+
+      '<radialGradient id="d-joint-overlay" cx="35%" cy="30%" r="80%">'+
+        '<stop offset="0%"  stop-color="#a07a4a"/>'+
+        '<stop offset="50%" stop-color="#6a4520"/>'+
+        '<stop offset="100%" stop-color="#2a1a08"/>'+
+      '</radialGradient>'+
+    '</defs>'+
     '<path id="arm-l" class="arm"/>'+
     '<path id="arm-r" class="arm"/>'+
     '<path id="leg-l" class="leg"/>'+
     '<path id="leg-r" class="leg"/>'+
-    // Тканевые блики поверх рукавов/штанов (рисуются после толстой основы).
+    // Тканевые блики поверх рукавов/штанов.
     '<path id="arm-l-hl" class="arm-hl"/>'+
     '<path id="arm-r-hl" class="arm-hl"/>'+
     '<path id="leg-l-hl" class="leg-hl"/>'+
-    '<path id="leg-r-hl" class="leg-hl"/>';
+    '<path id="leg-r-hl" class="leg-hl"/>'+
+    // Шарики-шарниры локтей/коленей (позиция обновляется в tick).
+    '<circle id="joint-arm-l" r="4.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-arm-r" r="4.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-leg-l" r="5.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
+    '<circle id="joint-leg-r" r="5.5" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>';
   document.body.appendChild(overlay);
 
   // 3) Кисти/стопы (ellipse) — поверх сообщений (z:5).
@@ -2441,6 +2466,7 @@ async function askWithImages(photos, userText) {
     L.pathEl = overlay.querySelector('#'+L.pathId);
     L.handEl = hands.querySelector('#'+L.handId);
     L.hlEl   = overlay.querySelector('#'+L.pathId+'-hl');
+    L.jointEl = overlay.querySelector('#joint-'+(L.isLeg?'leg':'arm')+'-'+(L.sideSign<0?'l':'r'));
   });
   // Пулы по сторонам. Рука встречается дважды в пуле (arm, arm, leg) —
   // 2/3 шансов что новое сообщение возьмёт именно руку. Нога подбирает
@@ -2715,7 +2741,7 @@ async function askWithImages(photos, userText) {
       // Анатомическое сгибание: два прямых отрезка от плеча к локтю и от
       // локтя к кисти. Локоть/колено вычисляется через 2-bone IK по L1/L2.
       // bendSign — противоположен sideSign в SVG-coords (Y вниз): чтобы
-      // локоть/колено уходило НАРУЖУ (левая конечность — влево, правая — вправо).
+      // локоть/колено уходило НАРУЖУ.
       var j = twoBoneJoint(s, L.cur, L.L1, L.L2, -L.sideSign);
       var d = 'M '+s.x+' '+s.y+' L '+j.x+' '+j.y+' L '+L.cur.x+' '+L.cur.y;
       L.pathEl.setAttribute('d', d);
@@ -2723,6 +2749,10 @@ async function askWithImages(photos, userText) {
         var hx = L.sideSign * -2;
         L.hlEl.setAttribute('d',
           'M '+(s.x+hx)+' '+(s.y+2)+' L '+(j.x+hx)+' '+(j.y+2)+' L '+(L.cur.x+hx)+' '+(L.cur.y+2));
+      }
+      if (L.jointEl) {
+        L.jointEl.setAttribute('cx', j.x);
+        L.jointEl.setAttribute('cy', j.y);
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
