@@ -134,7 +134,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v608</span></div>
+<div class="title">Стич · Claude <span class="build">v609</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2615,16 +2615,53 @@ async function askWithImages(photos, userText) {
   // Заполняем все свободные конечности подходящими сообщениями. Идём по
   // bubbles от свежих к старым, для каждого ищем первую свободную конечность
   // подходящей стороны+зоны и привязываем. Пока клавиатура поднята — пропуск.
+  // Очередь поочерёдной привязки конечностей: первая срабатывает сразу,
+  // каждая следующая — через STEP_MS после предыдущей. Приоритет: руки до ног.
+  var attachQueue = [];
+  var attachTimer = null;
+  var ATTACH_STEP_MS = 3000;
+  function processAttachQueue(){
+    attachTimer = null;
+    if (window._scrollLocked || window._kbdShown) {
+      attachQueue.length = 0;
+      return;
+    }
+    while (attachQueue.length) {
+      var item = attachQueue.shift();
+      var L = item.L, b = item.b;
+      if (L.bubble) continue;
+      if (!document.body.contains(b)) continue;
+      var off = pickRandomOff(b, L);
+      if (!off) continue;
+      bindLimb(L, b);
+      L.relOff = off;
+      break;
+    }
+    if (attachQueue.length) attachTimer = setTimeout(processAttachQueue, ATTACH_STEP_MS);
+  }
+  function clearAttachQueue(){
+    attachQueue.length = 0;
+    if (attachTimer) { clearTimeout(attachTimer); attachTimer = null; }
+  }
+
   function fillFreeLimbs(){
     if (window._kbdShown || window._scrollLocked) return;
     var taken = [];
     LIMBS.forEach(function(L){ if (L.bubble) taken.push(L.bubble); });
-    var free = LIMBS.filter(function(L){ return !L.bubble; });
+    // Сначала руки, потом ноги; уже в очереди — пропускаем.
+    var free = LIMBS.filter(function(L){ return !L.bubble; })
+                    .sort(function(a, b){ return (a.isLeg?1:0) - (b.isLeg?1:0); });
+    free = free.filter(function(L){
+      return !attachQueue.some(function(q){ return q.L === L; });
+    });
     if (!free.length) return;
+
     var bubbles = Array.prototype.slice.call(document.querySelectorAll('#chat .bbl')).reverse();
+    var queuedNow = [];
     for (var i = 0; i < bubbles.length && free.length; i++) {
       var b = bubbles[i];
       if (taken.indexOf(b) !== -1) continue;
+      if (attachQueue.some(function(q){ return q.b === b; })) continue;
       var isUser = b.classList && b.classList.contains('u');
       for (var j = 0; j < free.length; j++) {
         var L = free[j];
@@ -2632,13 +2669,14 @@ async function askWithImages(photos, userText) {
         if (isUser !== rightSide) continue;
         var off = pickRandomOff(b, L);
         if (!off) continue;
-        bindLimb(L, b);
-        L.relOff = off;
+        queuedNow.push({L: L, b: b});
         taken.push(b);
         free.splice(j, 1);
         break;
       }
     }
+    queuedNow.forEach(function(item){ attachQueue.push(item); });
+    if (attachQueue.length && !attachTimer) processAttachQueue();
   }
 
   // Low-pass smoothing — плавность. 0.08 даёт неспешное перецепление —
@@ -2698,6 +2736,7 @@ async function askWithImages(photos, userText) {
       if (!window._scrollLocked) {
         window._scrollLocked = true;
         LIMBS.forEach(unbindLimb);
+        clearAttachQueue();
       }
       if (scrollTimer) clearTimeout(scrollTimer);
       scrollTimer = setTimeout(function(){
