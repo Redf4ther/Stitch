@@ -144,7 +144,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v630</span></div>
+<div class="title">Стич · Claude <span class="build">v631</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2563,11 +2563,11 @@ async function askWithImages(photos, userText) {
     var s = shoulderPoint(L.shoulderId);
     var totalLen = L.L1 + L.L2;
     if (L.isLeg) {
-      // Ноги — строго прямые вертикально вниз на полную длину.
       return {x: s.x, y: s.y + totalLen};
     }
-    // Руки — почти прямые с лёгким боковым отводом (виден небольшой сгиб).
-    return {x: s.x + L.sideSign * 2, y: s.y + totalLen * 0.97};
+    // Руки — почти полностью прямые, лёгкий боковой отвод чтобы IK не
+    // получал degenerate-случай (1px вместо 2px).
+    return {x: s.x + L.sideSign * 1, y: s.y + totalLen * 0.995};
   }
   // 2-bone IK: считает позицию локтя/колена так, чтобы upper-сегмент длиной
   // L1 от шарнира S и lower-сегмент длиной L2 до цели T соединялись в точке
