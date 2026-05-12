@@ -198,7 +198,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v665</span></div>
+<div class="title">Стич · Claude <span class="build">v666</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2772,6 +2772,22 @@ async function askWithImages(photos, userText) {
     '<ellipse id="foot-r" rx="18" ry="11" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.4" class="foot"/>';
   document.body.appendChild(hands);
 
+  // Дополнительный слой ПОЗАДИ #doll (z:-1) — туда переезжает hand-r во время
+  // listen-pose, чтобы голова/ухо рисовалось ПОВЕРХ кисти. Создаём один
+  // элипс с тем же стилем — отдельная копия hand-r-back.
+  var handsBehind = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  handsBehind.id = 'dollHandsBehind';
+  handsBehind.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1';
+  handsBehind.innerHTML =
+    '<defs><radialGradient id="dl-skin-back" cx="40%" cy="30%" r="75%">'+
+      '<stop offset="0%"  stop-color="#b88858"/>'+
+      '<stop offset="40%" stop-color="#8a5c30"/>'+
+      '<stop offset="75%" stop-color="#5c3818"/>'+
+      '<stop offset="100%" stop-color="#2a1408"/>'+
+    '</radialGradient></defs>'+
+    '<ellipse id="hand-r-back" rx="14" ry="11" fill="url(#dl-skin-back)" stroke="#2a1808" stroke-width="1.4" style="display:none"/>';
+  document.body.appendChild(handsBehind);
+
   // L1/L2 — длины верхнего/нижнего сегмента в screen-px.
   var LIMBS = [
     // Руки укоротили (досягают до пояса), ноги — короче и слегка сжаты в коленях.
@@ -3213,11 +3229,12 @@ async function askWithImages(photos, userText) {
       // локтя к кисти. Локоть/колено вычисляется через 2-bone IK по L1/L2.
       // bendSign — противоположен sideSign в SVG-coords (Y вниз): чтобы
       // локоть/колено уходило НАРУЖУ.
-      // Когда поза «рука к уху» (listen) — инвертируем bendSign для этой
-      // руки чтобы локоть всё равно ушёл НАРУЖУ от тела (рука согнута локтем
-      // в сторону, как при разговоре по телефону), а не внутрь к лицу.
+      // Когда рука поднята выше плеча (любая ситуация, не только listen-pose)
+      // — инвертируем bendSign, иначе локоть-перекидывается через S-T линию
+      // в момент пересечения и выглядит как телепорт. Так локоть остаётся
+      // НАРУЖУ непрерывно.
       var bend = -L.sideSign;
-      if (posed && !L.isLeg) bend = L.sideSign;
+      if (!L.isLeg && L.cur.y < s.y) bend = L.sideSign;
       var j = twoBoneJoint(s, L.cur, L.L1, L.L2, bend);
       var d = 'M '+s.x+' '+s.y+' L '+j.x+' '+j.y+' L '+L.cur.x+' '+L.cur.y;
       L.pathEl.setAttribute('d', d);
@@ -3231,6 +3248,22 @@ async function askWithImages(photos, userText) {
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
+      // Listen-pose: правая рука «за ухом». Front-hand прячем, показываем
+      // hand-r-back в слое z:-1 — голова/ухо рисуются поверх.
+      if (!L.isLeg && L.sideSign > 0) {
+        var backEl = document.getElementById('hand-r-back');
+        if (backEl) {
+          if (posed) {
+            L.handEl.style.display = 'none';
+            backEl.style.display = '';
+            backEl.setAttribute('cx', L.cur.x);
+            backEl.setAttribute('cy', L.cur.y);
+          } else {
+            L.handEl.style.display = '';
+            backEl.style.display = 'none';
+          }
+        }
+      }
       // Стираем краску: либо когда конечность ПРИВЯЗАНА к bubble (обычная
       // анимация по сообщениям), либо когда юзер сам тащит её пальцем — тогда
       // стираем любое сообщение под кистью/стопой (drag-режим).
