@@ -197,7 +197,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v649</span></div>
+<div class="title">Стич · Claude <span class="build">v650</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -669,11 +669,20 @@ window.stPaint = (function(){
       if (canvas) canvas.remove();
       bubble.style.removeProperty('--msg-tint');
       bubble.style.removeProperty('--asst-tint');
+      bubble.style.removeProperty('--msg-blur');
+      bubble.style.removeProperty('--asst-blur');
       return;
     }
-    // Стекло под краской — обнуляем тон через per-bubble override.
-    if (bubble.classList.contains('u')) bubble.style.setProperty('--msg-tint', 'transparent');
-    else bubble.style.setProperty('--asst-tint', 'transparent');
+    // Стекло под краской — обнуляем тон И размытие через per-bubble override.
+    // Без blur выходит «глянцевое» стекло (gradient-highlight без mate-эффекта)
+    // — то что пользователь хотел видеть в стёртых участках.
+    if (bubble.classList.contains('u')) {
+      bubble.style.setProperty('--msg-tint', 'transparent');
+      bubble.style.setProperty('--msg-blur', 'none');
+    } else {
+      bubble.style.setProperty('--asst-tint', 'transparent');
+      bubble.style.setProperty('--asst-blur', 'none');
+    }
     var r = bi.getBoundingClientRect();
     if (r.width < 1 || r.height < 1) {
       // .bi ещё не разлэйаутилось — попробуем чуть позже
