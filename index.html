@@ -31,7 +31,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
    safe-area-bottom = ~34px и общий нижний отступ становится 52px. Компенсируем:
    педаль safe-area минус 16px (но не меньше 14px). На iPhone X+ это даёт ~18px,
    как в Telegram; на устройствах без home-indicator — 14px. */
-body.pwa-standalone .bottom{padding-bottom:max(14px, calc(env(safe-area-inset-bottom, 0px) - 16px))}
+body.pwa-standalone .bottom{padding-bottom:max(2px, calc(env(safe-area-inset-bottom, 0px) - 30px))}
 .pwa-chrome{position:fixed;top:0;left:0;right:0;height:calc(44px + env(safe-area-inset-top, 0px));padding-top:env(safe-area-inset-top, 0px);background:transparent;display:none;align-items:center;justify-content:space-between;padding-left:8px;padding-right:8px;z-index:10;pointer-events:none}
 .pwa-chrome button{pointer-events:auto}
 body.pwa-standalone .pwa-chrome{display:flex}
@@ -186,7 +186,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v646</span></div>
+<div class="title">Стич · Claude <span class="build">v647</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -245,7 +245,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 </div>
 
 <div id="settingsPanel" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top, 0px) + 14px) 13px calc(env(safe-area-inset-bottom, 0px) + 14px)">
-  <div id="settingsBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(12px) saturate(140%);-webkit-backdrop-filter:blur(12px) saturate(140%);-webkit-mask-image:radial-gradient(ellipse 220px 260px at 50% 50%, transparent 0%, transparent 60%, #000 100%);mask-image:radial-gradient(ellipse 220px 260px at 50% 50%, transparent 0%, transparent 60%, #000 100%);transition:opacity .25s ease,background .25s ease"></div>
+  <div id="settingsBackdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(12px) saturate(140%);-webkit-backdrop-filter:blur(12px) saturate(140%);-webkit-mask-image:radial-gradient(ellipse 220px 260px at 50% 50%, transparent 0%, transparent 60%, #000 100%);mask-image:radial-gradient(ellipse 220px 260px at 50% 50%, transparent 0%, transparent 60%, #000 100%);transition:opacity .25s ease,background .25s ease"></div>
   <div id="settingsCard" style="position:relative;background:rgba(60,64,72,.85);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:18px;width:100%;max-width:380px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#fff;box-shadow:0 14px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18);transition:background .25s ease,border-color .25s ease,box-shadow .25s ease">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff;opacity:.85">Настройки</div>
