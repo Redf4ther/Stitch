@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v691</span></div>
+<div class="title">Стич · Claude <span class="build">v692</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2099,6 +2099,18 @@ micBtn.addEventListener('pointerdown', function(e) {
   if (micBtn.setPointerCapture) { try { micBtn.setPointerCapture(e.pointerId); } catch(_){} }
   if (state === 'thinking' || state === 'talking') cancelThinking();
   getAudioCtx();
+  // Прайм sharedAudio из user-gesture контекста — позже src сменим на TTS
+  // и play() уже не упрётся в iOS «user agent denied». Грузим короткий
+  // silent-wav один раз — потом тот же элемент проигрывает любой src.
+  try {
+    var sa = getSharedAudio();
+    if (!sa._primed) {
+      sa._primed = true;
+      sa.src = getSilentWavUrl() || sa.src;
+      var p = sa.play();
+      if (p && p.catch) p.catch(function(){ sa._primed = false; });
+    }
+  } catch(_) {}
   startListening();
 });
 // Centralised release path: pointerup, pointercancel, lostpointercapture,
