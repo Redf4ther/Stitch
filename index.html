@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v695</span></div>
+<div class="title">Стич · Claude <span class="build">v696</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3369,6 +3369,17 @@ async function askWithImages(photos, userText) {
       var goal = bp || (L.frozen ? L.frozen : dangleGoal(L));
       if (!L.cur) L.cur = {x:goal.x, y:goal.y};
       if (!L.trans) L.trans = {sx:L.cur.x, sy:L.cur.y, gx:goal.x, gy:goal.y, t0:now, dur:1};
+      // Защита от bent-limb на первых рендерах / layout-shift: если конечность
+      // в свободном висении (нет bubble/drag/posed/frozen) и кисть оказалась
+      // НЕЕСТЕСТВЕННО близко к плечу (<70% L1+L2) — это значит что shoulder
+      // только что переехал и L.cur застрял в старой позиции. Snap к dangle.
+      if (!L.bubble && !L.dragGoal && !posed && !L.frozen) {
+        var distSh = Math.hypot(L.cur.x - preS.x, L.cur.y - preS.y);
+        if (distSh < (L.L1 + L.L2) * 0.7) {
+          L.cur.x = goal.x; L.cur.y = goal.y;
+          L.trans.sx = goal.x; L.trans.sy = goal.y; L.trans.gx = goal.x; L.trans.gy = goal.y;
+        }
+      }
       if (dragged) {
         // Прямое управление пальцем — без сглаживающего перехода.
         L.cur.x = goal.x; L.cur.y = goal.y;
