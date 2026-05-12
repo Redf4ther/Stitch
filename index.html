@@ -153,7 +153,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v638</span></div>
+<div class="title">Стич · Claude <span class="build">v639</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1183,6 +1183,8 @@ function stopMouth() { if (raf) { cancelAnimationFrame(raf); raf=null; } mC=0; d
 function setState(s) {
   state = s;
   if (s !== 'listening') micActive = false;
+  // Поза «рука к уху» включается строго пока активна запись.
+  window.dollListenPose = (s === 'listening');
   dot.className = 'dot'+(s==='thinking'?' y':s==='talking'?' g':s==='listening'?(micActive?' r':' b'):' ok');
   stxt.textContent = {idle:'Готов',listening:'Слушаю...',thinking:'Думаю...',talking:'Говорит...'}[s];
   head.className = 'head'+(s==='talking'?' talk':s==='listening'?' listen':'');
@@ -2283,8 +2285,8 @@ async function askWithImages(photos, userText) {
     // Голова в группе — наклоняется при listening.
     '<g id="dollHead">'+
     // Уши — небольшие овалы по бокам, с тёмным внутренним углублением.
-    '<ellipse cx="54"  cy="124" rx="6.5" ry="10" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
-    '<ellipse cx="166" cy="124" rx="6.5" ry="10" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
+    '<ellipse id="ear-l" cx="54"  cy="124" rx="6.5" ry="10" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
+    '<ellipse id="ear-r" cx="166" cy="124" rx="6.5" ry="10" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
     '<path d="M54 119 Q56 124 54 130" stroke="#7a4a26" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
     '<path d="M166 119 Q164 124 166 130" stroke="#7a4a26" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
     // Голова — почти круглая, чуть вытянута вверх
@@ -2831,7 +2833,17 @@ async function askWithImages(photos, userText) {
       // конечности «упадут» из (0,0) в правильную позицию при первом рендере.
       var preS = shoulderPoint(L.shoulderId);
       if (!preS.x && !preS.y) return;
-      var bp = L.bubble ? bubblePoint(L.bubble, L) : null;
+      // Поза «рука к уху» при записи голоса: левая рука (sideSign<0, не нога)
+      // принудительно идёт на ear-l, отвязавшись от любого bubble.
+      var posed = null;
+      if (window.dollListenPose && !L.isLeg && L.sideSign < 0) {
+        var ear = shoulderPoint('ear-l');
+        if (ear.x || ear.y) {
+          posed = ear;
+          L.bubble = null;
+        }
+      }
+      var bp = posed || (L.bubble ? bubblePoint(L.bubble, L) : null);
       var attached = !!bp;
       var goal = bp || dangleGoal(L);
       if (!L.cur) L.cur = {x:goal.x, y:goal.y};
