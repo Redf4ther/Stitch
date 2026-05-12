@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v684</span></div>
+<div class="title">Стич · Claude <span class="build">v685</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1656,10 +1656,17 @@ async function askClaude(msg) {
       nudgeOutputToSpeaker();
       var blob2 = new Blob([audioBlob], {type:'audio/mpeg'});
       var url = URL.createObjectURL(blob2);
-      var audio = new Audio(url);
+      var audio = getSharedAudio();
+      if (currentAudio && currentAudio !== audio) {
+        try { currentAudio.pause(); } catch(_){}
+      }
       currentAudio = audio;
-      audio.onended = function(){ URL.revokeObjectURL(url); audio.src=''; audio.load(); if(currentAudio===audio) currentAudio=null; };
-      audio.onerror = function(){ URL.revokeObjectURL(url); if(currentAudio===audio) currentAudio=null; };
+      // Освобождаем прежний blob-URL если был.
+      if (audio._lastUrl) try { URL.revokeObjectURL(audio._lastUrl); } catch(_){}
+      audio._lastUrl = url;
+      audio.src = url;
+      audio.onended = function(){ if(currentAudio===audio) currentAudio=null; };
+      audio.onerror = function(){ if(currentAudio===audio) currentAudio=null; };
       audio.play().catch(function(err){ errEl.textContent = 'Звук: '+(err&&err.message||err); });
     }
 
@@ -2045,6 +2052,18 @@ function stopListening() {
 // the typing loop, return to idle.
 var currentAbort = null;
 var currentAudio = null;
+// Один переиспользуемый Audio-элемент. iOS PWA standalone имеет ограничение:
+// каждый new Audio после первого user-gesture может не воспроизвестись (play
+// requires user activation, async-call контекст «не свежий»). Создаём один,
+// меняем src, играем — гарантированно работает после первой инициализации.
+var sharedAudio = null;
+function getSharedAudio() {
+  if (sharedAudio) return sharedAudio;
+  sharedAudio = new Audio();
+  sharedAudio.setAttribute('playsinline', '');
+  sharedAudio.preload = 'auto';
+  return sharedAudio;
+}
 var typingCancel = false;
 function cancelThinking() {
   if (currentAbort) { try { currentAbort.abort(); } catch(_){} currentAbort = null; }
@@ -2505,9 +2524,15 @@ async function askWithImages(photos, userText) {
       nudgeOutputToSpeaker();
       var blob2 = new Blob([audioBlob],{type:'audio/mpeg'});
       var url = URL.createObjectURL(blob2);
-      var audio = new Audio(url);
+      var audio = getSharedAudio();
+      if (currentAudio && currentAudio !== audio) {
+        try { currentAudio.pause(); } catch(_){}
+      }
       currentAudio = audio;
-      audio.onended = function(){ URL.revokeObjectURL(url); audio.src=''; audio.load(); if(currentAudio===audio) currentAudio=null; };
+      if (audio._lastUrl) try { URL.revokeObjectURL(audio._lastUrl); } catch(_){}
+      audio._lastUrl = url;
+      audio.src = url;
+      audio.onended = function(){ if(currentAudio===audio) currentAudio=null; };
       audio.onerror = function(){ if(currentAudio===audio) currentAudio=null; };
       audio.play().catch(function(){});
     }
@@ -3365,12 +3390,14 @@ async function askWithImages(photos, userText) {
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
-      // Телефон в правой руке при listen-pose: чуть-чуть наклонён к уху,
-      // прикреплён к кисти. На остальных конечностях не показываем.
+      // Телефон в правой руке: видим пока кисть в верхней зоне (не висит).
+      // При отпускании мика рука плавно идёт вниз, телефон следует за ней,
+      // и исчезает когда кисть опустилась ниже плеча (y >= shoulder.y + 20).
       if (!L.isLeg && L.sideSign > 0) {
         var phone = document.getElementById('phone-r');
         if (phone) {
-          if (posed) {
+          var phoneVisible = posed || (L.cur.y < s.y - 10);
+          if (phoneVisible) {
             phone.style.display = '';
             phone.setAttribute('transform',
               'translate(' + L.cur.x.toFixed(1) + ' ' + L.cur.y.toFixed(1) + ') rotate(8)');
