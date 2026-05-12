@@ -59,7 +59,7 @@ body.pwa-standalone .below{padding-bottom:140px}
 body.pwa-standalone.kb-open #doll,
 body.pwa-standalone.kb-open #dollLimbs,
 body.pwa-standalone.kb-open #dollHands,
-body.pwa-standalone.kb-open #dollHandsBehind{opacity:0;transition:opacity .15s}
+body.pwa-standalone.kb-open #dollHandsBehind{opacity:0;transition:opacity .12s ease-out;pointer-events:none}
 body.pwa-standalone .mic-hint{display:none}
 body.pwa-standalone .status{display:none}
 .pwa-chrome{position:fixed;top:0;left:0;right:0;height:calc(44px + env(safe-area-inset-top, 0px));padding-top:env(safe-area-inset-top, 0px);background:transparent;display:none;align-items:center;justify-content:space-between;padding-left:8px;padding-right:8px;z-index:10;pointer-events:none}
@@ -234,7 +234,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v718</span></div>
+<div class="title">Стич · Claude <span class="build">v719</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3663,22 +3663,30 @@ async function askWithImages(photos, userText) {
   // скрытие клавиатуры — замораживает конечности в их текущей позиции, чтобы
   // они не пытались следовать за съезжающими bubbles. Через 3с затишья —
   // обычная анимация по очереди.
-  // При появлении клавиатуры — сбрасываем привязки конечностей к bubbles
-  // (просто L.bubble=null, без freeze) → они висят свободно от плеч и
-  // следуют за body, когда iOS поднимает doll. Никакой freeze-эффект.
-  // После закрытия клавиатуры — scheduleNextLimbStep сам цепляет их обратно.
+  // iOS standalone PWA scroll'ит весь page при focus на input — position:fixed
+   // элементы (включая doll) уносит за верх экрана. Не дать iOS этого сделать
+  // нельзя на уровне CSS/JS. Прячем куклу ПРОАКТИВНО на input.focus (до того
+  // как клавиатура успеет появиться), показываем обратно на blur.
+  var inpForKb = document.getElementById('inp');
+  if (inpForKb) {
+    inpForKb.addEventListener('focus', function(){
+      document.body.classList.add('kb-open');
+      LIMBS.forEach(function(L){ L.bubble = null; L.frozen = null; L.frozenShoulder = null; });
+      clearAttachQueue();
+    });
+    inpForKb.addEventListener('blur', function(){
+      document.body.classList.remove('kb-open');
+      document.documentElement.style.setProperty('--kb-h', '0px');
+      fillFreeLimbs();
+    });
+  }
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', function(){
       var kb = Math.max(0, window.innerHeight - window.visualViewport.height);
       var open = kb > 100;
       document.documentElement.style.setProperty('--kb-h', (open ? kb : 0) + 'px');
-      document.body.classList.toggle('kb-open', open);
-      if (open) {
-        LIMBS.forEach(function(L){ L.bubble = null; L.frozen = null; L.frozenShoulder = null; });
-        clearAttachQueue();
-      } else {
-        fillFreeLimbs();
-      }
+      // kb-open уже мог быть выставлен ранее focus'ом, но синхронизируем.
+      if (open) document.body.classList.add('kb-open');
     });
   }
   if (chatEl && 'MutationObserver' in window) {
