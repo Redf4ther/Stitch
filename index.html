@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v699</span></div>
+<div class="title">Стич · Claude <span class="build">v700</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -880,9 +880,9 @@ var HIST_LIMIT = 60; // keep last ~30 turns
 var VOICES = ['jane','alena','omazh','oksana','dasha','marina','ermil','zahar','filipp','madi','lera','masha'];
 var apiKey = localStorage.getItem(KEY_SK) || '';
 var currentVoice = localStorage.getItem(KEY_VOICE);
-// Миграция: если был сохранён OpenAI-голос — заменим на дефолт jane.
+// Миграция: если был сохранён OpenAI-голос — заменим на дефолт zahar.
 if (!currentVoice || VOICES.indexOf(currentVoice) === -1) {
-  currentVoice = 'jane';
+  currentVoice = 'zahar';
   try { localStorage.setItem(KEY_VOICE, currentVoice); } catch(_) {}
 }
 function cycleVoice() {
