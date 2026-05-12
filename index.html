@@ -137,6 +137,14 @@ body.pwa-standalone .pwa-chrome{display:flex}
 .chat{flex:1;min-height:0;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px;touch-action:pan-y;-webkit-touch-callout:none}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
+/* Слой «краски» поверх стеклянной подложки .bi. Canvas с z-index:-1 рисуется
+   ПОЗАДИ текста, но ПЕРЕД .bi's background (правило стека CSS-Z2.1).
+   isolation:isolate делает .bi контекстом, чтобы negative-z не утёк за пределы.
+   Когда canvas активен — на .bbl выставляется per-bubble override --msg-tint:
+   transparent, чтобы .bi через CSS-фон оставалось «стеклом», и весь цвет шёл
+   только от canvas; стирание canvas → возвращается стекло. */
+.bi{position:relative;isolation:isolate}
+.bi > canvas.paint{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:inherit;pointer-events:none;z-index:-1}
 .bi{max-width:84%;border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:15px;line-height:1.5;background:linear-gradient(135deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.04) 55%,rgba(0,0,0,.06) 100%),var(--asst-tint, rgba(28,28,30,.35));backdrop-filter:var(--asst-blur, blur(14px) saturate(160%));-webkit-backdrop-filter:var(--asst-blur, blur(14px) saturate(160%));border:1px solid rgba(255,255,255,.12);color:#e6e8eb;box-shadow:0 4px 14px rgba(0,0,0,.32),inset .5px .5px 0 rgba(255,255,255,.32);transition:background .35s ease}
 .bbl.u .bi{background:linear-gradient(135deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.04) 55%,rgba(0,0,0,.06) 100%),var(--msg-tint, rgba(44,44,46,.35));backdrop-filter:var(--msg-blur, blur(14px) saturate(160%));-webkit-backdrop-filter:var(--msg-blur, blur(14px) saturate(160%));border:1px solid rgba(255,255,255,.12);color:#ffffff;border-radius:16px 16px 4px 16px;box-shadow:0 4px 14px rgba(0,0,0,.32),inset .5px .5px 0 rgba(255,255,255,.32);transition:background .35s ease}
 .cur::after{content:‘▋’;color:#7c5cff;animation:cur .4s steps(1) infinite}
@@ -186,7 +194,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v647</span></div>
+<div class="title">Стич · Claude <span class="build">v648</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -642,6 +650,95 @@ window.stApi = (function(){
   return {chat: chat, tts: tts, transcribe: transcribe};
 })();
 
+// ─── Стирание краски с сообщений ────────────────────────────────────
+// Когда тон сообщений — сплошной цвет (не transparent / не glossy),
+// поверх .bi накладывается canvas, залитый этим цветом. Руки и ноги
+// куклы при движении «стирают» краску (destination-out) — открывая
+// прозрачное стекло. Canvas сидит за текстом (z:-1), но перед фоном.
+window.stPaint = (function(){
+  var KEY_USER = 'stitch_msg_tint';
+  var KEY_ASST = 'stitch_asst_tint';
+  function tintFor(bubble){
+    var isUser = bubble.classList.contains('u');
+    var c;
+    try { c = localStorage.getItem(isUser ? KEY_USER : KEY_ASST); } catch(_) { c = null; }
+    if (!c) c = 'transparent';
+    if (c === 'transparent' || c === 'glossy') return null;
+    return c;
+  }
+  function ensure(bubble){
+    if (!bubble || !bubble.classList || !bubble.classList.contains('bbl')) return;
+    var bi = bubble.querySelector('.bi');
+    if (!bi) return;
+    var color = tintFor(bubble);
+    var canvas = bi.querySelector('canvas.paint');
+    if (!color) {
+      if (canvas) canvas.remove();
+      bubble.style.removeProperty('--msg-tint');
+      bubble.style.removeProperty('--asst-tint');
+      return;
+    }
+    // Стекло под краской — обнуляем тон через per-bubble override.
+    if (bubble.classList.contains('u')) bubble.style.setProperty('--msg-tint', 'transparent');
+    else bubble.style.setProperty('--asst-tint', 'transparent');
+    var r = bi.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) {
+      // .bi ещё не разлэйаутилось — попробуем чуть позже
+      requestAnimationFrame(function(){ ensure(bubble); });
+      return;
+    }
+    var dpr = Math.max(1, window.devicePixelRatio || 1);
+    var w = Math.round(r.width), h = Math.round(r.height);
+    if (!canvas) {
+      canvas = document.createElement('canvas');
+      canvas.className = 'paint';
+      bi.appendChild(canvas);
+    }
+    var needsRepaint = (canvas._w !== w || canvas._h !== h || canvas._color !== color);
+    if (needsRepaint) {
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      var ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, w, h);
+      canvas._w = w; canvas._h = h; canvas._color = color;
+    }
+  }
+  // Координаты в экранных пикселях. Стираем мягким destination-out кружком.
+  function erase(bubble, sx, sy, radius){
+    if (!bubble) return;
+    var bi = bubble.querySelector('.bi');
+    if (!bi) return;
+    var canvas = bi.querySelector('canvas.paint');
+    if (!canvas) return;
+    var r = bi.getBoundingClientRect();
+    var x = sx - r.left, y = sy - r.top;
+    var pad = radius + 4;
+    if (x < -pad || y < -pad || x > r.width + pad || y > r.height + pad) return;
+    var ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    var grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    grad.addColorStop(0, 'rgba(0,0,0,0.85)');
+    grad.addColorStop(0.55, 'rgba(0,0,0,0.45)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function refreshAll(){
+    document.querySelectorAll('#chat .bbl').forEach(ensure);
+  }
+  // Цепляемся на window resize/orientationchange — canvas мог оказаться не
+  // того размера. Пересоздаём краску, потери стираний — приемлемо.
+  window.addEventListener('orientationchange', refreshAll);
+  return {ensure: ensure, erase: erase, refreshAll: refreshAll};
+})();
+
 // Single short haptic pulse — used on every button press and on chat-tap
 // hold-ring. Prefers Telegram's native impact (matches system feel) and
 // falls back to navigator.vibrate for non-Telegram browsers.
@@ -975,6 +1072,7 @@ function showVoicePanel(name, steps, onDone) {
       root.setProperty('--msg-tint', c);
       root.setProperty('--msg-blur', 'blur(14px) saturate(160%)');
     }
+    if (window.stPaint) window.stPaint.refreshAll();
   }
   var savedMsg = localStorage.getItem(MSG_KEY) || 'transparent';
   applyMsgTint(savedMsg);
@@ -1021,6 +1119,7 @@ function showVoicePanel(name, steps, onDone) {
       root.setProperty('--asst-tint', c);
       root.setProperty('--asst-blur', 'blur(14px) saturate(160%)');
     }
+    if (window.stPaint) window.stPaint.refreshAll();
   }
   var savedAsst = localStorage.getItem(ASST_KEY) || 'transparent';
   applyAsstTint(savedAsst);
@@ -1306,6 +1405,9 @@ function addMsg(role, text) {
   var b = document.createElement('div'); b.className = 'bi'; b.textContent = text;
   w.appendChild(b); chat.appendChild(w);
   if (follow) chat.scrollTop = chat.scrollHeight;
+  // Накатываем краску если в настройках стоит сплошной цвет (асинхронно —
+  // .bi ещё может не быть разлэйаучено, ensure сам подождёт через rAF).
+  if (window.stPaint) window.stPaint.ensure(w);
   return b;
 }
 
@@ -3007,6 +3109,17 @@ async function askWithImages(photos, userText) {
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
+      // Стираем краску с сообщений, по которым проходит кисть/стопа.
+      // Только bubble нужной стороны (левые конечности — assistant, правые — user).
+      if (window.stPaint) {
+        var wantUser = L.sideSign > 0;
+        var bbls = document.querySelectorAll('#chat .bbl');
+        for (var bi2 = 0; bi2 < bbls.length; bi2++) {
+          var bb = bbls[bi2];
+          if (bb.classList.contains('u') !== wantUser) continue;
+          window.stPaint.erase(bb, L.cur.x, L.cur.y, L.isLeg ? 32 : 26);
+        }
+      }
     });
     requestAnimationFrame(tick);
   }
