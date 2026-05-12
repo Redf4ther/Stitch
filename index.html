@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v694</span></div>
+<div class="title">Стич · Claude <span class="build">v695</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2830,8 +2830,9 @@ async function askWithImages(photos, userText) {
     }
     function tick(){
       if (!document.hidden) {
-        // При записи голоса — взгляд прямо в камеру (центр), без блуждания.
-        if (window.dollListenPose) {
+        // При записи голоса ИЛИ когда юзер тащит конечность — взгляд прямо
+        // в камеру (центр), без блуждания.
+        if (window.dollListenPose || window.dollDragging) {
           applyTransform(0, 0);
           // Сбрасываем cur/tgt чтобы после отпускания не было резкого скачка.
           cur.x = 0; cur.y = 0; tgt.x = 0; tgt.y = 0;
@@ -3269,7 +3270,8 @@ async function askWithImages(photos, userText) {
     draggingPointers[e.pointerId] = L;
     L.dragGoal = {x: e.clientX, y: e.clientY};
     L.cur = {x: e.clientX, y: e.clientY};
-    // Открываем рот когда кого-то схватили, и закрываем через 5 секунд
+    window.dollDragging = true;
+    // Открываем рот когда кого-то схватили, и закрываем через 2 секунды
     // автоматом даже если всё ещё держим.
     try { if (typeof drawMouth === 'function') drawMouth(0.55); } catch(_) {}
     if (mouthCloseTimer) clearTimeout(mouthCloseTimer);
@@ -3293,6 +3295,7 @@ async function askWithImages(photos, userText) {
     var anyLeft = false;
     for (var k in draggingPointers) { anyLeft = true; break; }
     if (!anyLeft) {
+      window.dollDragging = false;
       if (mouthCloseTimer) { clearTimeout(mouthCloseTimer); mouthCloseTimer = null; }
       try { if (typeof drawMouth === 'function') drawMouth(0); } catch(_) {}
     }
