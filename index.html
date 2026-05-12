@@ -153,7 +153,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v634</span></div>
+<div class="title">Стич · Claude <span class="build">v635</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -449,6 +449,66 @@ window.apiHeaders = function(extra){
   return h;
 };
 
+window.hasApiAuth = function(){
+  return !!(tg && tg.initData) || !!window.pwaToken();
+};
+
+// Backend API client. Все вызовы идут на window.API_BASE; авторизация
+// подставляется через apiHeaders (initData для Mini App, Bearer для PWA).
+// Возвращают то, что ожидает callsite, чтобы старая логика типизации
+// сообщений не ломалась.
+window.stApi = (function(){
+  function url(path){ return window.API_BASE + path; }
+  async function chat(messages, signal){
+    var r = await fetch(url('/api/chat'), {
+      method: 'POST',
+      headers: window.apiHeaders({'Content-Type':'application/json'}),
+      body: JSON.stringify({messages: messages}),
+      signal: signal,
+    });
+    var data = await r.json();
+    if (!r.ok || data.error) throw new Error(data.error || ('HTTP '+r.status));
+    return String(data.text || '');
+  }
+  // Возвращает {promise, abort, xhr}. promise → ArrayBuffer | null.
+  function tts(text, voice, speed){
+    var xhr = new XMLHttpRequest();
+    var promise = new Promise(function(resolve){
+      try {
+        xhr.open('POST', url('/api/tts'));
+        var h = window.apiHeaders({'Content-Type':'application/json'});
+        Object.keys(h).forEach(function(k){ xhr.setRequestHeader(k, h[k]); });
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function(){
+          if (xhr.status === 200) { resolve(xhr.response); return; }
+          resolve(null);
+        };
+        xhr.onerror = function(){ resolve(null); };
+        xhr.onabort = function(){ resolve(null); };
+        var body = {text: text};
+        if (voice) body.voice = voice;
+        if (speed != null) body.speed = speed;
+        xhr.send(JSON.stringify(body));
+      } catch(_) { resolve(null); }
+    });
+    return {promise: promise, xhr: xhr, abort: function(){ try { xhr.abort(); } catch(_){} }};
+  }
+  async function transcribe(blob, ext, signal){
+    var fd = new FormData();
+    fd.append('file', blob, 'audio.' + (ext || 'webm'));
+    var r = await fetch(url('/api/transcribe'), {
+      method: 'POST',
+      headers: window.apiHeaders(),
+      body: fd,
+      signal: signal,
+    });
+    var data = await r.json();
+    if (!r.ok || data.error) throw new Error(data.error || ('HTTP '+r.status));
+    return String(data.text || '');
+  }
+  return {chat: chat, tts: tts, transcribe: transcribe};
+})();
+
 // Single short haptic pulse — used on every button press and on chat-tap
 // hold-ring. Prefers Telegram's native impact (matches system feel) and
 // falls back to navigator.vibrate for non-Telegram browsers.
@@ -508,27 +568,12 @@ function cycleVoice() {
   });
 }
 function fetchPreviewUrl(voice) {
-  if (!apiKey) return Promise.resolve(null);
-  return new Promise(function(resolve) {
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', 'https://api.openai.com/v1/audio/speech');
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('Authorization', 'Bearer ' + apiKey);
-      xhr.responseType = 'arraybuffer';
-      xhr.onload = function() {
-        if (xhr.status !== 200) { resolve(null); return; }
-        var blob = new Blob([xhr.response], {type: 'audio/mpeg'});
-        resolve(URL.createObjectURL(blob));
-      };
-      xhr.onerror = function(){ resolve(null); };
-      xhr.send(JSON.stringify({
-        model: 'gpt-4o-mini-tts',
-        input: 'Привет! Я Стич, теперь буду говорить вот так.',
-        voice: voice,
-        speed: 1.2
-      }));
-    } catch(_) { resolve(null); }
+  if (!window.hasApiAuth()) return Promise.resolve(null);
+  var h = window.stApi.tts('Привет! Я Стич, теперь буду говорить вот так.', voice, 1.2);
+  return h.promise.then(function(audio){
+    if (!audio) return null;
+    var blob = new Blob([audio], {type: 'audio/mpeg'});
+    return URL.createObjectURL(blob);
   });
 }
 function playPreviewUrl(url) {
@@ -984,7 +1029,7 @@ function showVoicePanel(name, steps, onDone) {
 // chat. The user pastes/types an sk-... message and saveKeyFromMessage
 // picks it up.
 function ensureKeyPrompt() {
-  if (apiKey) return;
+  if (apiKey || window.hasApiAuth()) return;
   var firstBubble = document.querySelector('.chat .bbl .bi');
   if (firstBubble) firstBubble.textContent = 'Привет! Я Стич! Чтобы я ожил — отправь мне твой OpenAI API ключ (он начинается с sk-).';
 }
@@ -1202,7 +1247,7 @@ var prompt = 'Ты — персональный репетитор. НИКОГД
 async function askClaude(msg) {
   errEl.textContent = '';
   addMsg('u', msg);
-  if (!apiKey) {
+  if (!apiKey && !window.hasApiAuth()) {
     addMsg('a', 'Сначала отправь мне твой OpenAI API ключ (начинается с sk-) — я его запомню.');
     setState('idle');
     return;
@@ -1222,20 +1267,10 @@ async function askClaude(msg) {
     var messages = [{role:'system',content:prompt}].concat(textHist);
     typingCancel = false;
     currentAbort = new AbortController();
-    var r = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body: JSON.stringify({model:'gpt-5', max_completion_tokens:800, messages:messages}),
-      signal: currentAbort.signal
-    });
-    var data = await r.json();
-    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    if (!data.choices || !data.choices[0]) throw new Error('API: ' + JSON.stringify(data).slice(0,200));
-    var msg0 = data.choices[0].message;
     var text = '';
-    if (typeof msg0.content === 'string') text = msg0.content;
-    else if (Array.isArray(msg0.content)) text = msg0.content.map(function(p){return p.text||'';}).join('');
-    else if (msg0.refusal) text = msg0.refusal;
+    try {
+      text = await window.stApi.chat(messages, currentAbort.signal);
+    } catch(e1) { throw e1; }
     if (!text) text = 'Хм, я задумался… попробуй спросить ещё раз!';
     hist.push({role:'assistant', content:text});
     saveHist();
@@ -1243,25 +1278,9 @@ async function askClaude(msg) {
     // STEP 1: Download audio (still showing "Думает...")
     var audioBlob = null;
     try {
-      var ttsXhr = new XMLHttpRequest();
-      currentAbort = { abort: function(){ try { ttsXhr.abort(); } catch(_){} } };
-      audioBlob = await new Promise(function(resolve) {
-        ttsXhr.open('POST','https://api.openai.com/v1/audio/speech');
-        ttsXhr.setRequestHeader('Content-Type','application/json');
-        ttsXhr.setRequestHeader('Authorization','Bearer '+apiKey);
-        ttsXhr.responseType = 'arraybuffer';
-        ttsXhr.onload = function(){
-          if (ttsXhr.status === 200) { resolve(ttsXhr.response); return; }
-          try {
-            var msg = new TextDecoder().decode(new Uint8Array(ttsXhr.response));
-            errEl.textContent = 'TTS ' + ttsXhr.status + ': ' + msg.slice(0, 180);
-          } catch(_) { errEl.textContent = 'TTS HTTP ' + ttsXhr.status; }
-          resolve(null);
-        };
-        ttsXhr.onerror = function(){ resolve(null); };
-        ttsXhr.onabort = function(){ resolve(null); };
-        ttsXhr.send(JSON.stringify({model:'gpt-4o-mini-tts',input:text,voice:currentVoice,speed:1.2}));
-      });
+      var ttsH = window.stApi.tts(text, currentVoice, 1.2);
+      currentAbort = { abort: ttsH.abort };
+      audioBlob = await ttsH.promise;
     } catch(e2) { audioBlob = null; }
     currentAbort = null;
     if (typingCancel) return;
@@ -1541,7 +1560,7 @@ async function startListening() {
     errEl.textContent = 'Запись не поддерживается этим браузером';
     return;
   }
-  if (!apiKey) {
+  if (!apiKey && !window.hasApiAuth()) {
     addMsg('a', 'Сначала отправь мне твой OpenAI API ключ (начинается с sk-) — я его запомню.');
     return;
   }
@@ -1607,22 +1626,10 @@ async function startListening() {
     try {
       typingCancel = false;
       currentAbort = new AbortController();
-      var fd = new FormData();
-      fd.append('file', blob, 'audio.' + ext);
-      fd.append('model', 'whisper-1');
-      fd.append('language', 'ru');
-      fd.append('temperature', '0');
-      fd.append('prompt', 'Ребёнок задаёт вопрос репетитору Стичу или решает школьную задачу.');
-      var r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: {'Authorization': 'Bearer ' + apiKey},
-        body: fd,
-        signal: currentAbort.signal
-      });
-      currentAbort = null;
-      var data = await r.json();
-      if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-      var t = ((data.text || '') + '').trim();
+      var t = '';
+      try {
+        t = (await window.stApi.transcribe(blob, ext, currentAbort.signal) || '').trim();
+      } finally { currentAbort = null; }
       if (!t) { errEl.textContent = 'Тихо, не услышал — попробуй ещё раз'; return; }
       if (isWhisperHallucination(t)) { errEl.textContent = 'Не разобрал — попробуй ещё раз'; return; }
       if (window.pendingPhotos && window.pendingPhotos.length) {
@@ -2085,7 +2092,7 @@ function cancelAllPhotos() {
 
 async function askWithImages(photos, userText) {
   errEl.textContent = '';
-  if (!apiKey) {
+  if (!apiKey && !window.hasApiAuth()) {
     addMsg('a', 'Сначала отправь мне твой OpenAI API ключ (начинается с sk-) — я его запомню.');
     setState('idle');
     return;
@@ -2101,45 +2108,19 @@ async function askWithImages(photos, userText) {
   try {
     typingCancel = false;
     currentAbort = new AbortController();
-    var r = await fetch('https://api.openai.com/v1/chat/completions', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body:JSON.stringify({model:'gpt-5', max_completion_tokens:800, messages:[{role:'system',content:prompt}].concat(hist)}),
-      signal: currentAbort.signal
-    });
-    var data = await r.json();
-    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    if (!data.choices || !data.choices[0]) throw new Error('API: ' + JSON.stringify(data).slice(0,200));
-    var msg0 = data.choices[0].message;
     var text = '';
-    if (typeof msg0.content === 'string') text = msg0.content;
-    else if (Array.isArray(msg0.content)) text = msg0.content.map(function(p){return p.text||'';}).join('');
-    else if (msg0.refusal) text = msg0.refusal;
+    try {
+      text = await window.stApi.chat([{role:'system',content:prompt}].concat(hist), currentAbort.signal);
+    } catch(e1) { throw e1; }
     if (!text) text = 'Хм, я задумался… попробуй спросить ещё раз!';
     hist.push({role:'assistant', content:text});
     saveHist();
 
     var audioBlob = null;
     try {
-      var ttsXhr2 = new XMLHttpRequest();
-      currentAbort = { abort: function(){ try { ttsXhr2.abort(); } catch(_){} } };
-      audioBlob = await new Promise(function(resolve) {
-        ttsXhr2.open('POST','https://api.openai.com/v1/audio/speech');
-        ttsXhr2.setRequestHeader('Content-Type','application/json');
-        ttsXhr2.setRequestHeader('Authorization','Bearer '+apiKey);
-        ttsXhr2.responseType = 'arraybuffer';
-        ttsXhr2.onload = function(){
-          if (ttsXhr2.status === 200) { resolve(ttsXhr2.response); return; }
-          try {
-            var msg = new TextDecoder().decode(new Uint8Array(ttsXhr2.response));
-            errEl.textContent = 'TTS ' + ttsXhr2.status + ': ' + msg.slice(0, 180);
-          } catch(_) { errEl.textContent = 'TTS HTTP ' + ttsXhr2.status; }
-          resolve(null);
-        };
-        ttsXhr2.onerror = function(){ resolve(null); };
-        ttsXhr2.onabort = function(){ resolve(null); };
-        ttsXhr2.send(JSON.stringify({model:'gpt-4o-mini-tts',input:text,voice:currentVoice,speed:1.2}));
-      });
+      var ttsH2 = window.stApi.tts(text, currentVoice, 1.2);
+      currentAbort = { abort: ttsH2.abort };
+      audioBlob = await ttsH2.promise;
     } catch(e2) {}
     currentAbort = null;
     if (typingCancel) return;
