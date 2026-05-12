@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v692</span></div>
+<div class="title">Стич · Claude <span class="build">v693</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1471,6 +1471,13 @@ function setState(s) {
   // Поза «рука к уху» включается ТОЛЬКО когда мик реально начал писать
   // (audioRec.start успех → micActive=true). При любом не-listening — сбрасываем.
   if (s !== 'listening') window.dollListenPose = false;
+  // Телефон: показан пока listening; при выходе сбрасываем флаг + включаем
+  // phoneFadeOut — он держит телефон видимым ещё пока рука едет вниз. В tick
+  // когда рука доходит до dangle — phoneFadeOut сбрасывается.
+  if (s !== 'listening') {
+    if (window.phoneShown) window.phoneFadeOut = true;
+    window.phoneShown = false;
+  }
   dot.className = 'dot'+(s==='thinking'?' y':s==='talking'?' g':s==='listening'?(micActive?' r':' b'):' ok');
   stxt.textContent = {idle:'Готов',listening:'Слушаю...',thinking:'Думаю...',talking:'Говорит...'}[s];
   head.className = 'head'+(s==='talking'?' talk':s==='listening'?' listen':'');
@@ -1479,9 +1486,10 @@ function setState(s) {
   micBtn.className = 'mic-btn'+(s==='listening'?' listening':busy?' busy':'');
   if (s === 'listening') {
     micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="32" height="32" fill="#fff"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
-  } else if (busy) {
-    micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
   } else {
+    // Любое не-listening — показываем mic-иконку. Раньше при busy был крест ✕
+    // (отмена), но юзер хотел чтобы кнопка возвращалась в дефолт сразу как
+    // отпустил мик.
     micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="2.5" width="7" height="13" rx="3.5"/><path d="M19 11a7 7 0 0 1-14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>';
   }
   micHint.textContent = s==='listening'?'ОТПУСТИ...':busy?'НАЖМИ ЧТОБЫ ОСТАНОВИТЬ':'ДЕРЖИ И ГОВОРИ';
@@ -2098,6 +2106,8 @@ micBtn.addEventListener('pointerdown', function(e) {
   }
   if (micBtn.setPointerCapture) { try { micBtn.setPointerCapture(e.pointerId); } catch(_){} }
   if (state === 'thinking' || state === 'talking') cancelThinking();
+  // Телефон в руке появляется ровно с нажатия — без ожидания разрешения мика.
+  window.phoneShown = true;
   getAudioCtx();
   // Прайм sharedAudio из user-gesture контекста — позже src сменим на TTS
   // и play() уже не упрётся в iOS «user agent denied». Грузим короткий
@@ -3412,20 +3422,23 @@ async function askWithImages(photos, userText) {
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
-      // Телефон в правой руке: видим пока кисть НЕ опустилась полностью в
-      // dangle-позицию. Экранчик светится ТОЛЬКО пока posed (мик зажат);
-      // после отпускания — гаснет, телефон ещё видим пока рука едет вниз.
+      // Телефон в правой руке. Появляется СРАЗУ при нажатии мика
+      // (window.phoneShown=true в pointerdown). После отпускания phoneShown
+      // сбрасывается → phoneFadeOut=true — держит телефон видимым ПОКА рука
+      // едет вниз. Когда рука достигла dangle — phoneFadeOut уходит. При drag
+      // или natural-attach телефон НЕ показывается (никаких флагов нет).
       if (!L.isLeg && L.sideSign > 0) {
         var phone = document.getElementById('phone-r');
         if (phone) {
           var dg = dangleGoal(L);
-          var phoneVisible = posed || (dg.y - L.cur.y > 25);
+          if (window.phoneFadeOut && (dg.y - L.cur.y <= 20)) window.phoneFadeOut = false;
+          var phoneVisible = window.phoneShown || window.phoneFadeOut;
           if (phoneVisible) {
             phone.style.display = '';
             phone.setAttribute('transform',
               'translate(' + L.cur.x.toFixed(1) + ' ' + L.cur.y.toFixed(1) + ') rotate(8)');
             var screen = phone.querySelector('.phone-screen');
-            if (screen) screen.setAttribute('fill', posed ? '#ecfff0' : '#0e2a14');
+            if (screen) screen.setAttribute('fill', window.phoneShown ? '#ecfff0' : '#0e2a14');
           } else {
             phone.style.display = 'none';
           }
