@@ -197,7 +197,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v651</span></div>
+<div class="title">Стич · Claude <span class="build">v652</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -498,11 +498,15 @@ if (window.isPWA) {
       if (menu) menu.classList.toggle('open');
     });
     if (btnClose) btnClose.addEventListener('click', function(){
+      // iOS standalone PWA не даёт JS закрыть окно — нет аналога Telegram
+      // tg.close(). Лучшее что можно — попытаться window.close() (сработает
+      // если PWA была открыта через JS-окно), затем уйти на about:blank
+      // чтобы экран стал пустым. Дальше юзер свайпом вверх возвращается
+      // на хоум.
       try { window.close(); } catch(_) {}
-      // В standalone PWA window.close() обычно не сработает — никакого
-      // вреда. Альтернативно открываем настройки внутри Стича.
-      var sp = document.getElementById('settingsPanel');
-      if (sp) sp.style.display = 'flex';
+      setTimeout(function(){
+        try { location.replace('about:blank'); } catch(_) {}
+      }, 30);
     });
     if (btnReload) btnReload.addEventListener('click', function(){
       closeMenu();
