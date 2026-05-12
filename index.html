@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v683</span></div>
+<div class="title">Стич · Claude <span class="build">v684</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1999,7 +1999,7 @@ async function startListening() {
       }
     } catch(err) {
       currentAbort = null;
-      if (err && err.name !== 'AbortError') errEl.textContent = 'Whisper: ' + err.message;
+      if (err && err.name !== 'AbortError') errEl.textContent = 'STT: ' + err.message;
     }
   };
   try {
