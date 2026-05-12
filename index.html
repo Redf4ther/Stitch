@@ -31,7 +31,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
    safe-area-bottom = ~34px и общий нижний отступ становится 52px. Компенсируем:
    педаль safe-area минус 16px (но не меньше 14px). На iPhone X+ это даёт ~18px,
    как в Telegram; на устройствах без home-indicator — 14px. */
-body.pwa-standalone .bottom{padding-bottom:max(2px, calc(env(safe-area-inset-bottom, 0px) - 30px))}
+body.pwa-standalone .bottom{padding-bottom:0;padding-top:0}
+body.pwa-standalone .mic-hint{display:none}
+body.pwa-standalone .status{display:none}
 .pwa-chrome{position:fixed;top:0;left:0;right:0;height:calc(44px + env(safe-area-inset-top, 0px));padding-top:env(safe-area-inset-top, 0px);background:transparent;display:none;align-items:center;justify-content:space-between;padding-left:8px;padding-right:8px;z-index:10;pointer-events:none}
 body.pwa-standalone .pwa-chrome{display:flex}
 /* Иконки X / ⋯ оформлены в тот же «стеклянный» стиль что и mic-btn:
@@ -196,7 +198,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v656</span></div>
+<div class="title">Стич · Claude <span class="build">v657</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -255,7 +257,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 </div>
 
 <div id="settingsPanel" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top, 0px) + 14px) 13px calc(env(safe-area-inset-bottom, 0px) + 14px)">
-  <div id="settingsBackdrop" style="position:fixed;top:-20px;left:-20px;right:-20px;bottom:-20px;width:auto;height:auto;background:rgba(0,0,0,.55);backdrop-filter:blur(12px) saturate(140%);-webkit-backdrop-filter:blur(12px) saturate(140%);-webkit-mask-image:radial-gradient(ellipse 220px 260px at 50% 50%, transparent 0%, transparent 60%, #000 100%);mask-image:radial-gradient(ellipse 220px 260px at 50% 50%, transparent 0%, transparent 60%, #000 100%);transition:opacity .25s ease,background .25s ease"></div>
+  <div id="settingsBackdrop" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.45);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);transition:opacity .25s ease,background .25s ease"></div>
   <div id="settingsCard" style="position:relative;background:rgba(60,64,72,.85);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:18px;width:100%;max-width:380px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#fff;box-shadow:0 14px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18);transition:background .25s ease,border-color .25s ease,box-shadow .25s ease">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff;opacity:.85">Настройки</div>
@@ -2765,6 +2767,7 @@ async function askWithImages(photos, userText) {
     L.handEl = hands.querySelector('#'+L.handId);
     L.hlEl   = overlay.querySelector('#'+L.pathId+'-hl');
     L.jointEl = overlay.querySelector('#joint-'+(L.isLeg?'leg':'arm')+'-'+(L.sideSign<0?'l':'r'));
+    L.dragGoal = null; // target point set by finger drag
   });
   // Пулы по сторонам. Рука встречается дважды в пуле (arm, arm, leg) —
   // 2/3 шансов что новое сообщение возьмёт именно руку. Нога подбирает
@@ -2890,16 +2893,11 @@ async function askWithImages(photos, userText) {
   // Лёгкое покачивание куклы на верёвочке при перестановке конечности.
   // Через toggle класса .sway — animationend снимает класс, чтобы можно
   // было сразу поставить заново на следующем перемещении.
+  // Качание тела заменено rag-doll-физикой ниже в tick(). triggerSway()
+  // даёт маленький случайный импульс bodyAngVel — кукла слегка качнётся,
+  // springback вернёт её на место с естественным затуханием.
   function triggerSway(){
-    if (!doll) return;
-    doll.classList.remove('sway');
-    void doll.offsetHeight;
-    doll.classList.add('sway');
-  }
-  if (doll) {
-    doll.addEventListener('animationend', function(e){
-      if (e.animationName === 'swayDoll') doll.classList.remove('sway');
-    });
+    bodyAngVel += (Math.random() - 0.5) * 0.18;
   }
 
   // ── Единый таймер всех перемещений конечностей ─────────────────────
@@ -3040,8 +3038,66 @@ async function askWithImages(photos, userText) {
     }, 3000);
   }
 
+  // ── Rag-doll body physics + drag ──
+  var bodyAngle = 0, bodyAngVel = 0;
+  var draggingPointers = {};
+
+  function findLimbAt(x, y){
+    var HIT = 36;
+    var best = null, bestD = HIT;
+    for (var i = 0; i < LIMBS.length; i++) {
+      var L = LIMBS[i];
+      if (!L.cur) continue;
+      var d = Math.hypot(L.cur.x - x, L.cur.y - y);
+      if (d < bestD) { best = L; bestD = d; }
+    }
+    return best;
+  }
+  document.addEventListener('pointerdown', function(e){
+    var L = findLimbAt(e.clientX, e.clientY);
+    if (!L) return;
+    draggingPointers[e.pointerId] = L;
+    L.dragGoal = {x: e.clientX, y: e.clientY};
+    L.cur = {x: e.clientX, y: e.clientY};
+    try { e.target && e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch(_) {}
+  }, true);
+  document.addEventListener('pointermove', function(e){
+    var L = draggingPointers[e.pointerId];
+    if (!L) return;
+    L.dragGoal = {x: e.clientX, y: e.clientY};
+  }, true);
+  function releasePointer(e){
+    var L = draggingPointers[e.pointerId];
+    if (!L) return;
+    L.dragGoal = null;
+    delete draggingPointers[e.pointerId];
+  }
+  document.addEventListener('pointerup', releasePointer, true);
+  document.addEventListener('pointercancel', releasePointer, true);
+
+  function applyBodyPhysics(){
+    // Считаем крутящий момент от каждой подёрнутой конечности.
+    // Лево/право от плеча/бедра → положительный/отрицательный момент.
+    var torque = 0;
+    for (var pid in draggingPointers) {
+      var L = draggingPointers[pid];
+      if (!L || !L.dragGoal) continue;
+      var s = shoulderPoint(L.shoulderId);
+      torque += (L.dragGoal.x - s.x) * 0.00012;
+      // Тянут вниз — слегка кивнёт вперёд (но тут проще пренебречь).
+    }
+    var restore = -bodyAngle * 0.012;
+    var damp = -bodyAngVel * 0.06;
+    bodyAngVel += torque + restore + damp;
+    bodyAngle += bodyAngVel;
+    if (bodyAngle > 28) { bodyAngle = 28; if (bodyAngVel > 0) bodyAngVel = 0; }
+    if (bodyAngle < -28) { bodyAngle = -28; if (bodyAngVel < 0) bodyAngVel = 0; }
+    if (doll) doll.style.transform = 'translateX(-50%) rotate(' + bodyAngle.toFixed(3) + 'deg)';
+  }
+
   function tick(){
     var now = performance.now();
+    applyBodyPhysics();
     // Обновляем позиции шариков-шарниров на плечах/бёдрах.
     ['shoulder-l','shoulder-r','hip-l','hip-r'].forEach(function(id){
       var p = shoulderPoint(id);
@@ -3065,30 +3121,44 @@ async function askWithImages(photos, userText) {
           L.frozen = null;  // listen-pose сильнее любой заморозки
         }
       }
+      // Если юзер тащит эту конечность пальцем — dragGoal сильнее всего
+      // остального. Координаты в экранных px, клампим к радиусу L1+L2 от плеча.
+      var dragged = null;
+      if (L.dragGoal) {
+        L.bubble = null;
+        L.frozen = null;
+        dragged = L.dragGoal;
+      }
       // Если конечность «заморожена» (UI дрыгается — клавиатура/скролл/фокус)
       // — держим её на сохранённой позиции, не реагируем на движение чата.
-      var bp = posed || (!L.frozen && L.bubble ? bubblePoint(L.bubble, L) : null);
-      var attached = !!bp;
+      var bp = dragged || posed || (!L.frozen && L.bubble ? bubblePoint(L.bubble, L) : null);
+      var attached = !!bp && !dragged;
       var goal = bp || (L.frozen ? L.frozen : dangleGoal(L));
       if (!L.cur) L.cur = {x:goal.x, y:goal.y};
       if (!L.trans) L.trans = {sx:L.cur.x, sy:L.cur.y, gx:goal.x, gy:goal.y, t0:now, dur:1};
-      var goalShift = Math.hypot(goal.x - L.trans.gx, goal.y - L.trans.gy);
-      if (goalShift > 4) {
-        var dist = Math.hypot(goal.x - L.cur.x, goal.y - L.cur.y);
-        L.trans = {
-          sx: L.cur.x, sy: L.cur.y,
-          gx: goal.x,  gy: goal.y,
-          t0: now,
-          dur: Math.min(1800, Math.max(700, 500 + dist * 3.5))
-        };
+      if (dragged) {
+        // Прямое управление пальцем — без сглаживающего перехода.
+        L.cur.x = goal.x; L.cur.y = goal.y;
+        L.trans.sx = goal.x; L.trans.sy = goal.y; L.trans.gx = goal.x; L.trans.gy = goal.y; L.trans.t0 = now;
       } else {
-        L.trans.gx = goal.x; L.trans.gy = goal.y;
+        var goalShift = Math.hypot(goal.x - L.trans.gx, goal.y - L.trans.gy);
+        if (goalShift > 4) {
+          var dist = Math.hypot(goal.x - L.cur.x, goal.y - L.cur.y);
+          L.trans = {
+            sx: L.cur.x, sy: L.cur.y,
+            gx: goal.x,  gy: goal.y,
+            t0: now,
+            dur: Math.min(1800, Math.max(700, 500 + dist * 3.5))
+          };
+        } else {
+          L.trans.gx = goal.x; L.trans.gy = goal.y;
+        }
+        var t = Math.min(1, (now - L.trans.t0) / L.trans.dur);
+        // Сглаженная sine-кривая ease-in-out (плавнее cubic).
+        var e = 0.5 - 0.5 * Math.cos(Math.PI * t);
+        L.cur.x = L.trans.sx + (L.trans.gx - L.trans.sx) * e;
+        L.cur.y = L.trans.sy + (L.trans.gy - L.trans.sy) * e;
       }
-      var t = Math.min(1, (now - L.trans.t0) / L.trans.dur);
-      // Сглаженная sine-кривая ease-in-out (плавнее cubic).
-      var e = 0.5 - 0.5 * Math.cos(Math.PI * t);
-      L.cur.x = L.trans.sx + (L.trans.gx - L.trans.sx) * e;
-      L.cur.y = L.trans.sy + (L.trans.gy - L.trans.sy) * e;
       var s = shoulderPoint(L.shoulderId);
       // Ограничение длины. Привязанной — до 92% макс., чтобы локоть/колено
       // оставались чуть согнутыми, но без сильного изгиба. Висящей — полная.
@@ -3116,13 +3186,19 @@ async function askWithImages(photos, userText) {
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
-      // Стираем краску только с того bubble, к которому конечность реально
-      // привязана. Если рука/нога висит в воздухе (dangle) — не стираем
-      // ничего, даже если её координаты случайно пересекают другие сообщения.
-      if (window.stPaint && L.bubble && attached) {
-        // Радиус стирания = rx кисти (14) / стопы (18) куклы, чтобы след
-        // совпадал по размеру с самой конечностью.
-        window.stPaint.erase(L.bubble, L.cur.x, L.cur.y, L.isLeg ? 18 : 14);
+      // Стираем краску: либо когда конечность ПРИВЯЗАНА к bubble (обычная
+      // анимация по сообщениям), либо когда юзер сам тащит её пальцем — тогда
+      // стираем любое сообщение под кистью/стопой (drag-режим).
+      if (window.stPaint) {
+        var radius = L.isLeg ? 18 : 14;
+        if (dragged) {
+          var bbls2 = document.querySelectorAll('#chat .bbl');
+          for (var bi3 = 0; bi3 < bbls2.length; bi3++) {
+            window.stPaint.erase(bbls2[bi3], L.cur.x, L.cur.y, radius);
+          }
+        } else if (L.bubble && attached) {
+          window.stPaint.erase(L.bubble, L.cur.x, L.cur.y, radius);
+        }
       }
     });
     requestAnimationFrame(tick);
