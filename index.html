@@ -21,6 +21,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 #app{display:contents}
 .top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
 .below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4}
+/* PWA standalone: имитируем Telegram chrome — фейковый top-bar 44px (стандарт
+   iOS nav-bar) + сдвигаем сцену куклы и .below вниз ровно на эту высоту, чтобы
+   mic/chat сидели на тех же экранных Y что и в Mini App. */
+body.pwa-standalone .top{top:calc(44px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)))}
+body.pwa-standalone .below{top:calc(44px + 215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)))}
+.pwa-chrome{position:fixed;top:0;left:0;right:0;height:calc(44px + env(safe-area-inset-top, 0px));padding-top:env(safe-area-inset-top, 0px);background:rgba(0,0,0,.35);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:none;align-items:center;justify-content:space-between;padding-left:8px;padding-right:8px;z-index:10}
+body.pwa-standalone .pwa-chrome{display:flex}
+.pwa-chrome button{background:rgba(255,255,255,.10);border:none;color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
+.pwa-chrome button:active{background:rgba(255,255,255,.20)}
+.pwa-menu{position:fixed;top:calc(48px + env(safe-area-inset-top,0px));right:8px;background:rgba(20,20,24,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:12px;min-width:170px;padding:6px;z-index:11;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08)}
+.pwa-menu.open{display:block}
+.pwa-menu .item{display:block;width:100%;background:transparent;border:none;color:#fff;text-align:left;padding:10px 14px;font-size:15px;cursor:pointer;border-radius:8px}
+.pwa-menu .item:active{background:rgba(255,255,255,.10)}
 .title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#ffffff}
 .build{font-size:10px;opacity:.6;margin-left:4px}
 .stage{position:relative;width:160px;height:160px;margin-top:2px}
@@ -144,6 +157,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
 </head>
 <body>
 
+<div class="pwa-chrome" id="pwaChrome">
+  <button id="pwaClose" aria-label="Закрыть" title="Закрыть">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+  </button>
+  <button id="pwaMenuBtn" aria-label="Меню" title="Меню">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+  </button>
+</div>
+<div class="pwa-menu" id="pwaMenu">
+  <button class="item" id="pwaReload">↻ Обновить</button>
+  <button class="item" id="pwaClearCache">Очистить кэш</button>
+  <button class="item" id="pwaForget">Выйти (забыть токен)</button>
+</div>
 <div id="app">
   <div class="top">
     <button id="settingsBtn" style="display:none;position:absolute;top:calc(56px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));right:12px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.22);box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28);cursor:pointer;align-items:center;justify-content:center;padding:0;z-index:6;-webkit-tap-highlight-color:transparent">
@@ -153,7 +179,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v639</span></div>
+<div class="title">Стич · Claude <span class="build">v640</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -437,6 +463,64 @@ var KEY_PWA_TOKEN = 'stitch_pwa_token';
   } catch(_) {}
 })();
 window.isPWA = !tg;
+if (window.isPWA) {
+  document.body.classList.add('pwa-standalone');
+  // Хром поверх контента: левый X — пытается закрыть окно (в standalone PWA
+  // обычно ничего не делает, но кнопка есть для симметрии с Telegram chrome).
+  // Правый ⋯ — открывает меню с Обновить / Очистить кэш / Выйти.
+  document.addEventListener('DOMContentLoaded', function(){
+    var menu = document.getElementById('pwaMenu');
+    var btnMenu = document.getElementById('pwaMenuBtn');
+    var btnClose = document.getElementById('pwaClose');
+    var btnReload = document.getElementById('pwaReload');
+    var btnClearCache = document.getElementById('pwaClearCache');
+    var btnForget = document.getElementById('pwaForget');
+    function closeMenu(){ if (menu) menu.classList.remove('open'); }
+    if (btnMenu) btnMenu.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (menu) menu.classList.toggle('open');
+    });
+    if (btnClose) btnClose.addEventListener('click', function(){
+      try { window.close(); } catch(_) {}
+      // В standalone PWA window.close() обычно не сработает — никакого
+      // вреда. Альтернативно открываем настройки внутри Стича.
+      var sp = document.getElementById('settingsPanel');
+      if (sp) sp.style.display = 'flex';
+    });
+    if (btnReload) btnReload.addEventListener('click', function(){
+      closeMenu();
+      location.reload();
+    });
+    if (btnClearCache) btnClearCache.addEventListener('click', async function(){
+      closeMenu();
+      try {
+        if ('serviceWorker' in navigator) {
+          var regs = await navigator.serviceWorker.getRegistrations();
+          for (var i = 0; i < regs.length; i++) await regs[i].unregister();
+        }
+        if (window.caches && caches.keys) {
+          var keys = await caches.keys();
+          await Promise.all(keys.map(function(k){ return caches.delete(k); }));
+        }
+      } catch(_) {}
+      location.reload();
+    });
+    if (btnForget) btnForget.addEventListener('click', function(){
+      closeMenu();
+      if (!confirm('Забыть PWA-токен и OpenAI-ключ?')) return;
+      try {
+        localStorage.removeItem(KEY_PWA_TOKEN);
+        localStorage.removeItem(KEY_SK);
+      } catch(_) {}
+      location.reload();
+    });
+    document.addEventListener('click', function(e){
+      if (menu && menu.classList.contains('open')) {
+        if (!menu.contains(e.target) && e.target !== btnMenu) closeMenu();
+      }
+    });
+  });
+}
 window.pwaToken = function(){ try { return localStorage.getItem(KEY_PWA_TOKEN) || ''; } catch(_) { return ''; } };
 window.apiHeaders = function(extra){
   var h = Object.assign({}, extra || {});
