@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v697</span></div>
+<div class="title">Стич · Claude <span class="build">v698</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -284,8 +284,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 </div>
 
 <div id="settingsPanel" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top, 0px) + 14px) 13px calc(env(safe-area-inset-bottom, 0px) + 14px)">
-  <div id="settingsBackdrop" style="position:fixed;top:-50px;left:-50px;right:-50px;bottom:-50px;width:auto;height:auto;background:rgba(0,0,0,.45);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);transition:opacity .25s ease,background .25s ease"></div>
-<div id="settingsHomeIndicatorBg" style="display:none;position:fixed;left:0;right:0;bottom:0;height:calc(env(safe-area-inset-bottom, 0px) + 24px);background:rgba(0,0,0,.55);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);pointer-events:none;z-index:299;transform:translateZ(0)"></div>
+  <div id="settingsBackdrop" style="position:fixed;top:0;left:0;width:100vw;height:100lvh;min-height:100vh;background:rgba(0,0,0,.45);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);transition:opacity .25s ease,background .25s ease;transform:translateZ(0)"></div>
   <div id="settingsCard" style="position:relative;background:rgba(60,64,72,.85);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:18px;width:100%;max-width:380px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#fff;box-shadow:0 14px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18);transition:background .25s ease,border-color .25s ease,box-shadow .25s ease">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff;opacity:.85">Настройки</div>
@@ -979,17 +978,8 @@ function showVoicePanel(name, steps, onDone) {
     bd.style.backdropFilter = 'none';
     bd.style.webkitBackdropFilter = 'none';
   }
-  function openS(){
-    if (sp) sp.style.display = 'flex';
-    var hiBg = document.getElementById('settingsHomeIndicatorBg');
-    if (hiBg) hiBg.style.display = 'block';
-    restoreBackdrop();
-  }
-  function closeS(){
-    if (sp) sp.style.display = 'none';
-    var hiBg = document.getElementById('settingsHomeIndicatorBg');
-    if (hiBg) hiBg.style.display = 'none';
-  }
+  function openS(){ if (sp) sp.style.display = 'flex'; restoreBackdrop(); }
+  function closeS(){ if (sp) sp.style.display = 'none'; }
   if (sb2 && !sb2._wired) { sb2._wired = true; sb2.addEventListener('click', function(){ haptic(); openS(); }); }
   if (sc && !sc._wired) { sc._wired = true; sc.addEventListener('click', function(){ haptic(); closeS(); }); }
   if (bd && !bd._wired) { bd._wired = true; bd.addEventListener('click', closeS); }
@@ -1687,6 +1677,10 @@ async function askClaude(msg) {
     }
     el.classList.remove('cur');
     stopMouth();
+    // После typing-эффекта bubble имеет финальный размер — пересоздаём
+    // paint-canvas под него (раньше был натянут на пустой .bi и оказывался
+    // 0px → бабл выглядел прозрачным).
+    if (window.stPaint) window.stPaint.ensure(el.parentElement);
     if (typingCancel) return;
     setState('idle');
   } catch(e) {
@@ -2566,6 +2560,7 @@ async function askWithImages(photos, userText) {
     }
     el.classList.remove('cur');
     stopMouth();
+    if (window.stPaint) window.stPaint.ensure(el.parentElement);
     if (typingCancel) return;
     setState('idle');
   } catch(e) {
