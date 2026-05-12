@@ -14,7 +14,26 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<meta name="apple-itunes-app" content="">
+<meta name="format-detection" content="telephone=no,email=no,address=no,date=no,url=no">
+<script>
+// Telegram WebApp script нужен только когда мы реально в Telegram WebView —
+// иначе он регистрирует глобальные хэндлеры и на iOS Safari (standalone PWA)
+// иногда вызывает ложные срабатывания (открытие крипто-бота при тапе на UI).
+(function(){
+  var inTelegram = false;
+  try {
+    if (window.TelegramWebviewProxy || window.TelegramWebview) inTelegram = true;
+    if (/Telegram/i.test(navigator.userAgent)) inTelegram = true;
+  } catch(_) {}
+  if (inTelegram) {
+    var s = document.createElement('script');
+    s.src = 'https://telegram.org/js/telegram-web-app.js';
+    s.async = false;
+    document.head.appendChild(s);
+  }
+})();
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease}
@@ -206,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v673</span></div>
+<div class="title">Стич · Claude <span class="build">v674</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
