@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v696</span></div>
+<div class="title">Стич · Claude <span class="build">v697</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3445,7 +3445,12 @@ async function askWithImages(photos, userText) {
         var phone = document.getElementById('phone-r');
         if (phone) {
           var dg = dangleGoal(L);
-          if (window.phoneFadeOut && (dg.y - L.cur.y <= 20)) window.phoneFadeOut = false;
+          // Fadeout заканчивается когда: рука достигла dangle ИЛИ её перехватил
+          // bubble/drag — в обоих случаях анимация спуска прерывается, телефон
+          // должен исчезнуть сразу.
+          if (window.phoneFadeOut && (
+            (dg.y - L.cur.y <= 20) || L.bubble || L.dragGoal
+          )) window.phoneFadeOut = false;
           var phoneVisible = window.phoneShown || window.phoneFadeOut;
           if (phoneVisible) {
             phone.style.display = '';
