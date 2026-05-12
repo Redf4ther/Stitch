@@ -198,7 +198,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v667</span></div>
+<div class="title">Стич · Claude <span class="build">v668</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -483,6 +483,23 @@ var KEY_PWA_TOKEN = 'stitch_pwa_token';
   } catch(_) {}
 })();
 window.isPWA = !tg;
+// Анонимная PWA-регистрация: если запустились без токена (нет ?t=… в URL и
+// в localStorage пусто) — фетчим /api/pwa-init, бэк создаёт нового юзера с
+// триалом и возвращает токен. Дальше всё как обычно через apiHeaders().
+(function autoPwaRegister(){
+  if (!window.isPWA) return;
+  try {
+    if (localStorage.getItem(KEY_PWA_TOKEN)) return; // уже есть
+  } catch(_) { return; }
+  fetch(window.API_BASE + '/api/pwa-init', { method: 'POST' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d && d.token) {
+        try { localStorage.setItem(KEY_PWA_TOKEN, d.token); } catch(_){}
+      }
+    })
+    .catch(function(){});
+})();
 if (window.isPWA) {
   document.body.classList.add('pwa-standalone');
   // Хром поверх контента: левый X — пытается закрыть окно (в standalone PWA
