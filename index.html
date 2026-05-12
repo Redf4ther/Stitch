@@ -226,7 +226,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v706</span></div>
+<div class="title">Стич · Claude <span class="build">v707</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -321,9 +321,11 @@ body.pwa-standalone .pwa-chrome{display:flex}
     </div>
     <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Стиль куклы</div>
-      <div id="dollStylePicker" style="display:flex;gap:8px">
-        <button data-style="cute" style="flex:1;padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">Милая</button>
-        <button data-style="classic" style="flex:1;padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">Классика</button>
+      <div id="dollStylePicker" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button data-style="cute" style="padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">Милая</button>
+        <button data-style="classic" style="padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">Классика</button>
+        <button data-style="dog" style="padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">🐶 Собачка</button>
+        <button data-style="cat" style="padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">🐱 Кошечка</button>
       </div>
     </div>
     <button id="toggleTests" style="margin-top:12px;display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;font-size:15px;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent">
@@ -2786,16 +2788,131 @@ async function askWithImages(photos, userText) {
     /* шарики на плечах/бёдрах теперь рендерятся в #dollLimbs (поверх рук/ног) */ '';
   }
 
+  // Доп. стили — собачка и кошечка. Тело идентично милому стилю; меняется
+  // только содержимое head-группы (уши, нос, для кошки — усы).
+  function dollDogHTML() {
+    var html = dollCuteHTML();
+    // Уши-висюльки заменяют круглые уши; +чёрный нос и язык.
+    var customHead =
+      '<g id="dollHead">'+
+      // Длинные висячие уши по бокам, чуть наклонены наружу.
+      '<path d="M50 100 Q34 130 44 160 Q56 162 60 144 Q60 122 60 110 Z" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.2"/>'+
+      '<path d="M170 100 Q186 130 176 160 Q164 162 160 144 Q160 122 160 110 Z" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.2"/>'+
+      // Маркеры ear-l/ear-r на исходных позициях (для listen-pose).
+      '<circle id="ear-l" cx="54" cy="124" r="0.1" fill="none" stroke="none"/>'+
+      '<circle id="ear-r" cx="166" cy="124" r="0.1" fill="none" stroke="none"/>'+
+      // Голова и блик.
+      '<ellipse cx="110" cy="120" rx="55" ry="60" fill="url(#d-skin)"/>'+
+      '<path d="M132 175 A 55 60 0 1 0 88 175" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+      '<ellipse cx="110" cy="120" rx="55" ry="60" fill="url(#d-sheen)"/>'+
+      // Глаза — как у милой куклы.
+      '<ellipse cx="84"  cy="134" rx="11" ry="4.5" fill="#f08868" opacity=".55" filter="url(#d-soft)"/>'+
+      '<ellipse cx="136" cy="134" rx="11" ry="4.5" fill="#f08868" opacity=".55" filter="url(#d-soft)"/>'+
+      '<circle cx="94"  cy="114" r="10.5" fill="#fff8ec" stroke="#1a0a04" stroke-width="0.8"/>'+
+      '<circle cx="126" cy="114" r="10.5" fill="#fff8ec" stroke="#1a0a04" stroke-width="0.8"/>'+
+      '<g id="pupil-l">'+
+        '<circle id="iris-l" cx="94"  cy="115.5" r="7.6" fill="#0e2440"/>'+
+        '<ellipse cx="91" cy="112" rx="3.2" ry="3.6" fill="#fff"/>'+
+        '<circle cx="97" cy="120" r="1.2" fill="#fff" opacity=".7"/>'+
+      '</g>'+
+      '<g id="pupil-r">'+
+        '<circle id="iris-r" cx="126" cy="115.5" r="7.6" fill="#0e2440"/>'+
+        '<ellipse cx="123" cy="112" rx="3.2" ry="3.6" fill="#fff"/>'+
+        '<circle cx="129" cy="120" r="1.2" fill="#fff" opacity=".7"/>'+
+      '</g>'+
+      // Брови.
+      '<path d="M87 96 Q94 91 101 96" stroke="#1a0a04" stroke-width="1.6" fill="none" stroke-linecap="round"/>'+
+      '<path d="M119 96 Q126 91 133 96" stroke="#1a0a04" stroke-width="1.6" fill="none" stroke-linecap="round"/>'+
+      // Чёрный собачий нос.
+      '<ellipse cx="110" cy="146" rx="9" ry="6.5" fill="#1a0a04" stroke="#000" stroke-width="0.5"/>'+
+      '<ellipse cx="107" cy="143" rx="2.8" ry="1.8" fill="rgba(255,255,255,.55)"/>'+
+      // Розовый язычок-капелька выступает из улыбки.
+      '<path d="M104 170 Q110 184 116 170 Q116 178 110 180 Q104 178 104 170 Z" fill="#e87090" stroke="#a04060" stroke-width="0.6"/>'+
+      // Рот: та же прорезь+jaw что и в милой куколке.
+      '<path id="MS" d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="#1a0a04"/>'+
+      '<g id="dollJaw">'+
+        '<path id="jawShape" d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="url(#d-skin)"/>'+
+        '<path d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="url(#d-sheen)"/>'+
+        '<path d="M88 175 Q110 185 132 175" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+      '</g>'+
+      '<line x1="88" y1="160" x2="88" y2="175" stroke="#2a1808" stroke-width="0.3" stroke-linecap="round"/>'+
+      '<line x1="132" y1="160" x2="132" y2="175" stroke="#2a1808" stroke-width="0.3" stroke-linecap="round"/>'+
+      '<path d="M88 160 Q98 166 110 166 Q122 166 132 160" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+      '</g>';
+    return html.replace(/<g id="dollHead">[\s\S]*?<\/g>(\s*)(<g id="MC")/, customHead + '$1$2');
+  }
+
+  function dollCatHTML() {
+    var html = dollCuteHTML();
+    var customHead =
+      '<g id="dollHead">'+
+      // Треугольные уши кошки сверху головы.
+      '<path d="M64 78 L74 60 L86 86 Z" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.2"/>'+
+      '<path d="M156 78 L146 60 L134 86 Z" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.2"/>'+
+      // Внутреннее розовое ушко.
+      '<path d="M70 78 L75 67 L82 83 Z" fill="#e87090" opacity=".55"/>'+
+      '<path d="M150 78 L145 67 L138 83 Z" fill="#e87090" opacity=".55"/>'+
+      '<circle id="ear-l" cx="74" cy="82" r="0.1" fill="none" stroke="none"/>'+
+      '<circle id="ear-r" cx="146" cy="82" r="0.1" fill="none" stroke="none"/>'+
+      // Голова.
+      '<ellipse cx="110" cy="120" rx="55" ry="60" fill="url(#d-skin)"/>'+
+      '<path d="M132 175 A 55 60 0 1 0 88 175" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+      '<ellipse cx="110" cy="120" rx="55" ry="60" fill="url(#d-sheen)"/>'+
+      // Глаза-щёлочки кошки — вытянутые овалы.
+      '<ellipse cx="94"  cy="114" rx="11" ry="9" fill="#fff8ec" stroke="#1a0a04" stroke-width="0.8"/>'+
+      '<ellipse cx="126" cy="114" rx="11" ry="9" fill="#fff8ec" stroke="#1a0a04" stroke-width="0.8"/>'+
+      '<g id="pupil-l">'+
+        '<ellipse id="iris-l" cx="94"  cy="115" rx="3.5" ry="8" fill="#0a3818"/>'+
+        '<ellipse cx="92" cy="111" rx="2" ry="3" fill="#fff"/>'+
+      '</g>'+
+      '<g id="pupil-r">'+
+        '<ellipse id="iris-r" cx="126" cy="115" rx="3.5" ry="8" fill="#0a3818"/>'+
+        '<ellipse cx="124" cy="111" rx="2" ry="3" fill="#fff"/>'+
+      '</g>'+
+      // Брови.
+      '<path d="M87 96 Q94 92 101 96" stroke="#1a0a04" stroke-width="1.6" fill="none" stroke-linecap="round"/>'+
+      '<path d="M119 96 Q126 92 133 96" stroke="#1a0a04" stroke-width="1.6" fill="none" stroke-linecap="round"/>'+
+      // Розовый треугольный носик кошки.
+      '<path d="M104 142 L 116 142 L 110 150 Z" fill="#e87090" stroke="#a04060" stroke-width="0.8"/>'+
+      // Усы — по три с каждой стороны.
+      '<path d="M76 148 L 60 145" stroke="#1a0a04" stroke-width="0.8" stroke-linecap="round" opacity=".7"/>'+
+      '<path d="M76 153 L 58 154" stroke="#1a0a04" stroke-width="0.8" stroke-linecap="round" opacity=".7"/>'+
+      '<path d="M78 158 L 62 162" stroke="#1a0a04" stroke-width="0.8" stroke-linecap="round" opacity=".7"/>'+
+      '<path d="M144 148 L 160 145" stroke="#1a0a04" stroke-width="0.8" stroke-linecap="round" opacity=".7"/>'+
+      '<path d="M144 153 L 162 154" stroke="#1a0a04" stroke-width="0.8" stroke-linecap="round" opacity=".7"/>'+
+      '<path d="M142 158 L 158 162" stroke="#1a0a04" stroke-width="0.8" stroke-linecap="round" opacity=".7"/>'+
+      // Рот.
+      '<path id="MS" d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="#1a0a04"/>'+
+      '<g id="dollJaw">'+
+        '<path id="jawShape" d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="url(#d-skin)"/>'+
+        '<path d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="url(#d-sheen)"/>'+
+        '<path d="M88 175 Q110 185 132 175" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+      '</g>'+
+      '<line x1="88" y1="160" x2="88" y2="175" stroke="#2a1808" stroke-width="0.3" stroke-linecap="round"/>'+
+      '<line x1="132" y1="160" x2="132" y2="175" stroke="#2a1808" stroke-width="0.3" stroke-linecap="round"/>'+
+      '<path d="M88 160 Q98 166 110 166 Q122 166 132 160" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+      '</g>';
+    return html.replace(/<g id="dollHead">[\s\S]*?<\/g>(\s*)(<g id="MC")/, customHead + '$1$2');
+  }
+
   function currentDollStyle(){ return localStorage.getItem('stitch_doll_style') || 'cute'; }
   function renderDoll(){
-    doll.innerHTML = currentDollStyle() === 'classic' ? dollClassicHTML() : dollCuteHTML();
+    var style = currentDollStyle();
+    var html;
+    if (style === 'classic') html = dollClassicHTML();
+    else if (style === 'dog') html = dollDogHTML();
+    else if (style === 'cat') html = dollCatHTML();
+    else html = dollCuteHTML();
+    doll.innerHTML = html;
     var jawEl = doll.querySelector('#dollJaw');
     if (jawEl) jawEl.style.transition = 'transform .08s ease-out';
   }
   renderDoll();
   // Глобальный хук для смены стиля из настроек.
   window.setDollStyle = function(s){
-    localStorage.setItem('stitch_doll_style', s === 'classic' ? 'classic' : 'cute');
+    var allowed = ['cute','classic','dog','cat'];
+    if (allowed.indexOf(s) === -1) s = 'cute';
+    localStorage.setItem('stitch_doll_style', s);
     renderDoll();
   };
 
