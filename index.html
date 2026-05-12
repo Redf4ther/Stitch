@@ -26,6 +26,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
    mic/chat сидели на тех же экранных Y что и в Mini App. */
 body.pwa-standalone .top{top:calc(44px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)))}
 body.pwa-standalone .below{top:calc(44px + 215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)))}
+/* Сама кукла (#doll) рендерится фиксировано — её тоже сдвигаем вниз на 44px
+   чтобы голова не лезла на надпись «Стич · Claude vNNN» в .top. */
+body.pwa-standalone #doll{top:calc(44px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px)}
 /* В standalone PWA нижний блок (микрофон/камера/инпут) сидит ниже — убираем
    двойную надбавку 18px поверх iOS home-indicator safe-area. Оставляем 6px
    просвета над индикатором — достаточно чтобы не ловить случайные swipe-up. */
@@ -183,7 +186,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v641</span></div>
+<div class="title">Стич · Claude <span class="build">v642</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
