@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v680</span></div>
+<div class="title">Стич · Claude <span class="build">v681</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2851,7 +2851,13 @@ async function askWithImages(photos, userText) {
     '<ellipse id="hand-l" rx="14" ry="11" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.4" class="hand"/>'+
     '<ellipse id="hand-r" rx="14" ry="11" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.4" class="hand"/>'+
     '<ellipse id="foot-l" rx="18" ry="11" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.4" class="foot"/>'+
-    '<ellipse id="foot-r" rx="18" ry="11" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.4" class="foot"/>';
+    '<ellipse id="foot-r" rx="18" ry="11" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.4" class="foot"/>'+
+    // Телефон в правой кисти при listen-pose — появляется/прячется в tick().
+    '<g id="phone-r" style="display:none">'+
+      '<rect x="-7" y="-13" width="14" height="26" rx="3" fill="#15161a" stroke="#3a3c42" stroke-width="0.8"/>'+
+      '<rect x="-5" y="-10" width="10" height="20" rx="1.5" fill="#2a3140" opacity=".9"/>'+
+      '<circle cx="0" cy="11" r="0.9" fill="#5a5d65"/>'+
+    '</g>';
   document.body.appendChild(hands);
 
   // Дополнительный слой ПОЗАДИ #doll (z:-1) — туда переезжает hand-r во время
@@ -3273,7 +3279,7 @@ async function askWithImages(photos, userText) {
       if (window.dollListenPose && !L.isLeg && L.sideSign > 0) {
         var ear = shoulderPoint('ear-r');
         if (ear.x || ear.y) {
-          posed = {x: ear.x + 8, y: ear.y - 4};
+          posed = {x: ear.x + 22, y: ear.y - 2};
           L.bubble = null;
           L.frozen = null;  // listen-pose сильнее любой заморозки
         }
@@ -3349,6 +3355,20 @@ async function askWithImages(photos, userText) {
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
+      // Телефон в правой руке при listen-pose: чуть-чуть наклонён к уху,
+      // прикреплён к кисти. На остальных конечностях не показываем.
+      if (!L.isLeg && L.sideSign > 0) {
+        var phone = document.getElementById('phone-r');
+        if (phone) {
+          if (posed) {
+            phone.style.display = '';
+            phone.setAttribute('transform',
+              'translate(' + L.cur.x.toFixed(1) + ' ' + L.cur.y.toFixed(1) + ') rotate(-20)');
+          } else {
+            phone.style.display = 'none';
+          }
+        }
+      }
       // Стираем краску: либо когда конечность ПРИВЯЗАНА к bubble (обычная
       // анимация по сообщениям), либо когда юзер сам тащит её пальцем — тогда
       // стираем любое сообщение под кистью/стопой (drag-режим).
