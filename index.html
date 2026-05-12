@@ -226,7 +226,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v716</span></div>
+<div class="title">Стич · Claude <span class="build">v717</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3655,15 +3655,22 @@ async function askWithImages(photos, userText) {
   // скрытие клавиатуры — замораживает конечности в их текущей позиции, чтобы
   // они не пытались следовать за съезжающими bubbles. Через 3с затишья —
   // обычная анимация по очереди.
-  // НЕ замораживаем при клавиатуре — пусть кукла и конечности плавно
-  // следуют за смещением body на марионеточной верёвочке. Только обновляем
-  // CSS-переменную с высотой клавиатуры (для bottom-блока).
+  // При появлении клавиатуры — сбрасываем привязки конечностей к bubbles
+  // (просто L.bubble=null, без freeze) → они висят свободно от плеч и
+  // следуют за body, когда iOS поднимает doll. Никакой freeze-эффект.
+  // После закрытия клавиатуры — scheduleNextLimbStep сам цепляет их обратно.
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', function(){
       var kb = Math.max(0, window.innerHeight - window.visualViewport.height);
       var open = kb > 100;
       document.documentElement.style.setProperty('--kb-h', (open ? kb : 0) + 'px');
       document.body.classList.toggle('kb-open', open);
+      if (open) {
+        LIMBS.forEach(function(L){ L.bubble = null; L.frozen = null; L.frozenShoulder = null; });
+        clearAttachQueue();
+      } else {
+        fillFreeLimbs();
+      }
     });
   }
   if (chatEl && 'MutationObserver' in window) {
