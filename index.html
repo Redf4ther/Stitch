@@ -197,7 +197,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v650</span></div>
+<div class="title">Стич · Claude <span class="build">v651</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -722,9 +722,10 @@ window.stPaint = (function(){
     var ctx = canvas.getContext('2d');
     ctx.save();
     ctx.globalCompositeOperation = 'destination-out';
+    // Жёсткое стирание в центре под размер кисти/стопы, мягкая антиалис-кайма.
     var grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
-    grad.addColorStop(0, 'rgba(0,0,0,0.85)');
-    grad.addColorStop(0.55, 'rgba(0,0,0,0.45)');
+    grad.addColorStop(0, 'rgba(0,0,0,1)');
+    grad.addColorStop(0.85, 'rgba(0,0,0,1)');
     grad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = grad;
     ctx.beginPath();
@@ -3119,7 +3120,9 @@ async function askWithImages(photos, userText) {
         for (var bi2 = 0; bi2 < bbls.length; bi2++) {
           var bb = bbls[bi2];
           if (bb.classList.contains('u') !== wantUser) continue;
-          window.stPaint.erase(bb, L.cur.x, L.cur.y, L.isLeg ? 32 : 26);
+          // Радиус стирания = rx кисти (14) / стопы (18) куклы, чтобы след
+          // совпадал по размеру с самой конечностью.
+          window.stPaint.erase(bb, L.cur.x, L.cur.y, L.isLeg ? 18 : 14);
         }
       }
     });
