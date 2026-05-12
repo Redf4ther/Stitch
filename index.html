@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v698</span></div>
+<div class="title">Стич · Claude <span class="build">v699</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -789,6 +789,16 @@ window.stPaint = (function(){
       ctx.fillStyle = color;
       ctx.fillRect(0, 0, w, h);
       canvas._w = w; canvas._h = h; canvas._color = color;
+    }
+    // Следим за изменениями текста и пересоздаём canvas под новый размер.
+    // Нужно для typewriter-эффекта в ассистентских ответах: bi растёт буква
+    // за буквой, ensure() перевыпускается на каждое изменение, canvas всегда
+    // совпадает с финальным размером bubble.
+    if (!bubble._paintObserver && window.MutationObserver) {
+      bubble._paintObserver = new MutationObserver(function(){
+        ensure(bubble);
+      });
+      bubble._paintObserver.observe(bi, {childList:true, characterData:true, subtree:true});
     }
   }
   // Координаты в экранных пикселях. Стираем мягким destination-out кружком.
