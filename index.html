@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v675</span></div>
+<div class="title">Стич · Claude <span class="build">v677</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1083,7 +1083,7 @@ function showVoicePanel(name, steps, onDone) {
   ];
   var TONE_KEY = 'stitch_bg_tone';
   function applyTone(c){ document.documentElement.style.setProperty('--bg-tone', c); }
-  var savedTone = localStorage.getItem(TONE_KEY) || '#000000';
+  var savedTone = localStorage.getItem(TONE_KEY) || '#3a3a4a';
   applyTone(savedTone);
   var picker = document.getElementById('tonePicker');
   if (picker && !picker._wired) {
@@ -1121,7 +1121,7 @@ function showVoicePanel(name, steps, onDone) {
   var BTN_TONES = [{n:'Чистый', c:'transparent'}].concat(TONES);
   var BTN_KEY = 'stitch_btn_tint';
   function applyBtnTint(c){ document.documentElement.style.setProperty('--btn-tint', c); }
-  var savedBtn = localStorage.getItem(BTN_KEY) || 'transparent';
+  var savedBtn = localStorage.getItem(BTN_KEY) || '#1c1c1e';
   applyBtnTint(savedBtn);
   var btnPicker = document.getElementById('btnTonePicker');
   if (btnPicker && !btnPicker._wired) {
@@ -1300,7 +1300,7 @@ function showVoicePanel(name, steps, onDone) {
     {n:'Уголь',      c:'#1c1c1e'}
   ];
   var CLOTH_KEY = 'stitch_cloth_tint';
-  var savedCloth = localStorage.getItem(CLOTH_KEY) || 'default';
+  var savedCloth = localStorage.getItem(CLOTH_KEY) || '#0a0a0c';
   function applyClothTint(c){
     var t = document.getElementById('dollTorso');
     if (!t) return;
@@ -3264,7 +3264,7 @@ async function askWithImages(photos, userText) {
       if (window.dollListenPose && !L.isLeg && L.sideSign > 0) {
         var ear = shoulderPoint('ear-r');
         if (ear.x || ear.y) {
-          posed = {x: ear.x + 26, y: ear.y + 6};
+          posed = {x: ear.x - 6, y: ear.y - 8};
           L.bubble = null;
           L.frozen = null;  // listen-pose сильнее любой заморозки
         }
@@ -3340,6 +3340,22 @@ async function askWithImages(photos, userText) {
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
+      // Listen-pose: правая кисть уходит ЗА голову/ушко — z:-1 слой
+      // #dollHandsBehind. Голова рисуется поверх → ухо видно над кистью.
+      if (!L.isLeg && L.sideSign > 0) {
+        var backEl = document.getElementById('hand-r-back');
+        if (backEl) {
+          if (posed) {
+            L.handEl.style.display = 'none';
+            backEl.style.display = '';
+            backEl.setAttribute('cx', L.cur.x);
+            backEl.setAttribute('cy', L.cur.y);
+          } else {
+            L.handEl.style.display = '';
+            backEl.style.display = 'none';
+          }
+        }
+      }
       // Стираем краску: либо когда конечность ПРИВЯЗАНА к bubble (обычная
       // анимация по сообщениям), либо когда юзер сам тащит её пальцем — тогда
       // стираем любое сообщение под кистью/стопой (drag-режим).
