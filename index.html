@@ -226,7 +226,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v704</span></div>
+<div class="title">Стич · Claude <span class="build">v705</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3128,14 +3128,23 @@ async function askWithImages(photos, userText) {
       return bIsUser === side;
     });
   }
+  function isBubblePainted(b){
+    var bi = b.querySelector('.bi');
+    return !!(bi && bi.querySelector('canvas.paint'));
+  }
   function doOneLimbAction(){
-    // Приоритет 1: привязать свободную конечность (руки раньше ног).
+    // Приоритет 1: привязать свободную конечность (руки раньше ног). Среди
+    // bubble'ов сначала смотрим ПОКРАШЕННЫЕ (где есть paint-canvas — то есть
+    // тон сообщений выбран не «Чистый»/«Глянец»). Если таких нет — любой.
     var free = LIMBS.filter(function(L){ return !L.bubble; })
                     .sort(function(a, b){ return (a.isLeg?1:0) - (b.isLeg?1:0); });
     for (var i = 0; i < free.length; i++) {
       var L = free[i];
       var rightSide = L.sideSign > 0;
-      var bubbles = bubblesForSide(rightSide).reverse();
+      var all = bubblesForSide(rightSide).reverse();
+      var painted = all.filter(isBubblePainted);
+      var bubbles = painted.length ? painted.concat(all.filter(function(b){ return !isBubblePainted(b); }))
+                                   : all;
       for (var j = 0; j < bubbles.length; j++) {
         var b = bubbles[j];
         if (LIMBS.some(function(o){ return o.bubble === b; })) continue;
@@ -3164,7 +3173,10 @@ async function askWithImages(photos, userText) {
           return !LIMBS.some(function(o){ return o !== L2 && o.bubble === b; });
         });
         if (others.length) {
-          var pick = others[Math.floor(Math.random() * others.length)];
+          // Покрашенные имеют приоритет.
+          var paintedOthers = others.filter(isBubblePainted);
+          var pool = paintedOthers.length ? paintedOthers : others;
+          var pick = pool[Math.floor(Math.random() * pool.length)];
           var noff = pickRandomOff(pick, L2);
           if (noff) { L2.bubble = pick; L2.relOff = noff; return true; }
         }
