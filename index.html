@@ -198,7 +198,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v663</span></div>
+<div class="title">Стич · Claude <span class="build">v664</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3076,13 +3076,16 @@ async function askWithImages(photos, userText) {
     return best;
   }
   document.addEventListener('pointerdown', function(e){
-    // Не интерферируем с tap'ами по кнопкам/инпуту/чату — drag только когда
-    // тап ушёл в «пустоту» страницы или прямо в конечность.
+    // Не перехватываем tap'ы по интерактивным UI-элементам (кнопки, инпут,
+    // чром, меню, settingsPanel). Чат и bubble-ы НЕ исключаем — конечности
+    // куклы (#dollLimbs pointer-events:none) визуально часто лежат поверх
+    // чата, и клик на лимб приходит на e.target=bubble. Если бы я исключал
+    // #chat, drag бы не работал в большинстве экрана.
     var t = e.target;
     if (t && t.closest && (
       t.closest('button') || t.closest('input') || t.closest('textarea') ||
       t.closest('a') || t.closest('label') || t.closest('#composer') ||
-      t.closest('#chat') || t.closest('.pwa-chrome') || t.closest('.pwa-menu') ||
+      t.closest('.pwa-chrome') || t.closest('.pwa-menu') ||
       t.closest('#settingsPanel')
     )) return;
     var L = findLimbAt(e.clientX, e.clientY);
