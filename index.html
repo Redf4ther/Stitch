@@ -50,8 +50,15 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:var(--
    safe-area-bottom = ~34px и общий нижний отступ становится 52px. Компенсируем:
    педаль safe-area минус 16px (но не меньше 14px). На iPhone X+ это даёт ~18px,
    как в Telegram; на устройствах без home-indicator — 14px. */
-body.pwa-standalone .bottom{padding-bottom:14px;padding-top:0;position:fixed;left:0;right:0;bottom:var(--kb-h, 0px);background:var(--bg-tone, #000);transition:bottom .2s ease-out}
+body.pwa-standalone .bottom{padding-bottom:14px;padding-top:0;position:fixed;left:0;right:0;bottom:var(--kb-h, 0px);background:var(--bg-tone, #000)}
 body.pwa-standalone .below{padding-bottom:140px}
+/* Пока клавиатура открыта — прячем куклу и лимбы целиком. Это гарантирует
+   что юзер не видит никаких сдвигов плеч/локтей/кисти даже если iOS
+   что-то делает с doll-svg сам по себе. После закрытия — возвращаем. */
+body.pwa-standalone.kb-open #doll,
+body.pwa-standalone.kb-open #dollLimbs,
+body.pwa-standalone.kb-open #dollHands,
+body.pwa-standalone.kb-open #dollHandsBehind{visibility:hidden}
 body.pwa-standalone .mic-hint{display:none}
 body.pwa-standalone .status{display:none}
 .pwa-chrome{position:fixed;top:0;left:0;right:0;height:calc(44px + env(safe-area-inset-top, 0px));padding-top:env(safe-area-inset-top, 0px);background:transparent;display:none;align-items:center;justify-content:space-between;padding-left:8px;padding-right:8px;z-index:10;pointer-events:none}
@@ -226,7 +233,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v713</span></div>
+<div class="title">Стич · Claude <span class="build">v714</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3667,7 +3674,9 @@ async function askWithImages(photos, userText) {
       freezeLimbs();
       // Высота клавиатуры = layout-viewport - visual-viewport.
       var kb = Math.max(0, window.innerHeight - window.visualViewport.height);
-      document.documentElement.style.setProperty('--kb-h', (kb > 100 ? kb : 0) + 'px');
+      var open = kb > 100;
+      document.documentElement.style.setProperty('--kb-h', (open ? kb : 0) + 'px');
+      document.body.classList.toggle('kb-open', open);
     });
     window.visualViewport.addEventListener('scroll', function(){ freezeLimbs(); });
   }
