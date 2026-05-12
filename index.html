@@ -227,7 +227,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v689</span></div>
+<div class="title">Стич · Claude <span class="build">v690</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2899,7 +2899,10 @@ async function askWithImages(photos, userText) {
     '</defs>'+
     '<g id="phone-r" style="display:none">'+
       '<rect x="-9" y="-17" width="18" height="34" rx="4" fill="#34C759" stroke="#1f7a3a" stroke-width="0.9"/>'+
-      '<rect class="phone-screen" x="-7" y="-14" width="14" height="26" rx="2" fill="#bdf6cf" filter="url(#phone-screen-glow)"/>'+
+      '<rect class="phone-screen" x="-7" y="-14" width="14" height="26" rx="2" fill="#bdf6cf" filter="url(#phone-screen-glow)">'+
+        '<animate attributeName="fill" values="#bdf6cf;#ecfff0;#bdf6cf" dur="0.9s" repeatCount="indefinite"/>'+
+        '<animate attributeName="opacity" values="0.75;1;0.75" dur="0.9s" repeatCount="indefinite"/>'+
+      '</rect>'+
       // Иконка звонка на экране — маленькая трубка.
       '<path d="M-3.5 -3 L-1 -1 Q0 0 1.5 -1 L3.5 -3 L4.5 -2 Q4 1 1.5 2 Q-1 1 -3 -1 Z" fill="#0e4d20" opacity="0.85"/>'+
       '<circle cx="0" cy="14" r="1.1" fill="#0e4d20"/>'+
