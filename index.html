@@ -185,6 +185,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
   </button>
 </div>
 <div class="pwa-menu" id="pwaMenu">
+  <button class="item" id="pwaTopup">💳 Продлить подписку</button>
   <button class="item" id="pwaReload">↻ Обновить</button>
   <button class="item" id="pwaClearCache">Очистить кэш</button>
   <button class="item" id="pwaSettings">⚙ Настройки</button>
@@ -198,7 +199,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v669</span></div>
+<div class="title">Стич · Claude <span class="build">v670</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -511,6 +512,7 @@ if (window.isPWA) {
     var btnSettings = document.getElementById('pwaSettings');
     var btnReload = document.getElementById('pwaReload');
     var btnClearCache = document.getElementById('pwaClearCache');
+    var btnTopup = document.getElementById('pwaTopup');
     function closeMenu(){ if (menu) menu.classList.remove('open'); }
     if (btnMenu) btnMenu.addEventListener('click', function(e){
       e.stopPropagation();
@@ -521,6 +523,17 @@ if (window.isPWA) {
       // Открывает settings-panel — тот же что по тапу на голову.
       var head = document.getElementById('head');
       if (head) head.click();
+    });
+    if (btnTopup) btnTopup.addEventListener('click', function(){
+      closeMenu();
+      var tok = window.pwaToken();
+      if (!tok) {
+        alert('Сначала нужно получить токен — обнови страницу');
+        return;
+      }
+      // Открываем твоего бота с deep-link на topup-флоу.
+      var botUrl = 'https://t.me/Stich_talk_bot?start=topup_' + encodeURIComponent(tok);
+      location.href = botUrl;
     });
     if (btnReload) btnReload.addEventListener('click', function(){
       closeMenu();
