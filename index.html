@@ -177,18 +177,13 @@ body.pwa-standalone .pwa-chrome{display:flex}
 <body>
 
 <div class="pwa-chrome" id="pwaChrome">
-  <button id="pwaClose" aria-label="Меню" title="Меню">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
-      <line x1="5" y1="7" x2="19" y2="7"/>
-      <line x1="5" y1="12" x2="19" y2="12"/>
-      <line x1="5" y1="17" x2="19" y2="17"/>
-    </svg>
-  </button>
+  <span></span>
   <button id="pwaMenuBtn" aria-label="Меню" title="Меню">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
   </button>
 </div>
 <div class="pwa-menu" id="pwaMenu">
+  <button class="item" id="pwaSettings">⚙ Настройки</button>
   <button class="item" id="pwaReload">↻ Обновить</button>
   <button class="item" id="pwaClearCache">Очистить кэш</button>
 </div>
@@ -201,7 +196,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v655</span></div>
+<div class="title">Стич · Claude <span class="build">v656</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -493,7 +488,7 @@ if (window.isPWA) {
   document.addEventListener('DOMContentLoaded', function(){
     var menu = document.getElementById('pwaMenu');
     var btnMenu = document.getElementById('pwaMenuBtn');
-    var btnClose = document.getElementById('pwaClose');
+    var btnSettings = document.getElementById('pwaSettings');
     var btnReload = document.getElementById('pwaReload');
     var btnClearCache = document.getElementById('pwaClearCache');
     function closeMenu(){ if (menu) menu.classList.remove('open'); }
@@ -501,7 +496,8 @@ if (window.isPWA) {
       e.stopPropagation();
       if (menu) menu.classList.toggle('open');
     });
-    if (btnClose) btnClose.addEventListener('click', function(){
+    if (btnSettings) btnSettings.addEventListener('click', function(){
+      closeMenu();
       // Открывает settings-panel — тот же что по тапу на голову.
       var head = document.getElementById('head');
       if (head) head.click();
@@ -3120,18 +3116,13 @@ async function askWithImages(photos, userText) {
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
-      // Стираем краску с сообщений, по которым проходит кисть/стопа.
-      // Только bubble нужной стороны (левые конечности — assistant, правые — user).
-      if (window.stPaint) {
-        var wantUser = L.sideSign > 0;
-        var bbls = document.querySelectorAll('#chat .bbl');
-        for (var bi2 = 0; bi2 < bbls.length; bi2++) {
-          var bb = bbls[bi2];
-          if (bb.classList.contains('u') !== wantUser) continue;
-          // Радиус стирания = rx кисти (14) / стопы (18) куклы, чтобы след
-          // совпадал по размеру с самой конечностью.
-          window.stPaint.erase(bb, L.cur.x, L.cur.y, L.isLeg ? 18 : 14);
-        }
+      // Стираем краску только с того bubble, к которому конечность реально
+      // привязана. Если рука/нога висит в воздухе (dangle) — не стираем
+      // ничего, даже если её координаты случайно пересекают другие сообщения.
+      if (window.stPaint && L.bubble && attached) {
+        // Радиус стирания = rx кисти (14) / стопы (18) куклы, чтобы след
+        // совпадал по размеру с самой конечностью.
+        window.stPaint.erase(L.bubble, L.cur.x, L.cur.y, L.isLeg ? 18 : 14);
       }
     });
     requestAnimationFrame(tick);
