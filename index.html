@@ -198,7 +198,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v658</span></div>
+<div class="title">Стич · Claude <span class="build">v659</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3113,11 +3113,12 @@ async function askWithImages(photos, userText) {
       // конечности «упадут» из (0,0) в правильную позицию при первом рендере.
       var preS = shoulderPoint(L.shoulderId);
       if (!preS.x && !preS.y) return;
-      // Поза «рука к уху» при записи голоса: левая рука (sideSign<0, не нога)
-      // принудительно идёт на ear-l, отвязавшись от любого bubble.
+      // Поза «рука к уху» при записи голоса: правая рука куклы (sideSign>0,
+      // визуально на правой стороне экрана) идёт к правому уху. Как «слушаю
+      // телефон» в обычной правой руке.
       var posed = null;
-      if (window.dollListenPose && !L.isLeg && L.sideSign < 0) {
-        var ear = shoulderPoint('ear-l');
+      if (window.dollListenPose && !L.isLeg && L.sideSign > 0) {
+        var ear = shoulderPoint('ear-r');
         if (ear.x || ear.y) {
           posed = ear;
           L.bubble = null;
