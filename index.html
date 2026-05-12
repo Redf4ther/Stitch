@@ -201,7 +201,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v653</span></div>
+<div class="title">Стич · Claude <span class="build">v654</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2982,15 +2982,21 @@ async function askWithImages(photos, userText) {
     }
     return false;
   }
-  // Подбираем такую точку, которая ощутимо отличается от текущей (минимум
-  // 0.18 в нормализованных координатах = ~18% от размера bubble).
+  // Подбираем такую точку, которая ощутимо отличается от текущей. Раньше
+  // мерили в нормализованных координатах (0.18 = 18% bubble) — на маленьких
+  // сообщениях это давало 10-15px сдвиг, кукла раскачивалась но визуально
+  // ничего не происходило. Теперь меряем абсолютные экранные пиксели:
+  // минимум 30px реального движения кисти.
   function pickDifferentOff(b, L, current){
+    var bi = b.querySelector('.bi') || b;
+    var br = bi.getBoundingClientRect();
     for (var a = 0; a < 8; a++) {
       var off = pickRandomOff(b, L);
       if (!off) return null;
       if (!current) return off;
-      var dx = off.rx - current.rx, dy = off.ry - current.ry;
-      if (Math.hypot(dx, dy) > 0.18) return off;
+      var dxScreen = (off.rx - current.rx) * br.width;
+      var dyScreen = (off.ry - current.ry) * br.height;
+      if (Math.hypot(dxScreen, dyScreen) > 30) return off;
     }
     return null;
   }
