@@ -190,6 +190,13 @@ body.pwa-standalone .pwa-chrome{display:flex}
   <button class="item" id="pwaClearCache">Очистить кэш</button>
   <button class="item" id="pwaSettings">⚙ Настройки</button>
 </div>
+<div id="topupBanner" style="display:none;position:fixed;left:12px;right:12px;top:calc(50px + env(safe-area-inset-top,0px));z-index:50;padding:14px 16px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),rgba(60,60,68,.85);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.45)">
+  <div id="topupBannerText" style="margin-bottom:10px;line-height:1.4">Подписка не активна. Продли чтобы продолжить.</div>
+  <div style="display:flex;gap:8px">
+    <button id="topupBannerGo" style="flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.30);background:rgba(255,255,255,.18);color:#fff;font-size:14px;font-weight:600;cursor:pointer">💳 Продлить</button>
+    <button id="topupBannerClose" style="padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font-size:14px;cursor:pointer">×</button>
+  </div>
+</div>
 <div id="app">
   <div class="top">
     <button id="settingsBtn" style="display:none;position:absolute;top:calc(56px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));right:12px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.22);box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28);cursor:pointer;align-items:center;justify-content:center;padding:0;z-index:6;-webkit-tap-highlight-color:transparent">
@@ -199,7 +206,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v670</span></div>
+<div class="title">Стич · Claude <span class="build">v671</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -558,9 +565,30 @@ if (window.isPWA) {
         if (!menu.contains(e.target) && e.target !== btnMenu) closeMenu();
       }
     });
+    // Топап-баннер: «Продлить» открывает бота с deep-link, «×» прячет.
+    var banner = document.getElementById('topupBanner');
+    var bGo = document.getElementById('topupBannerGo');
+    var bClose = document.getElementById('topupBannerClose');
+    if (bGo) bGo.addEventListener('click', function(){
+      var tok = window.pwaToken();
+      var url = 'https://t.me/Stich_talk_bot' + (tok ? ('?start=topup_' + encodeURIComponent(tok)) : '');
+      location.href = url;
+    });
+    if (bClose) bClose.addEventListener('click', function(){
+      if (banner) banner.style.display = 'none';
+    });
   });
 }
 window.pwaToken = function(){ try { return localStorage.getItem(KEY_PWA_TOKEN) || ''; } catch(_) { return ''; } };
+// Показывает баннер «лимит исчерпан / триал кончился» с кнопкой «Продлить»
+// которая откроет бота с deep-link. Вызывается из stApi при 403/limit.
+window.showTopupBanner = function(reason){
+  var b = document.getElementById('topupBanner');
+  if (!b) return;
+  var t = document.getElementById('topupBannerText');
+  if (t && reason) t.textContent = reason;
+  b.style.display = 'block';
+};
 window.apiHeaders = function(extra){
   var h = Object.assign({}, extra || {});
   if (tg && tg.initData) {
@@ -590,6 +618,10 @@ window.stApi = (function(){
       signal: signal,
     });
     var data = await r.json();
+    if (r.status === 403 && data && data.code === 'limit') {
+      if (typeof window.showTopupBanner === 'function') window.showTopupBanner(data.error);
+      throw new Error(data.error || 'Лимит исчерпан');
+    }
     if (!r.ok || data.error) throw new Error(data.error || ('HTTP '+r.status));
     return String(data.text || '');
   }
@@ -1315,15 +1347,11 @@ function showVoicePanel(name, steps, onDone) {
 // picks it up.
 function ensureKeyPrompt() {
   if (apiKey || window.hasApiAuth()) return;
+  // В PWA-режиме токен прилетает асинхронно из /api/pwa-init — не пугаем
+  // юзера sk-промптом; дефолтное приветствие остаётся как есть.
+  if (window.isPWA) return;
   var firstBubble = document.querySelector('.chat .bbl .bi');
-  if (!firstBubble) return;
-  if (window.isPWA) {
-    firstBubble.textContent =
-      'Привет! Я Стич. Чтобы я ожил, открой бота → /pwa → скопируй и пришли сюда ' +
-      'ссылку или код. Или, как раньше, OpenAI ключ (sk-…).';
-  } else {
-    firstBubble.textContent = 'Привет! Я Стич! Чтобы я ожил — отправь мне твой OpenAI API ключ (он начинается с sk-).';
-  }
+  if (firstBubble) firstBubble.textContent = 'Привет! Я Стич! Чтобы я ожил — отправь мне твой OpenAI API ключ (он начинается с sk-).';
 }
 function saveKeyFromMessage(text) {
   var m = String(text || '').trim();
