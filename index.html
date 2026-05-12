@@ -52,6 +52,15 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:var(--
    как в Telegram; на устройствах без home-indicator — 14px. */
 body.pwa-standalone .bottom{padding-bottom:12px;padding-top:0;position:fixed;left:0;right:0;bottom:var(--kb-h, 0px);background:var(--bg-tone, #000)}
 body.pwa-standalone .below{padding-bottom:130px}
+/* Компактный режим при клавиатуре: куклу уменьшаем и поджимаем к верху,
+   чтобы она целиком влезала в видимую область над клавиатурой.
+   Bottom-блок чуть приподнимаем поверх iOS-аксессуара (кнопки ^ v Done). */
+body.kb-open #doll{transform:translateX(-50%) scale(.5);transform-origin:50% 80px}
+body.kb-open #dollLimbs{transform:translateY(var(--vv-top, 0px)) scale(.5);transform-origin:50% 80px}
+body.kb-open #dollHands{transform:translateY(var(--vv-top, 0px)) scale(.5);transform-origin:50% 80px}
+body.kb-open.pwa-standalone .bottom{bottom:calc(var(--kb-h, 0px) + 0px);padding-bottom:6px}
+body.kb-open.pwa-standalone .below{padding-bottom:110px}
+body.kb-open .chat{opacity:.35;pointer-events:none}
 /* iOS standalone PWA при появлении клавиатуры scroll'ит весь page вверх
    чтобы инпут попал в visualViewport. Это уносит position:fixed элементы
    (doll, dollLimbs, dollHands) за пределы экрана. Скрываем их пока
@@ -230,7 +239,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v724</span></div>
+<div class="title">Стич · Claude <span class="build">v725</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -429,8 +438,8 @@ body.pwa-standalone .pwa-chrome{display:flex}
 <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
 
 <!-- Тест-кнопки для куклы (по умолчанию скрыты, включаются в настройках). -->
-<button id="testAsst" style="display:none;position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.04) 55%,rgba(0,0,0,.08));border:1px solid rgba(255,255,255,.32);color:#fff;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.45);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%)">+ стич</button>
-<button id="testUser" style="display:none;position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.04) 55%,rgba(0,0,0,.08));border:1px solid rgba(255,255,255,.32);color:#fff;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.45);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%)">+ я</button>
+<button id="testAsst" style="display:none;position:fixed;left:14px;bottom:calc(var(--kb-h, 0px) + env(safe-area-inset-bottom, 0px) + 140px);background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.04) 55%,rgba(0,0,0,.08));border:1px solid rgba(255,255,255,.32);color:#fff;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.45);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%)">+ стич</button>
+<button id="testUser" style="display:none;position:fixed;right:14px;bottom:calc(var(--kb-h, 0px) + env(safe-area-inset-bottom, 0px) + 140px);background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.04) 55%,rgba(0,0,0,.08));border:1px solid rgba(255,255,255,.32);color:#fff;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.45);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%)">+ я</button>
 <script>
 (function(){
   // Длинные тестовые реплики, ~80 символов каждая.
@@ -3673,12 +3682,15 @@ async function askWithImages(photos, userText) {
     var top = (window.visualViewport && window.visualViewport.offsetTop) || 0;
     document.documentElement.style.setProperty('--vv-top', top + 'px');
   }
+  function applyKbState(){
+    var kb = (window.visualViewport ? Math.max(0, window.innerHeight - window.visualViewport.height) : 0);
+    var open = kb > 100;
+    document.documentElement.style.setProperty('--kb-h', (open ? kb : 0) + 'px');
+    document.body.classList.toggle('kb-open', open);
+    syncVisualViewportTop();
+  }
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', function(){
-      var kb = Math.max(0, window.innerHeight - window.visualViewport.height);
-      document.documentElement.style.setProperty('--kb-h', (kb > 100 ? kb : 0) + 'px');
-      syncVisualViewportTop();
-    });
+    window.visualViewport.addEventListener('resize', applyKbState);
     window.visualViewport.addEventListener('scroll', syncVisualViewportTop);
   }
   syncVisualViewportTop();
@@ -3688,6 +3700,7 @@ async function askWithImages(photos, userText) {
       // Сбрасываем флаги при закрытии клавиатуры — иногда iOS не fires
       // visualViewport.resize.
       document.documentElement.style.setProperty('--kb-h', '0px');
+      document.body.classList.remove('kb-open');
       syncVisualViewportTop();
       fillFreeLimbs();
     });
