@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v681</span></div>
+<div class="title">Стич · Claude <span class="build">v682</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2095,6 +2095,15 @@ micBtn.addEventListener('pointercancel', function(e){ micRelease(e); });
 micBtn.addEventListener('lostpointercapture', function(e){ micRelease(e); });
 micBtn.addEventListener('touchend', function(e){ micRelease(e); }, {passive:true});
 micBtn.addEventListener('touchcancel', function(e){ micRelease(e); }, {passive:true});
+// Защитная сетка: если по какой-то причине pointerup на mic-btn не сработал
+// (iOS gesture мог украсть события), document-level pointerup тоже останавливает
+// запись если она шла.
+document.addEventListener('pointerup', function(){
+  if (state === 'listening') stopListening();
+}, false);
+document.addEventListener('pointercancel', function(){
+  if (state === 'listening') stopListening();
+}, false);
 micBtn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 // Slide-to-cancel: если палец во время удержания вышел за пределы кнопки
 // (с небольшим люфтом 12px), отменяем запись и возвращаем UI в idle —
