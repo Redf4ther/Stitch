@@ -186,7 +186,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v645</span></div>
+<div class="title">Стич · Claude <span class="build">v646</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2910,6 +2910,27 @@ async function askWithImages(photos, userText) {
     scheduleNextLimbStep();
   }
 
+  // Замораживаем все конечности на их текущей экранной позиции и не привязываем
+  // ни к чему пока интерфейс «дрыгается» (фокус на инпут, появление клавиатуры,
+  // скролл чата, resize). Через 3 секунды затишья — размораживаем и запускаем
+  // обычный scheduleNextLimbStep, который рассаживает руки/ноги по одной.
+  var freezeTimer = null;
+  function freezeLimbs(){
+    LIMBS.forEach(function(L){
+      L.bubble = null;
+      if (L.cur) L.frozen = {x: L.cur.x, y: L.cur.y};
+    });
+    clearAttachQueue();
+    window._scrollLocked = true; // совместимость со старыми гардами
+    if (freezeTimer) clearTimeout(freezeTimer);
+    freezeTimer = setTimeout(function(){
+      LIMBS.forEach(function(L){ L.frozen = null; });
+      window._scrollLocked = false;
+      window._kbdShown = false;
+      fillFreeLimbs();
+    }, 3000);
+  }
+
   function tick(){
     var now = performance.now();
     // Обновляем позиции шариков-шарниров на плечах/бёдрах.
@@ -2932,11 +2953,14 @@ async function askWithImages(photos, userText) {
         if (ear.x || ear.y) {
           posed = ear;
           L.bubble = null;
+          L.frozen = null;  // listen-pose сильнее любой заморозки
         }
       }
-      var bp = posed || (L.bubble ? bubblePoint(L.bubble, L) : null);
+      // Если конечность «заморожена» (UI дрыгается — клавиатура/скролл/фокус)
+      // — держим её на сохранённой позиции, не реагируем на движение чата.
+      var bp = posed || (!L.frozen && L.bubble ? bubblePoint(L.bubble, L) : null);
       var attached = !!bp;
-      var goal = bp || dangleGoal(L);
+      var goal = bp || (L.frozen ? L.frozen : dangleGoal(L));
       if (!L.cur) L.cur = {x:goal.x, y:goal.y};
       if (!L.trans) L.trans = {sx:L.cur.x, sy:L.cur.y, gx:goal.x, gy:goal.y, t0:now, dur:1};
       var goalShift = Math.hypot(goal.x - L.trans.gx, goal.y - L.trans.gy);
@@ -2993,44 +3017,25 @@ async function askWithImages(photos, userText) {
   });
 
   var chatEl = document.getElementById('chat');
-  var scrollTimer = null;
   if (chatEl) {
-    chatEl.addEventListener('scroll', function(){
-      // На скролле отцепляем все конечности (руки висят свободно) и ждём
-      // 3 секунды простоя, прежде чем снова цепляться за ближайшие bubbles.
-      if (!window._scrollLocked) {
-        window._scrollLocked = true;
-        LIMBS.forEach(unbindLimb);
-        clearAttachQueue();
-      }
-      if (scrollTimer) clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(function(){
-        window._scrollLocked = false;
-        fillFreeLimbs();
-      }, 3000);
-    }, {passive:true});
+    chatEl.addEventListener('scroll', function(){ freezeLimbs(); }, {passive:true});
   }
   // Периодическая страховка — на случай когда чат двигают не скроллом
   // (resize keyboard, layout shift). 250ms достаточно неспешно.
   setInterval(function(){ if (!window._scrollLocked) pruneInvisibleAndFill(); }, 250);
 
-  // Когда выезжает клавиатура — отцепляем конечности от всего (висят
-  // свободно). visualViewport.height падает на высоту клавиатуры. Когда
-  // клавиатура убирается — fillFreeLimbs восстанавливает привязку.
-  var keyboardShown = false;
+  // Любая дрыгающая UI-активность — фокус на инпут, ввод текста, появление/
+  // скрытие клавиатуры — замораживает конечности в их текущей позиции, чтобы
+  // они не пытались следовать за съезжающими bubbles. Через 3с затишья —
+  // обычная анимация по очереди.
+  var inpEl = document.getElementById('inp');
+  if (inpEl) {
+    inpEl.addEventListener('focus', function(){ freezeLimbs(); });
+    inpEl.addEventListener('input', function(){ freezeLimbs(); });
+  }
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', function(){
-      var diff = window.innerHeight - window.visualViewport.height;
-      var nowShown = diff > 100;
-      if (nowShown !== keyboardShown) {
-        keyboardShown = nowShown;
-        window._kbdShown = nowShown;
-        if (keyboardShown) {
-          LIMBS.forEach(function(L){ L.bubble = null; });
-        } else {
-          fillFreeLimbs();
-        }
-      }
+      freezeLimbs();
     });
   }
   if (chatEl && 'MutationObserver' in window) {
