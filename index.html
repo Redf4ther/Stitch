@@ -206,7 +206,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v671</span></div>
+<div class="title">Стич · Claude <span class="build">v672</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -533,6 +533,7 @@ if (window.isPWA) {
     });
     if (btnTopup) btnTopup.addEventListener('click', function(){
       closeMenu();
+      if (typeof window.dollFreezeLimbs === 'function') window.dollFreezeLimbs();
       var tok = window.pwaToken();
       if (!tok) {
         alert('Сначала нужно получить токен — обнови страницу');
@@ -570,6 +571,7 @@ if (window.isPWA) {
     var bGo = document.getElementById('topupBannerGo');
     var bClose = document.getElementById('topupBannerClose');
     if (bGo) bGo.addEventListener('click', function(){
+      if (typeof window.dollFreezeLimbs === 'function') window.dollFreezeLimbs();
       var tok = window.pwaToken();
       var url = 'https://t.me/Stich_talk_bot' + (tok ? ('?start=topup_' + encodeURIComponent(tok)) : '');
       location.href = url;
@@ -3121,6 +3123,7 @@ async function askWithImages(photos, userText) {
   // скролл чата, resize). Через 3 секунды затишья — размораживаем и запускаем
   // обычный scheduleNextLimbStep, который рассаживает руки/ноги по одной.
   var freezeTimer = null;
+  window.dollFreezeLimbs = function(){ freezeLimbs(); };
   function freezeLimbs(){
     LIMBS.forEach(function(L){
       L.bubble = null;
