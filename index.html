@@ -198,7 +198,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v666</span></div>
+<div class="title">Стич · Claude <span class="build">v667</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3112,6 +3112,8 @@ async function askWithImages(photos, userText) {
     draggingPointers[e.pointerId] = L;
     L.dragGoal = {x: e.clientX, y: e.clientY};
     L.cur = {x: e.clientX, y: e.clientY};
+    // Открываем рот когда кого-то схватили.
+    try { if (typeof drawMouth === 'function') drawMouth(0.55); } catch(_) {}
   }, true);
   document.addEventListener('pointermove', function(e){
     var L = draggingPointers[e.pointerId];
@@ -3123,6 +3125,12 @@ async function askWithImages(photos, userText) {
     if (!L) return;
     L.dragGoal = null;
     delete draggingPointers[e.pointerId];
+    // Если ни одна конечность больше не тянется — закрываем рот.
+    var anyLeft = false;
+    for (var k in draggingPointers) { anyLeft = true; break; }
+    if (!anyLeft) {
+      try { if (typeof drawMouth === 'function') drawMouth(0); } catch(_) {}
+    }
   }
   document.addEventListener('pointerup', releasePointer, true);
   document.addEventListener('pointercancel', releasePointer, true);
