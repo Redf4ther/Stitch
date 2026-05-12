@@ -226,7 +226,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v710</span></div>
+<div class="title">Стич · Claude <span class="build">v711</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1086,7 +1086,7 @@ function showVoicePanel(name, steps, onDone) {
   ];
   var TONE_KEY = 'stitch_bg_tone';
   function applyTone(c){ document.documentElement.style.setProperty('--bg-tone', c); }
-  var savedTone = localStorage.getItem(TONE_KEY) || '#3a3a4a';
+  var savedTone = localStorage.getItem(TONE_KEY) || '#000000';
   applyTone(savedTone);
   var picker = document.getElementById('tonePicker');
   if (picker && !picker._wired) {
@@ -1124,7 +1124,7 @@ function showVoicePanel(name, steps, onDone) {
   var BTN_TONES = [{n:'Чистый', c:'transparent'}].concat(TONES);
   var BTN_KEY = 'stitch_btn_tint';
   function applyBtnTint(c){ document.documentElement.style.setProperty('--btn-tint', c); }
-  var savedBtn = localStorage.getItem(BTN_KEY) || '#1c1c1e';
+  var savedBtn = localStorage.getItem(BTN_KEY) || 'transparent';
   applyBtnTint(savedBtn);
   var btnPicker = document.getElementById('btnTonePicker');
   if (btnPicker && !btnPicker._wired) {
@@ -1173,7 +1173,7 @@ function showVoicePanel(name, steps, onDone) {
     }
     if (window.stPaint) window.stPaint.refreshAll();
   }
-  var savedMsg = localStorage.getItem(MSG_KEY) || '#000000';
+  var savedMsg = localStorage.getItem(MSG_KEY) || '#5856D6';
   applyMsgTint(savedMsg);
   var msgPicker = document.getElementById('msgTonePicker');
   if (msgPicker && !msgPicker._wired) {
@@ -1223,7 +1223,7 @@ function showVoicePanel(name, steps, onDone) {
     }
     if (window.stPaint) window.stPaint.refreshAll();
   }
-  var savedAsst = localStorage.getItem(ASST_KEY) || '#000000';
+  var savedAsst = localStorage.getItem(ASST_KEY) || '#8E8E93';
   applyAsstTint(savedAsst);
 
   var asstPicker = document.getElementById('asstTonePicker');
