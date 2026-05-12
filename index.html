@@ -153,7 +153,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-tone, #000)
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v636</span></div>
+<div class="title">Стич · Claude <span class="build">v637</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -549,9 +549,16 @@ var KEY_SK = 'sk';
 var KEY_HIST = 'stitch_hist';
 var KEY_VOICE = 'stitch_voice';
 var HIST_LIMIT = 60; // keep last ~30 turns
-var VOICES = ['alloy','echo','fable','onyx','nova','shimmer','ash','ballad','coral','sage','verse'];
+// Yandex SpeechKit голоса (раньше тут были OpenAI alloy/echo/…).
+// jane:friendly — тёплый детский режим, остальное — обычные голоса.
+var VOICES = ['jane','alena','omazh','oksana','dasha','marina','ermil','zahar','filipp','madi','lera','masha'];
 var apiKey = localStorage.getItem(KEY_SK) || '';
-var currentVoice = localStorage.getItem(KEY_VOICE) || 'sage';
+var currentVoice = localStorage.getItem(KEY_VOICE);
+// Миграция: если был сохранён OpenAI-голос — заменим на дефолт jane.
+if (!currentVoice || VOICES.indexOf(currentVoice) === -1) {
+  currentVoice = 'jane';
+  try { localStorage.setItem(KEY_VOICE, currentVoice); } catch(_) {}
+}
 function cycleVoice() {
   var i = VOICES.indexOf(currentVoice);
   currentVoice = VOICES[(i + 1) % VOICES.length];
