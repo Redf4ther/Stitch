@@ -206,7 +206,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v672</span></div>
+<div class="title">Стич · Claude <span class="build">v673</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3234,14 +3234,15 @@ async function askWithImages(photos, userText) {
       // конечности «упадут» из (0,0) в правильную позицию при первом рендере.
       var preS = shoulderPoint(L.shoulderId);
       if (!preS.x && !preS.y) return;
-      // Поза «рука к уху» при записи голоса: правая рука куклы (sideSign>0,
-      // визуально на правой стороне экрана) идёт к правому уху. Как «слушаю
-      // телефон» в обычной правой руке.
+      // Поза «рука к уху» при записи голоса: правая рука куклы (sideSign>0)
+      // идёт РЯДОМ с правым ухом — не на ухо и не позади, а вплотную сбоку.
+      // Смещаем точку на ~16px наружу и слегка вниз от центра уха, чтобы
+      // кисть лежала рядом, не перекрывая ухо.
       var posed = null;
       if (window.dollListenPose && !L.isLeg && L.sideSign > 0) {
         var ear = shoulderPoint('ear-r');
         if (ear.x || ear.y) {
-          posed = ear;
+          posed = {x: ear.x + 16, y: ear.y + 4};
           L.bubble = null;
           L.frozen = null;  // listen-pose сильнее любой заморозки
         }
@@ -3317,22 +3318,6 @@ async function askWithImages(photos, userText) {
       }
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
-      // Listen-pose: правая рука «за ухом». Front-hand прячем, показываем
-      // hand-r-back в слое z:-1 — голова/ухо рисуются поверх.
-      if (!L.isLeg && L.sideSign > 0) {
-        var backEl = document.getElementById('hand-r-back');
-        if (backEl) {
-          if (posed) {
-            L.handEl.style.display = 'none';
-            backEl.style.display = '';
-            backEl.setAttribute('cx', L.cur.x);
-            backEl.setAttribute('cy', L.cur.y);
-          } else {
-            L.handEl.style.display = '';
-            backEl.style.display = 'none';
-          }
-        }
-      }
       // Стираем краску: либо когда конечность ПРИВЯЗАНА к bubble (обычная
       // анимация по сообщениям), либо когда юзер сам тащит её пальцем — тогда
       // стираем любое сообщение под кистью/стопой (drag-режим).
