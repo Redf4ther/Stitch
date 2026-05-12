@@ -225,7 +225,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v677</span></div>
+<div class="title">Стич · Claude <span class="build">v678</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3177,6 +3177,7 @@ async function askWithImages(photos, userText) {
     }
     return best;
   }
+  var mouthCloseTimer = null;
   document.addEventListener('pointerdown', function(e){
     // Не перехватываем tap'ы по интерактивным UI-элементам (кнопки, инпут,
     // чром, меню, settingsPanel). Чат и bubble-ы НЕ исключаем — конечности
@@ -3195,8 +3196,14 @@ async function askWithImages(photos, userText) {
     draggingPointers[e.pointerId] = L;
     L.dragGoal = {x: e.clientX, y: e.clientY};
     L.cur = {x: e.clientX, y: e.clientY};
-    // Открываем рот когда кого-то схватили.
+    // Открываем рот когда кого-то схватили, и закрываем через 5 секунд
+    // автоматом даже если всё ещё держим.
     try { if (typeof drawMouth === 'function') drawMouth(0.55); } catch(_) {}
+    if (mouthCloseTimer) clearTimeout(mouthCloseTimer);
+    mouthCloseTimer = setTimeout(function(){
+      try { if (typeof drawMouth === 'function') drawMouth(0); } catch(_) {}
+      mouthCloseTimer = null;
+    }, 5000);
   }, true);
   document.addEventListener('pointermove', function(e){
     var L = draggingPointers[e.pointerId];
@@ -3208,10 +3215,12 @@ async function askWithImages(photos, userText) {
     if (!L) return;
     L.dragGoal = null;
     delete draggingPointers[e.pointerId];
-    // Если ни одна конечность больше не тянется — закрываем рот.
+    // Если ни одна конечность больше не тянется — закрываем рот сразу
+    // и отменяем 5-секундный таймер автозакрытия.
     var anyLeft = false;
     for (var k in draggingPointers) { anyLeft = true; break; }
     if (!anyLeft) {
+      if (mouthCloseTimer) { clearTimeout(mouthCloseTimer); mouthCloseTimer = null; }
       try { if (typeof drawMouth === 'function') drawMouth(0); } catch(_) {}
     }
   }
