@@ -1,7 +1,7 @@
 // Service worker for Стич PWA.
 // Strategy: app shell precached on install; network-first for HTML (so updates
 // land fast on iPhone), cache-first for icons/manifest (rarely change).
-const VERSION = 'stitch-v1';
+const VERSION = 'stitch-v2';
 const SHELL = [
   './',
   './index.html',
