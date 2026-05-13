@@ -108,7 +108,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
    тихо качается dangleDoll. Голова + шея + торс + шарниры плеч/бёдер. */
 /* transform-origin приподнят на 200px выше верха элемента — там, где верёвочка
    крепится к потолку (viewBox y=-200). Кукла качается как маятник. */
-#doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px + var(--doll-rope-len, 0px));left:50%;width:159px;height:387px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% calc(-143px - var(--doll-rope-len, 0px))}
+#doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px + var(--doll-rope-len, 0px));left:calc(50% + var(--doll-rope-x, 0px));width:159px;height:387px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% calc(-143px - var(--doll-rope-len, 0px))}
 @keyframes swayDoll {
   0%   { transform: translateX(-50%) rotate(0deg); }
   25%  { transform: translateX(-50%) rotate(0.35deg); }
@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v772</span></div>
+<div class="title">Стич · Claude <span class="build">v773</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3045,10 +3045,10 @@ async function askWithImages(photos, userText) {
     '<path id="leg-r-hl" class="leg-hl"/>'+
     // Шарики-шарниры с еле заметной прорезью посередине (как сборные).
     // Группа transform-translated в tick. jg() выше определён локально.
-    jg('joint-arm-l', 8) + jg('joint-arm-r', 8) +
-    jg('joint-leg-l', 12.5) + jg('joint-leg-r', 12.5) +
-    jg('joint-shoulder-l', 8) + jg('joint-shoulder-r', 8) +
-    jg('joint-hip-l', 12.5) + jg('joint-hip-r', 12.5);
+    jg('joint-arm-l', 6) + jg('joint-arm-r', 6) +
+    jg('joint-leg-l', 9) + jg('joint-leg-r', 9) +
+    jg('joint-shoulder-l', 6) + jg('joint-shoulder-r', 6) +
+    jg('joint-hip-l', 9) + jg('joint-hip-r', 9);
   document.body.appendChild(overlay);
 
   // 3) Кисти/стопы (ellipse) — поверх сообщений (z:5).
@@ -3063,10 +3063,10 @@ async function askWithImages(photos, userText) {
       '<stop offset="100%" stop-color="#7a4520"/>'+
     '</radialGradient></defs>'+
     // Кисти-варежки в стиле Вуди и кожаные сапожки.
-    '<ellipse id="hand-l" rx="14" ry="11" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.4" class="hand"/>'+
-    '<ellipse id="hand-r" rx="14" ry="11" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.4" class="hand"/>'+
-    '<ellipse id="foot-l" rx="18" ry="11" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.4" class="foot"/>'+
-    '<ellipse id="foot-r" rx="18" ry="11" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.4" class="foot"/>'+
+    '<ellipse id="hand-l" rx="10" ry="8" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.2" class="hand"/>'+
+    '<ellipse id="hand-r" rx="10" ry="8" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.2" class="hand"/>'+
+    '<ellipse id="foot-l" rx="14" ry="8" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.2" class="foot"/>'+
+    '<ellipse id="foot-r" rx="14" ry="8" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.2" class="foot"/>'+
     // Телефон в правой кисти при listen-pose — появляется/прячется в tick().
     // Зелёный (Apple System Green) — как иконка «принять звонок». Экранчик
     // светится-пульсирует как при входящем звонке.
@@ -3440,7 +3440,26 @@ async function askWithImages(photos, userText) {
       var d = Math.hypot(L.cur.x - x, L.cur.y - y);
       if (d < bestD) { best = L; bestD = d; }
     }
-    return best;
+    if (best) return best;
+    // Fallback: попадание в body/head куклы → берём ближайшую конечность
+    // по shoulder. Позволяет тянуть куклу за любое место (не только за
+    // концы рук/ног).
+    var dollEl = document.getElementById('doll');
+    if (dollEl) {
+      var r = dollEl.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        var bestS = null, bestSD = Infinity;
+        for (var j = 0; j < LIMBS.length; j++) {
+          var L2 = LIMBS[j];
+          var s = shoulderPoint(L2.shoulderId);
+          if (!s.x && !s.y) continue;
+          var sd = Math.hypot(s.x - x, s.y - y);
+          if (sd < bestSD) { bestS = L2; bestSD = sd; }
+        }
+        return bestS;
+      }
+    }
+    return null;
   }
   var mouthCloseTimer = null;
   document.addEventListener('pointerdown', function(e){
@@ -3494,28 +3513,51 @@ async function askWithImages(photos, userText) {
   document.addEventListener('pointerup', releasePointer, true);
   document.addEventListener('pointercancel', releasePointer, true);
 
-  // ── Rope length (drag за конечность опускает/поднимает куклу) ──
-  // Пользователь тянет конечность вниз → ropeTarget растёт (кукла опускается
-  // на верёвочке). Тянет вверх → ropeTarget уменьшается (верёвочка короче,
-  // кукла поднимается). Position применяется через CSS variable --doll-rope-len.
-  var ropeTarget = 0, ropeLen = 0;
-  var ROPE_MAX = 360, ROPE_DEAD = 60, ROPE_GAIN = 0.55, ROPE_LERP = 0.12;
+  // ── Rope (drag за конечность тянет куклу — vertical и horizontal) ──
+  // Срабатывает ТОЛЬКО если drag растянул конечность за её max длину
+  // (L1+L2). Для X дополнительный buffer +20px (5мм свободы в стороны).
+  // До тех пор просто двигается рука/нога, кукла стоит.
+  var ropeTargetY = 0, ropeY = 0;
+  var ropeTargetX = 0, ropeX = 0;
+  var ROPE_MAX_Y = 700, ROPE_MAX_X = 300, ROPE_GAIN = 0.6, ROPE_LERP = 0.12;
+  var SIDE_BUFFER = 20;
   function updateRope(){
-    var pull = 0, n = 0;
+    var pullY = 0, pullX = 0, nY = 0, nX = 0;
     for (var pid in draggingPointers) {
       var L = draggingPointers[pid];
       if (!L || !L.dragGoal) continue;
       var s = shoulderPoint(L.shoulderId);
       if (!s.x && !s.y) continue;
-      var dy = (L.dragGoal.y - s.y) - ROPE_DEAD;
-      pull += dy;
-      n++;
+      var dx = L.dragGoal.x - s.x;
+      var dy = L.dragGoal.y - s.y;
+      var reach = L.L1 + L.L2;
+      // Vertical pull: distance from shoulder
+      var distY = Math.hypot(dx, dy);
+      var excessY = distY - reach;
+      if (excessY > 0) {
+        pullY += excessY * (dy >= 0 ? 1 : -1);
+        nY++;
+      }
+      // Horizontal pull: только если конечность ушла далеко вбок (за reach + buffer)
+      var absX = Math.abs(dx);
+      var excessX = absX - (reach + SIDE_BUFFER);
+      if (excessX > 0) {
+        pullX += excessX * (dx >= 0 ? 1 : -1);
+        nX++;
+      }
     }
-    if (n) {
-      ropeTarget = Math.max(0, Math.min(ROPE_MAX, ropeTarget + (pull/n) * ROPE_GAIN * 0.05));
+    if (nY) {
+      ropeTargetY = Math.max(0, Math.min(ROPE_MAX_Y, ropeTargetY + (pullY/nY) * ROPE_GAIN * 0.05));
     }
-    ropeLen += (ropeTarget - ropeLen) * ROPE_LERP;
-    if (doll) doll.style.setProperty('--doll-rope-len', ropeLen.toFixed(1) + 'px');
+    if (nX) {
+      ropeTargetX = Math.max(-ROPE_MAX_X, Math.min(ROPE_MAX_X, ropeTargetX + (pullX/nX) * ROPE_GAIN * 0.05));
+    }
+    ropeY += (ropeTargetY - ropeY) * ROPE_LERP;
+    ropeX += (ropeTargetX - ropeX) * ROPE_LERP;
+    if (doll) {
+      doll.style.setProperty('--doll-rope-len', ropeY.toFixed(1) + 'px');
+      doll.style.setProperty('--doll-rope-x', ropeX.toFixed(1) + 'px');
+    }
   }
 
   function applyBodyPhysics(){
