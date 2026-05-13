@@ -50,14 +50,14 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:var(--
    safe-area-bottom = ~34px и общий нижний отступ становится 52px. Компенсируем:
    педаль safe-area минус 16px (но не меньше 14px). На iPhone X+ это даёт ~18px,
    как в Telegram; на устройствах без home-indicator — 14px. */
-body.pwa-standalone .bottom{padding-bottom:12px;padding-top:0;position:fixed;left:0;right:0;bottom:var(--kb-h, 0px);background:var(--bg-tone, #000)}
+body.pwa-standalone .bottom{padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 6px);padding-top:0;position:fixed;left:0;right:0;bottom:var(--kb-h, 0px);background:var(--bg-tone, #000)}
 body.pwa-standalone .below{padding-bottom:130px}
 /* Компактный режим при клавиатуре: куклу уменьшаем и поджимаем к верху,
    чтобы она целиком влезала в видимую область над клавиатурой.
    Bottom-блок чуть приподнимаем поверх iOS-аксессуара (кнопки ^ v Done). */
-body.kb-open #doll{transform:translateX(-50%) scale(.5);transform-origin:50% 80px}
-body.kb-open #dollLimbs{transform:translateY(var(--vv-top, 0px)) scale(.5);transform-origin:50% 80px}
-body.kb-open #dollHands{transform:translateY(var(--vv-top, 0px)) scale(.5);transform-origin:50% 80px}
+/* Кукла и конечности больше НЕ реагируют на клавиатуру (v726) —
+   остаются на месте сверху экрана. Раньше тут был compact-mode (scale .5)
+   и translateY(--vv-top), но это давало видимое подпрыгивание. */
 body.kb-open.pwa-standalone .bottom{bottom:calc(var(--kb-h, 0px) + 0px);padding-bottom:6px}
 body.kb-open.pwa-standalone .below{padding-bottom:110px}
 body.kb-open .chat{opacity:.35;pointer-events:none}
@@ -119,7 +119,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 #doll.sway { animation: swayDoll 2.4s ease-out; }
 /* Руки/ноги (path) ПОВЕРХ тела куклы (z:1, #doll z:0) — конечности
    соединяются поверх тела, без visual gap. Шарниры-кружочки скрыты. */
-#dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;transform:translateY(var(--vv-top, 0px))}
+#dollLimbs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:14;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 #dollLimbs .leg{stroke:#1a1610;stroke-width:22;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 /* Тонкий тканевый блик вдоль рукавов/штанов. */
@@ -129,7 +129,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 /* Кисти/стопы СЗАДИ сообщений (z:1, тот же что #dollLimbs) — рука/нога
    садится на верх bubble и нижняя часть кисти прячется за облачком,
    создавая эффект «держит сверху». В отвязанном виде свисает за чатом. */
-#dollHands{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;transform:translateY(var(--vv-top, 0px))}
+#dollHands{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 #dollHands .hand,#dollHands .foot{filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
 @keyframes iB{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-5px) rotate(.3deg)}}
 @keyframes tN{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-3px) rotate(.8deg)}}
@@ -173,7 +173,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 .dot.g{background:#5be09b;box-shadow:0 0 8px rgba(91,224,155,.7);animation:db 1s infinite}
 .dot.b{background:#7c5cff;box-shadow:0 0 8px rgba(124,92,255,.7);animation:db .4s infinite}
 .dot.r{background:#ff4757;box-shadow:0 0 8px rgba(255,71,87,.85);animation:db .5s infinite}
-.chat{flex:1;min-height:0;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px;touch-action:pan-y;-webkit-touch-callout:none}
+.chat{flex:1;min-height:0;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px;touch-action:pan-y;-webkit-touch-callout:none;transition:opacity .25s ease}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 /* Слой «краски» поверх стеклянной подложки .bi. Canvas с z-index:-1 рисуется
@@ -189,7 +189,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 .cur::after{content:‘▋’;color:#7c5cff;animation:cur .4s steps(1) infinite}
 .err{flex-shrink:0;font-size:11px;color:#e84a5f;padding:0 14px;text-align:center}
 .err:not(:empty){padding:2px 14px}
-.bottom{flex-shrink:0;position:relative;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:transparent;display:flex;flex-direction:column;gap:6px;align-items:center}
+.bottom{flex-shrink:0;position:relative;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:transparent;display:flex;flex-direction:column;gap:6px;align-items:center;transition:bottom .28s cubic-bezier(.16,.7,.3,1),padding-bottom .28s ease}
 .mic-btn{width:54px;height:54px;border-radius:50%;border:1px solid rgba(255,255,255,.22);font-size:24px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28);cursor:pointer;touch-action:none}
 .mic-btn.disabled{opacity:.5}
 .mic-btn:active{background:rgba(255,255,255,.05)}
@@ -239,7 +239,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v725</span></div>
+<div class="title">Стич · Claude <span class="build">v726</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -298,7 +298,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 </div>
 
 <div id="settingsPanel" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top, 0px) + 14px) 13px calc(env(safe-area-inset-bottom, 0px) + 14px)">
-  <div id="settingsBackdrop" style="position:fixed;top:0;left:0;width:100vw;height:100lvh;min-height:100vh;background:rgba(0,0,0,.55);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);transition:opacity .25s ease,background .25s ease;transform:translateZ(0)"></div>
+  <div id="settingsBackdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);transition:opacity .25s ease,background .25s ease;transform:translateZ(0)"></div>
   <div id="settingsCard" style="position:relative;background:rgba(60,64,72,.85);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:18px;width:100%;max-width:380px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#fff;box-shadow:0 14px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18);transition:background .25s ease,border-color .25s ease,box-shadow .25s ease">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff;opacity:.85">Настройки</div>
