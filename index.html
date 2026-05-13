@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v765</span></div>
+<div class="title">Стич · Claude <span class="build">v766</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3242,25 +3242,12 @@ async function askWithImages(photos, userText) {
   function triggerSway(){
     bodyAngVel += (Math.random() - 0.5) * 0.18;
   }
-  // Полноценная rag-doll реакция: кукла качается + конечности срываются с
-  // bubbles и свободно болтаются. Через 1.5 сек fillFreeLimbs возвращает
-  // конечности к нормальной анимации (re-attach к сообщениям).
+  // Rag-doll реакция куклы: только impulse к bodyAngVel (кукла качается).
+  // НЕ отвязываем LIMBS — раньше так делалось чтобы конечности болтались,
+  // но это ломало "стирание краски" (erase требует L.bubble != null).
   // force — амплитуда импульса для bodyAngVel (0.18 = лёгкое, 0.5 = резкое).
-  var __flopReturnTimer = null;
   window.dollFlop = function(force){
     bodyAngVel += (Math.random() - 0.5) * (force || 0.4);
-    LIMBS.forEach(function(L){
-      L.bubble = null;
-      L.frozen = null;
-      L.frozenShoulder = null;
-      L.relOff = null;
-    });
-    if (__flopReturnTimer) clearTimeout(__flopReturnTimer);
-    __flopReturnTimer = setTimeout(function(){
-      __flopReturnTimer = null;
-      if (window._scrollLocked || window._kbdShown) return;
-      fillFreeLimbs();
-    }, 1500);
   };
 
   // ── Единый таймер всех перемещений конечностей ─────────────────────
