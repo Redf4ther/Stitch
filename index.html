@@ -241,7 +241,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v740</span></div>
+<div class="title">Стич · Claude <span class="build">v741</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3764,13 +3764,7 @@ async function askWithImages(photos, userText) {
 </script>
 
 <script>
-// Стабилизация физической позиции composer'а на iOS PWA standalone.
-// iOS рандомно даёт viewport либо 956 (full screen incl. safe-areas)
-// либо 894 (без safe-areas) при cold start. Composer на bottom:0
-// оказывается на разной физической позиции. Чтобы он был ВСЕГДА на
-// одном месте — добавляем padding-bottom 62px в "good mode" (diff=0)
-// чтобы composer уехал внутри .bottom вверх на ту же позицию что
-// в "bad mode" (diff=62, viewport уже ужат).
+// Стабилизация физической позиции composer'а — см. v739/v740.
 (function(){
   function sync(){
     if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) return;
@@ -3785,6 +3779,33 @@ async function askWithImages(photos, userText) {
   window.__syncPadBottom = sync;
   sync();
   setTimeout(sync, 800);
+})();
+</script>
+<!-- DEBUG OVERLAY v5 (v741) — для диагностики позиций composer'а при клавиатуре -->
+<div id="dbgOverlay" style="position:fixed;top:env(safe-area-inset-top, 0px);left:0;z-index:9999;background:rgba(0,0,0,.8);color:#0f0;font:10px/1.25 monospace;padding:4px 6px;pointer-events:none;white-space:pre;border-bottom-right-radius:8px"></div>
+<script>
+(function(){
+  var dbg = document.getElementById('dbgOverlay');
+  if (!dbg) return;
+  function snap(){
+    var bot = document.querySelector('.bottom');
+    var rectB = bot ? bot.getBoundingClientRect() : null;
+    var s = getComputedStyle(document.documentElement);
+    var vv = window.visualViewport;
+    var sh = window.screen ? window.screen.height : 0;
+    var ih = window.innerHeight;
+    dbg.textContent = [
+      'iH:' + ih + ' vv.h:' + (vv?Math.round(vv.height):'?'),
+      'sh:' + sh + ' diff:' + (sh-ih),
+      '--kb-h:' + (s.getPropertyValue('--kb-h').trim()||'unset'),
+      '--pad-extra:' + (s.getPropertyValue('--pad-bottom-extra').trim()||'unset'),
+      'body:' + (document.body.className||'(none)'),
+      'AE:' + (document.activeElement ? document.activeElement.tagName : 'none'),
+      rectB ? '.bot top:' + Math.round(rectB.top) + ' bot:' + Math.round(rectB.bottom) : '.bot: none',
+    ].join('\n');
+  }
+  setInterval(snap, 200);
+  snap();
 })();
 </script>
 </body>
