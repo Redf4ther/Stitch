@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v769</span></div>
+<div class="title">Стич · Claude <span class="build">v770</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -849,6 +849,14 @@ window.stPaint = (function(){
   // Цепляемся на window resize/orientationchange — canvas мог оказаться не
   // того размера. Пересоздаём краску, потери стираний — приемлемо.
   window.addEventListener('orientationchange', refreshAll);
+  // Initial ensure для существующих bubbles (welcome bubble в HTML).
+  // MutationObserver ловит только future additions, для existing bubbles
+  // нужен явный refreshAll после load.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', refreshAll);
+  } else {
+    refreshAll();
+  }
   return {ensure: ensure, erase: erase, refreshAll: refreshAll};
 })();
 
