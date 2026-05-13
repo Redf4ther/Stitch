@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v773</span></div>
+<div class="title">Стич · Claude <span class="build">v774</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3514,12 +3514,16 @@ async function askWithImages(photos, userText) {
   document.addEventListener('pointercancel', releasePointer, true);
 
   // ── Rope (drag за конечность тянет куклу — vertical и horizontal) ──
-  // Срабатывает ТОЛЬКО если drag растянул конечность за её max длину
-  // (L1+L2). Для X дополнительный buffer +20px (5мм свободы в стороны).
-  // До тех пор просто двигается рука/нога, кукла стоит.
+  // Сопротивляется натягу — нужно реально тянуть сильно. Срабатывает
+  // ТОЛЬКО если drag растянул конечность за её max длину (L1+L2) ещё
+  // на STRETCH_BUFFER (доп. resistance, кажется что верёвка натянута).
+  // Для X дополнительный buffer +20px (5мм свободы в стороны).
   var ropeTargetY = 0, ropeY = 0;
   var ropeTargetX = 0, ropeX = 0;
-  var ROPE_MAX_Y = 700, ROPE_MAX_X = 300, ROPE_GAIN = 0.6, ROPE_LERP = 0.12;
+  var ROPE_MAX_Y = 700, ROPE_MAX_X = 300;
+  var ROPE_GAIN = 0.18;     // было 0.6 — теперь медленнее накапливается
+  var ROPE_LERP = 0.05;     // было 0.12 — медленнее сглаживание (вязче)
+  var STRETCH_BUFFER = 40;  // доп. excess до начала натяжения (resistance)
   var SIDE_BUFFER = 20;
   function updateRope(){
     var pullY = 0, pullX = 0, nY = 0, nX = 0;
@@ -3531,18 +3535,19 @@ async function askWithImages(photos, userText) {
       var dx = L.dragGoal.x - s.x;
       var dy = L.dragGoal.y - s.y;
       var reach = L.L1 + L.L2;
-      // Vertical pull: distance from shoulder
+      // Vertical pull: distance from shoulder больше reach + STRETCH_BUFFER
       var distY = Math.hypot(dx, dy);
-      var excessY = distY - reach;
+      var excessY = distY - reach - STRETCH_BUFFER;
       if (excessY > 0) {
-        pullY += excessY * (dy >= 0 ? 1 : -1);
+        // sqrt для сублинейного отклика — сначала почти не двигается, потом плавно
+        pullY += Math.sqrt(excessY) * 4 * (dy >= 0 ? 1 : -1);
         nY++;
       }
-      // Horizontal pull: только если конечность ушла далеко вбок (за reach + buffer)
+      // Horizontal pull
       var absX = Math.abs(dx);
-      var excessX = absX - (reach + SIDE_BUFFER);
+      var excessX = absX - reach - SIDE_BUFFER - STRETCH_BUFFER;
       if (excessX > 0) {
-        pullX += excessX * (dx >= 0 ? 1 : -1);
+        pullX += Math.sqrt(excessX) * 4 * (dx >= 0 ? 1 : -1);
         nX++;
       }
     }
