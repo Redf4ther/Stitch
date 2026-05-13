@@ -239,7 +239,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v727</span></div>
+<div class="title">Стич · Claude <span class="build">v728</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3678,11 +3678,20 @@ async function askWithImages(photos, userText) {
   // имеет transform (translateX -50%, rotate ragdoll-angle) — корректируем
   // в applyBodyPhysics. Для #dollLimbs/#dollHands устанавливаем здесь
   // напрямую через CSS-переменную --vv-top.
+  // Грейс-период для visualViewport — на iOS PWA standalone первые ~1.5 сек
+  // после cold start visualViewport нестабилен (splash transition, URL bar
+  // hide/show), и любой ранний resize/scroll даёт ложное определение
+  // «клавиатура открыта», что заставляет composer прыгать вверх-вниз.
+  // Игнорируем все события до тех пор, пока viewport не стабилизируется.
+  var __vvReady = false;
+  setTimeout(function(){ __vvReady = true; }, 1500);
   function syncVisualViewportTop(){
+    if (!__vvReady) return;
     var top = (window.visualViewport && window.visualViewport.offsetTop) || 0;
     document.documentElement.style.setProperty('--vv-top', top + 'px');
   }
   function applyKbState(){
+    if (!__vvReady) return;
     var kb = (window.visualViewport ? Math.max(0, window.innerHeight - window.visualViewport.height) : 0);
     var open = kb > 100;
     document.documentElement.style.setProperty('--kb-h', (open ? kb : 0) + 'px');
