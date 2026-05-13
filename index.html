@@ -239,7 +239,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v728</span></div>
+<div class="title">Стич · Claude <span class="build">v729</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3692,6 +3692,18 @@ async function askWithImages(photos, userText) {
   }
   function applyKbState(){
     if (!__vvReady) return;
+    // Жёсткая защита от ложных срабатываний: клавиатура iOS появляется
+    // ТОЛЬКО при focus на textarea/input. Если ничего не сфокусировано,
+    // visualViewport.height < innerHeight — это URL bar / system UI / PWA
+    // splash transition, НЕ клавиатура. Игнорируем.
+    var ae = document.activeElement;
+    var focused = ae && (ae.tagName === 'TEXTAREA' || ae.tagName === 'INPUT');
+    if (!focused) {
+      document.documentElement.style.setProperty('--kb-h', '0px');
+      document.body.classList.remove('kb-open');
+      syncVisualViewportTop();
+      return;
+    }
     var kb = (window.visualViewport ? Math.max(0, window.innerHeight - window.visualViewport.height) : 0);
     var open = kb > 100;
     document.documentElement.style.setProperty('--kb-h', (open ? kb : 0) + 'px');
