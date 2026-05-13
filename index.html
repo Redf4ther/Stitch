@@ -60,7 +60,7 @@ body.pwa-standalone .below{padding-bottom:130px}
    и translateY(--vv-top), но это давало видимое подпрыгивание. */
 body.kb-open.pwa-standalone .bottom{padding-bottom:6px;position:fixed;bottom:0}
 body.kb-open.pwa-standalone .below{padding-bottom:110px}
-body.kb-open .chat{opacity:.35;pointer-events:none}
+body.kb-open .chat{pointer-events:none}
 /* iOS standalone PWA при появлении клавиатуры scroll'ит весь page вверх
    чтобы инпут попал в visualViewport. Это уносит position:fixed элементы
    (doll, dollLimbs, dollHands) за пределы экрана. Скрываем их пока
@@ -3745,13 +3745,10 @@ async function askWithImages(photos, userText) {
       // (good ↔ bad). Пересчитать --pad-bottom-extra с задержкой на settling.
       setTimeout(function(){ if (window.__syncPadBottom) window.__syncPadBottom(); }, 300);
     });
-    inpForKb.addEventListener('focus', function(){
-      // Замораживаем конечности на ИХ ТЕКУЩЕЙ позиции до того как iOS
-      // начнёт показывать клавиатуру и двигать viewport. Раньше тут было
-      // L.frozen = null — конечности разваливались и "улетали" следуя
-      // за смещением куклы при показе клавиатуры.
-      if (typeof window.dollFreezeLimbs === 'function') window.dollFreezeLimbs();
-    });
+    // focus listener убран в v758: freezeLimbs ставил L.bubble=null и
+    // _scrollLocked=true, что ломало "стирание краски" с сообщений. После
+    // v755 конечности и так синхронизируются с куклой через --vv-top
+    // transform — freeze больше не нужен.
   }
   if (chatEl && 'MutationObserver' in window) {
     new MutationObserver(function(muts){
