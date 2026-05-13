@@ -50,7 +50,7 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:var(--
    safe-area-bottom = ~34px и общий нижний отступ становится 52px. Компенсируем:
    педаль safe-area минус 16px (но не меньше 14px). На iPhone X+ это даёт ~18px,
    как в Telegram; на устройствах без home-indicator — 14px. */
-body.pwa-standalone .bottom{padding-bottom:30px;padding-top:0;position:fixed;left:0;right:0;bottom:var(--kb-h, 0px);background:var(--bg-tone, #000)}
+body.pwa-standalone .bottom{padding-bottom:calc(30px + var(--pad-bottom-extra, 0px));padding-top:0;position:fixed;left:0;right:0;bottom:var(--kb-h, 0px);background:var(--bg-tone, #000)}
 body.pwa-standalone .below{transform:none}
 body.pwa-standalone .below{padding-bottom:130px}
 /* Компактный режим при клавиатуре: куклу уменьшаем и поджимаем к верху,
@@ -241,7 +241,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v738</span></div>
+<div class="title">Стич · Claude <span class="build">v739</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3760,29 +3760,27 @@ async function askWithImages(photos, userText) {
 })();
 </script>
 
-<!-- DEBUG OVERLAY v4 (v738) — без force-reload (он не помог — iOS state-restoration) -->
-<div id="dbgOverlay" style="position:fixed;top:env(safe-area-inset-top, 0px);left:0;z-index:9999;background:rgba(0,0,0,.8);color:#0f0;font:10px/1.25 monospace;padding:4px 6px;pointer-events:none;white-space:pre;border-bottom-right-radius:8px"></div>
 <script>
+// Стабилизация физической позиции composer'а на iOS PWA standalone.
+// iOS рандомно даёт viewport либо 956 (full screen incl. safe-areas)
+// либо 894 (без safe-areas) при cold start. Composer на bottom:0
+// оказывается на разной физической позиции. Чтобы он был ВСЕГДА на
+// одном месте — добавляем padding-bottom 62px в "good mode" (diff=0)
+// чтобы composer уехал внутри .bottom вверх на ту же позицию что
+// в "bad mode" (diff=62, viewport уже ужат).
 (function(){
-  var dbg = document.getElementById('dbgOverlay');
-  if (!dbg) return;
-  function snap(){
-    var bot = document.querySelector('.bottom');
-    var rectB = bot ? bot.getBoundingClientRect() : null;
-    var vv = window.visualViewport;
+  function sync(){
+    if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) return;
     var sh = window.screen ? window.screen.height : 0;
     var ih = window.innerHeight;
-    dbg.textContent = [
-      'iH:' + ih + ' vv.h:' + (vv?Math.round(vv.height):'?'),
-      'screen.h:' + sh + ' diff:' + (sh-ih),
-      'mM:' + window.matchMedia('(display-mode: standalone)').matches + ' nS:' + !!window.navigator.standalone,
-      'body:' + (document.body.className||'(none)'),
-      rectB ? '.bot top:' + Math.round(rectB.top) + ' bot:' + Math.round(rectB.bottom) : '.bot: none',
-      'doc.h:' + document.documentElement.clientHeight,
-    ].join('\n');
+    if (sh > 0 && (sh - ih) === 0) {
+      document.documentElement.style.setProperty('--pad-bottom-extra', '62px');
+    } else {
+      document.documentElement.style.setProperty('--pad-bottom-extra', '0px');
+    }
   }
-  setInterval(snap, 200);
-  snap();
+  sync();
+  setTimeout(sync, 800);
 })();
 </script>
 </body>
