@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v761</span></div>
+<div class="title">Стич · Claude <span class="build">v762</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3744,7 +3744,11 @@ async function askWithImages(photos, userText) {
       syncVisualViewportTop();
       return;
     }
-    var kb = (window.visualViewport ? Math.max(0, window.innerHeight - window.visualViewport.height) : 0);
+    // На iOS PWA standalone window.innerHeight тоже ужимается с
+    // клавиатурой (= visualViewport.height), их разница 0. Нужно
+    // сравнивать с screen.height — physical screen не меняется.
+    var sh = (window.screen && window.screen.height) ? window.screen.height : 0;
+    var kb = (sh > 0) ? Math.max(0, sh - window.innerHeight) : 0;
     var open = kb > 100;
     document.documentElement.style.setProperty('--kb-h', (open ? kb : 0) + 'px');
     document.body.classList.toggle('kb-open', open);
