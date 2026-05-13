@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v775</span></div>
+<div class="title">Стич · Claude <span class="build">v776</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3107,8 +3107,8 @@ async function askWithImages(photos, userText) {
     // Руки укоротили (досягают до пояса), ноги — короче и слегка сжаты в коленях.
     {pathId:'arm-l', handId:'hand-l', shoulderId:'shoulder-l', isLeg:false, sideSign:-1, L1:54, L2:50},
     {pathId:'arm-r', handId:'hand-r', shoulderId:'shoulder-r', isLeg:false, sideSign: 1, L1:54, L2:50},
-    {pathId:'leg-l', handId:'foot-l', shoulderId:'hip-l',     isLeg:true,  sideSign:-1, L1:72, L2:68},
-    {pathId:'leg-r', handId:'foot-r', shoulderId:'hip-r',     isLeg:true,  sideSign: 1, L1:72, L2:68}
+    {pathId:'leg-l', handId:'foot-l', shoulderId:'hip-l',     isLeg:true,  sideSign:-1, L1:60, L2:56},
+    {pathId:'leg-r', handId:'foot-r', shoulderId:'hip-r',     isLeg:true,  sideSign: 1, L1:60, L2:56}
   ];
   window._dbgLimbs = LIMBS;  // для debug overlay
   LIMBS.forEach(function(L){
@@ -3440,27 +3440,17 @@ async function askWithImages(photos, userText) {
       var d = Math.hypot(L.cur.x - x, L.cur.y - y);
       if (d < bestD) { best = L; bestD = d; }
     }
-    if (best) return best;
-    // Fallback: попадание в body/head куклы → берём ближайшую конечность
-    // по shoulder. Позволяет тянуть куклу за любое место (не только за
-    // концы рук/ног).
-    var dollEl = document.getElementById('doll');
-    if (dollEl) {
-      var r = dollEl.getBoundingClientRect();
-      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
-        var bestS = null, bestSD = Infinity;
-        for (var j = 0; j < LIMBS.length; j++) {
-          var L2 = LIMBS[j];
-          var s = shoulderPoint(L2.shoulderId);
-          if (!s.x && !s.y) continue;
-          var sd = Math.hypot(s.x - x, s.y - y);
-          if (sd < bestSD) { bestS = L2; bestSD = sd; }
-        }
-        return bestS;
-      }
-    }
-    return null;
+    return best;
   }
+  function isDollBodyHit(x, y){
+    var dollEl = document.getElementById('doll');
+    if (!dollEl) return false;
+    var r = dollEl.getBoundingClientRect();
+    return (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+  }
+  // bodyDragPointers — drag за тело/голову куклы (не за конечности).
+  // Двигает rope (всю куклу), конечности остаются на местах.
+  var bodyDragPointers = {};
   var mouthCloseTimer = null;
   document.addEventListener('pointerdown', function(e){
     // Не перехватываем tap'ы по интерактивным UI-элементам (кнопки, инпут,
@@ -3476,7 +3466,18 @@ async function askWithImages(photos, userText) {
       t.closest('#settingsPanel')
     )) return;
     var L = findLimbAt(e.clientX, e.clientY);
-    if (!L) return;
+    if (!L) {
+      // Не попали по конечности → проверяем body/head. Если да — body drag
+      // (двигает всю куклу через ropeTarget X/Y, конечности не трогаем).
+      if (isDollBodyHit(e.clientX, e.clientY)) {
+        bodyDragPointers[e.pointerId] = {
+          startX: e.clientX, startY: e.clientY,
+          startRopeX: ropeTargetX, startRopeY: ropeTargetY
+        };
+        window.dollDragging = true;
+      }
+      return;
+    }
     draggingPointers[e.pointerId] = L;
     L.dragGoal = {x: e.clientX, y: e.clientY};
     L.cur = {x: e.clientX, y: e.clientY};
@@ -3491,11 +3492,23 @@ async function askWithImages(photos, userText) {
     }, 2000);
   }, true);
   document.addEventListener('pointermove', function(e){
+    var bd = bodyDragPointers[e.pointerId];
+    if (bd) {
+      // Direct drag куклы — двигаем ropeTarget по delta pointer
+      var dxBd = e.clientX - bd.startX;
+      var dyBd = e.clientY - bd.startY;
+      ropeTargetX = Math.max(-ROPE_MAX_X, Math.min(ROPE_MAX_X, bd.startRopeX + dxBd));
+      ropeTargetY = Math.max(0, Math.min(ROPE_MAX_Y, bd.startRopeY + dyBd));
+      return;
+    }
     var L = draggingPointers[e.pointerId];
     if (!L) return;
     L.dragGoal = {x: e.clientX, y: e.clientY};
   }, true);
   function releasePointer(e){
+    if (bodyDragPointers[e.pointerId]) {
+      delete bodyDragPointers[e.pointerId];
+    }
     var L = draggingPointers[e.pointerId];
     if (!L) return;
     L.dragGoal = null;
@@ -3514,19 +3527,23 @@ async function askWithImages(photos, userText) {
   document.addEventListener('pointercancel', releasePointer, true);
 
   // ── Rope (drag за конечность тянет куклу — vertical и horizontal) ──
-  // Сопротивляется натягу — нужно реально тянуть сильно. Срабатывает
-  // ТОЛЬКО если drag растянул конечность за её max длину (L1+L2) ещё
-  // на STRETCH_BUFFER (доп. resistance, кажется что верёвка натянута).
-  // Для X дополнительный buffer +20px (5мм свободы в стороны).
+  // Двух-фазный отклик: 0..SNAP_THRESHOLD = visual resistance (натяжение,
+  // кукла почти стоит), > SNAP_THRESHOLD = сорвалась и быстро следует
+  // за пальцем. Ощущается как реальная верёвка которая натянулась и
+  // лопнула резинкой.
   var ropeTargetY = 0, ropeY = 0;
   var ropeTargetX = 0, ropeX = 0;
   var ROPE_MAX_Y = 700, ROPE_MAX_X = 300;
-  var ROPE_GAIN = 0.18;     // было 0.6 — теперь медленнее накапливается
-  var ROPE_LERP = 0.05;     // было 0.12 — медленнее сглаживание (вязче)
-  var STRETCH_BUFFER = 40;  // доп. excess до начала натяжения (resistance)
+  var SNAP_THRESHOLD = 50;  // px excess пока visual stretch
+  var STRETCH_GAIN = 0.05;  // движение в фазе натяжения (медленно)
+  var SNAP_GAIN = 1.5;      // движение после срыва (быстро)
+  var ROPE_LERP_STRETCH = 0.08;
+  var ROPE_LERP_SNAP = 0.32;  // быстрое следование за пальцем после срыва
   var SIDE_BUFFER = 20;
+  var snappedY = false, snappedX = false;
   function updateRope(){
     var pullY = 0, pullX = 0, nY = 0, nX = 0;
+    var maxExcessY = 0, maxExcessX = 0;
     for (var pid in draggingPointers) {
       var L = draggingPointers[pid];
       if (!L || !L.dragGoal) continue;
@@ -3535,30 +3552,39 @@ async function askWithImages(photos, userText) {
       var dx = L.dragGoal.x - s.x;
       var dy = L.dragGoal.y - s.y;
       var reach = L.L1 + L.L2;
-      // Vertical pull: distance from shoulder больше reach + STRETCH_BUFFER
       var distY = Math.hypot(dx, dy);
-      var excessY = distY - reach - STRETCH_BUFFER;
+      var excessY = distY - reach;
       if (excessY > 0) {
-        // sqrt для сублинейного отклика — сначала почти не двигается, потом плавно
-        pullY += Math.sqrt(excessY) * 4 * (dy >= 0 ? 1 : -1);
+        if (excessY > maxExcessY) maxExcessY = excessY;
+        var gainY = excessY > SNAP_THRESHOLD ? SNAP_GAIN : STRETCH_GAIN;
+        pullY += excessY * gainY * (dy >= 0 ? 1 : -1);
         nY++;
       }
-      // Horizontal pull
       var absX = Math.abs(dx);
-      var excessX = absX - reach - SIDE_BUFFER - STRETCH_BUFFER;
+      var excessX = absX - reach - SIDE_BUFFER;
       if (excessX > 0) {
-        pullX += Math.sqrt(excessX) * 4 * (dx >= 0 ? 1 : -1);
+        if (excessX > maxExcessX) maxExcessX = excessX;
+        var gainX = excessX > SNAP_THRESHOLD ? SNAP_GAIN : STRETCH_GAIN;
+        pullX += excessX * gainX * (dx >= 0 ? 1 : -1);
         nX++;
       }
     }
+    snappedY = nY > 0 && maxExcessY > SNAP_THRESHOLD;
+    snappedX = nX > 0 && maxExcessX > SNAP_THRESHOLD;
+    // Sticky snap — пока пользователь не отпустил, оставаться в snap-режиме
+    if (nY === 0) snappedY = false;
+    if (nX === 0) snappedX = false;
+
     if (nY) {
-      ropeTargetY = Math.max(0, Math.min(ROPE_MAX_Y, ropeTargetY + (pullY/nY) * ROPE_GAIN * 0.05));
+      ropeTargetY = Math.max(0, Math.min(ROPE_MAX_Y, ropeTargetY + (pullY/nY) * 0.05));
     }
     if (nX) {
-      ropeTargetX = Math.max(-ROPE_MAX_X, Math.min(ROPE_MAX_X, ropeTargetX + (pullX/nX) * ROPE_GAIN * 0.05));
+      ropeTargetX = Math.max(-ROPE_MAX_X, Math.min(ROPE_MAX_X, ropeTargetX + (pullX/nX) * 0.05));
     }
-    ropeY += (ropeTargetY - ropeY) * ROPE_LERP;
-    ropeX += (ropeTargetX - ropeX) * ROPE_LERP;
+    var lerpY = snappedY ? ROPE_LERP_SNAP : ROPE_LERP_STRETCH;
+    var lerpX = snappedX ? ROPE_LERP_SNAP : ROPE_LERP_STRETCH;
+    ropeY += (ropeTargetY - ropeY) * lerpY;
+    ropeX += (ropeTargetX - ropeX) * lerpX;
     if (doll) {
       doll.style.setProperty('--doll-rope-len', ropeY.toFixed(1) + 'px');
       doll.style.setProperty('--doll-rope-x', ropeX.toFixed(1) + 'px');
