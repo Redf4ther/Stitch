@@ -241,7 +241,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v747</span></div>
+<div class="title">Стич · Claude <span class="build">v748</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1006,8 +1006,21 @@ function showVoicePanel(name, steps, onDone) {
     bd.style.backdropFilter = 'none';
     bd.style.webkitBackdropFilter = 'none';
   }
-  function openS(){ if (sp) sp.style.display = 'flex'; restoreBackdrop(); }
-  function closeS(){ if (sp) sp.style.display = 'none'; }
+  function setThemeColor(c){
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', c);
+  }
+  function openS(){
+    if (sp) sp.style.display = 'flex';
+    restoreBackdrop();
+    // iOS PWA standalone красит safe-area zone в theme_color независимо
+    // от backdrop. При open settings ставим тёмный (сливается с backdrop).
+    setThemeColor('#000000');
+  }
+  function closeS(){
+    if (sp) sp.style.display = 'none';
+    setThemeColor('#1a0a04');
+  }
   if (sb2 && !sb2._wired) { sb2._wired = true; sb2.addEventListener('click', function(){ haptic(); openS(); }); }
   if (sc && !sc._wired) { sc._wired = true; sc.addEventListener('click', function(){ haptic(); closeS(); }); }
   if (bd && !bd._wired) { bd._wired = true; bd.addEventListener('click', closeS); }
