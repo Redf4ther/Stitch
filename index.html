@@ -50,7 +50,7 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:var(--
    safe-area-bottom = ~34px и общий нижний отступ становится 52px. Компенсируем:
    педаль safe-area минус 16px (но не меньше 14px). На iPhone X+ это даёт ~18px,
    как в Telegram; на устройствах без home-indicator — 14px. */
-body.pwa-standalone .bottom{padding-bottom:calc(var(--safe-bottom, 0px) + 6px);padding-top:0;position:fixed;left:0;right:0;bottom:var(--kb-h, 0px);background:var(--bg-tone, #000)}
+body.pwa-standalone .bottom{padding-bottom:30px;padding-top:0;position:fixed;left:0;right:0;bottom:var(--kb-h, 0px);background:var(--bg-tone, #000)}
 body.pwa-standalone .below{padding-bottom:130px}
 /* Компактный режим при клавиатуре: куклу уменьшаем и поджимаем к верху,
    чтобы она целиком влезала в видимую область над клавиатурой.
@@ -239,7 +239,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v730</span></div>
+<div class="title">Стич · Claude <span class="build">v731</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3686,23 +3686,6 @@ async function askWithImages(photos, userText) {
   var __vvReady = false;
   setTimeout(function(){ __vvReady = true; }, 1500);
 
-  // Замер env(safe-area-inset-bottom) на iOS PWA — сам env() может
-  // возвращать 0 в начале и реальное значение позже, что заставляет
-  // composer'а скакать. Меряем через невидимый probe и фиксируем в
-  // CSS variable --safe-bottom один раз когда viewport стабилизировался.
-  function lockSafeArea(){
-    var probe = document.createElement('div');
-    probe.style.cssText = 'position:fixed;visibility:hidden;left:0;bottom:0;height:env(safe-area-inset-bottom, 0px);width:1px;pointer-events:none';
-    document.body.appendChild(probe);
-    var sa = probe.getBoundingClientRect().height;
-    document.body.removeChild(probe);
-    if (sa > 0) {
-      document.documentElement.style.setProperty('--safe-bottom', sa + 'px');
-    }
-  }
-  // Меряем сразу и затем после стабилизации viewport.
-  if (document.body) lockSafeArea(); else document.addEventListener('DOMContentLoaded', lockSafeArea);
-  setTimeout(lockSafeArea, 1500);
   function syncVisualViewportTop(){
     if (!__vvReady) return;
     var top = (window.visualViewport && window.visualViewport.offsetTop) || 0;
