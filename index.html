@@ -108,7 +108,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
    тихо качается dangleDoll. Голова + шея + торс + шарниры плеч/бёдер. */
 /* transform-origin приподнят на 200px выше верха элемента — там, где верёвочка
    крепится к потолку (viewBox y=-200). Кукла качается как маятник. */
-#doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px + var(--doll-rope-len, 0px));left:calc(50% + var(--doll-rope-x, 0px));width:159px;height:387px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% calc(-143px - var(--doll-rope-len, 0px))}
+#doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) - 14px + var(--doll-rope-len, 0px));left:50%;width:159px;height:387px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% calc(-143px - var(--doll-rope-len, 0px))}
 @keyframes swayDoll {
   0%   { transform: translateX(-50%) rotate(0deg); }
   25%  { transform: translateX(-50%) rotate(0.35deg); }
@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v774</span></div>
+<div class="title">Стич · Claude <span class="build">v775</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3588,7 +3588,7 @@ async function askWithImages(photos, userText) {
     // Контр-сдвиг по visualViewport.offsetTop — компенсирует iOS-скролл
     // на keyboard, чтобы кукла оставалась на экране.
     var vvTop = (window.visualViewport && window.visualViewport.offsetTop) || 0;
-    if (doll) doll.style.transform = 'translateX(-50%) translateY(' + vvTop.toFixed(1) + 'px) rotate(' + bodyAngle.toFixed(3) + 'deg)';
+    if (doll) doll.style.transform = 'translateX(calc(-50% + ' + ropeX.toFixed(1) + 'px)) translateY(' + vvTop.toFixed(1) + 'px) rotate(' + bodyAngle.toFixed(3) + 'deg)';
   }
 
   function tick(){
