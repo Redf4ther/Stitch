@@ -241,7 +241,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v739</span></div>
+<div class="title">Стич · Claude <span class="build">v740</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3727,6 +3727,9 @@ async function askWithImages(photos, userText) {
       document.body.classList.remove('kb-open');
       syncVisualViewportTop();
       fillFreeLimbs();
+      // iOS может переключить viewport mode после закрытия клавиатуры
+      // (good ↔ bad). Пересчитать --pad-bottom-extra с задержкой на settling.
+      setTimeout(function(){ if (window.__syncPadBottom) window.__syncPadBottom(); }, 300);
     });
     inpForKb.addEventListener('focus', function(){
       LIMBS.forEach(function(L){ L.bubble = null; L.frozen = null; L.frozenShoulder = null; });
@@ -3779,6 +3782,7 @@ async function askWithImages(photos, userText) {
       document.documentElement.style.setProperty('--pad-bottom-extra', '0px');
     }
   }
+  window.__syncPadBottom = sync;
   sync();
   setTimeout(sync, 800);
 })();
