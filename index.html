@@ -241,7 +241,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v741</span></div>
+<div class="title">Стич · Claude <span class="build">v742</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3782,7 +3782,7 @@ async function askWithImages(photos, userText) {
 })();
 </script>
 <!-- DEBUG OVERLAY v5 (v741) — для диагностики позиций composer'а при клавиатуре -->
-<div id="dbgOverlay" style="position:fixed;top:env(safe-area-inset-top, 0px);left:0;z-index:9999;background:rgba(0,0,0,.8);color:#0f0;font:10px/1.25 monospace;padding:4px 6px;pointer-events:none;white-space:pre;border-bottom-right-radius:8px"></div>
+<div id="dbgOverlay" style="position:fixed;top:50%;left:8px;transform:translateY(-50%);z-index:999999;background:rgba(0,0,0,.85);color:#0f0;font:11px/1.3 monospace;padding:6px 8px;pointer-events:none;white-space:pre;border-radius:8px;max-width:60vw"></div>
 <script>
 (function(){
   var dbg = document.getElementById('dbgOverlay');
