@@ -241,7 +241,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v746</span></div>
+<div class="title">Стич · Claude <span class="build">v747</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -300,7 +300,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 </div>
 
 <div id="settingsPanel" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top, 0px) + 14px) 13px calc(env(safe-area-inset-bottom, 0px) + 14px)">
-  <div id="settingsBackdrop" style="position:fixed;top:0;left:0;right:0;bottom:-200px;background:rgba(0,0,0,.55);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);transition:opacity .25s ease,background .25s ease;transform:translateZ(0)"></div>
+  <div id="settingsBackdrop" style="position:fixed;left:0;right:0;top:calc(0px - var(--ios-top-gap, 0px));height:var(--screen-h, 100vh);background:rgba(0,0,0,.55);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);transition:opacity .25s ease,background .25s ease;transform:translateZ(0);will-change:opacity"></div>
   <div id="settingsCard" style="position:relative;background:rgba(60,64,72,.85);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:18px;width:100%;max-width:380px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#fff;box-shadow:0 14px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18);transition:background .25s ease,border-color .25s ease,box-shadow .25s ease">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff;opacity:.85">Настройки</div>
@@ -3766,6 +3766,19 @@ async function askWithImages(photos, userText) {
 <script>
 // Стабилизация физической позиции composer'а — см. v739/v740.
 (function(){
+  // --screen-h / --ios-top-gap для iOS PWA bad-mode viewport (894 vs 956).
+  // CSS-юниты (lvh/vh/dvh/inset:0) врут — все равны layout viewport (894).
+  // screen.height не врёт — physical screen всегда 956 на iPhone 14+/15/16.
+  // settingsBackdrop использует var(--screen-h) для height — гарантированно
+  // покрывает физ. низ в любом mode. --ios-top-gap = sh - iH сдвигает
+  // backdrop вверх чтобы перекрыть status bar zone в bad mode.
+  function setScreenVars(){
+    var sH = (window.screen && window.screen.height) ? window.screen.height : window.innerHeight;
+    var iH = window.innerHeight || sH;
+    var gap = Math.max(0, sH - iH);
+    document.documentElement.style.setProperty('--screen-h', sH + 'px');
+    document.documentElement.style.setProperty('--ios-top-gap', gap + 'px');
+  }
   function sync(){
     if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) return;
     var sh = window.screen ? window.screen.height : 0;
@@ -3777,8 +3790,13 @@ async function askWithImages(photos, userText) {
     }
   }
   window.__syncPadBottom = sync;
+  setScreenVars();
   sync();
-  setTimeout(sync, 800);
+  setTimeout(function(){ setScreenVars(); sync(); }, 800);
+  window.addEventListener('resize', setScreenVars);
+  window.addEventListener('orientationchange', setScreenVars);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) setScreenVars(); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', setScreenVars);
 })();
 </script>
 </body>
