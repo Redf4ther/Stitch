@@ -241,7 +241,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v735</span></div>
+<div class="title">Стич · Claude <span class="build">v736</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3760,25 +3760,34 @@ async function askWithImages(photos, userText) {
 })();
 </script>
 
+<!-- DEBUG OVERLAY v2 (v736) — расширенные метрики -->
+<div id="dbgOverlay" style="position:fixed;top:env(safe-area-inset-top, 0px);left:0;z-index:9999;background:rgba(0,0,0,.8);color:#0f0;font:10px/1.25 monospace;padding:4px 6px;pointer-events:none;white-space:pre;border-bottom-right-radius:8px"></div>
 <script>
-// Force reload at cold start если iOS PWA дала ужатый viewport.
-// На iPhone PWA standalone иногда стартует с viewport БЕЗ safe-area
-// (status bar + home-indicator), composer тогда стоит выше нужного места.
-// На втором cold start iOS обычно даёт правильный full viewport.
-// Гард ?r=1 защищает от infinite loop.
 (function(){
-  if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) return;
-  if (/[?&]r=1/.test(location.search)) return;
-  setTimeout(function(){
-    try {
-      var sh = window.screen && window.screen.height;
-      var ih = window.innerHeight;
-      if (sh && (sh - ih) > 50) {
-        var sep = location.search ? '&' : '?';
-        location.replace(location.pathname + location.search + sep + 'r=1' + location.hash);
-      }
-    } catch(_){}
-  }, 800);
+  var dbg = document.getElementById('dbgOverlay');
+  if (!dbg) return;
+  function snap(){
+    var bot = document.querySelector('.bottom');
+    var rectB = bot ? bot.getBoundingClientRect() : null;
+    var s = getComputedStyle(document.documentElement);
+    var vv = window.visualViewport;
+    var sh = window.screen ? window.screen.height : 0;
+    var sah = window.screen ? window.screen.availHeight : 0;
+    var ih = window.innerHeight;
+    dbg.textContent = [
+      'iH:' + ih + ' vv.h:' + (vv?Math.round(vv.height):'?'),
+      'screen.h:' + sh + ' avail:' + sah,
+      'diff(s-i):' + (sh-ih),
+      'matchMedia:' + window.matchMedia('(display-mode: standalone)').matches,
+      'nav.standalone:' + !!window.navigator.standalone,
+      'URL:' + (location.search||'(no query)'),
+      'body:' + (document.body.className||'(none)'),
+      rectB ? '.bot top:' + Math.round(rectB.top) + ' bot:' + Math.round(rectB.bottom) : '.bot: none',
+      'doc.h:' + document.documentElement.clientHeight,
+    ].join('\n');
+  }
+  setInterval(snap, 200);
+  snap();
 })();
 </script>
 </body>
