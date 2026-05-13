@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v757</span></div>
+<div class="title">Стич · Claude <span class="build">v759</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3242,6 +3242,26 @@ async function askWithImages(photos, userText) {
   function triggerSway(){
     bodyAngVel += (Math.random() - 0.5) * 0.18;
   }
+  // Полноценная rag-doll реакция: кукла качается + конечности срываются с
+  // bubbles и свободно болтаются. Через 1.5 сек fillFreeLimbs возвращает
+  // конечности к нормальной анимации (re-attach к сообщениям).
+  // force — амплитуда импульса для bodyAngVel (0.18 = лёгкое, 0.5 = резкое).
+  var __flopReturnTimer = null;
+  window.dollFlop = function(force){
+    bodyAngVel += (Math.random() - 0.5) * (force || 0.4);
+    LIMBS.forEach(function(L){
+      L.bubble = null;
+      L.frozen = null;
+      L.frozenShoulder = null;
+      L.relOff = null;
+    });
+    if (__flopReturnTimer) clearTimeout(__flopReturnTimer);
+    __flopReturnTimer = setTimeout(function(){
+      __flopReturnTimer = null;
+      if (window._scrollLocked || window._kbdShown) return;
+      fillFreeLimbs();
+    }, 1500);
+  };
 
   // ── Единый таймер всех перемещений конечностей ─────────────────────
   // Каждые STEP_MIN-STEP_MAX мс делается ОДНО действие из приоритетного
@@ -3730,6 +3750,16 @@ async function askWithImages(photos, userText) {
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', applyKbState);
     window.visualViewport.addEventListener('scroll', syncVisualViewportTop);
+    // Throttled rag-doll реакция на любой resize visualViewport (клавиатура,
+    // share-sheet, iOS UI). 800ms throttle чтобы не флопало много раз
+    // в течение одной анимации поднятия клавиатуры.
+    var __lastFlop = 0;
+    window.visualViewport.addEventListener('resize', function(){
+      var now = Date.now();
+      if (now - __lastFlop < 800) return;
+      __lastFlop = now;
+      if (typeof window.dollFlop === 'function') window.dollFlop(0.35);
+    });
   }
   syncVisualViewportTop();
   var inpForKb = document.getElementById('inp');
