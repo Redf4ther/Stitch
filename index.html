@@ -36,10 +36,10 @@
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{width:100%;height:100%;height:100dvh;min-height:var(--screen-h, 100dvh);overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease;position:relative}
+html,body{width:100%;height:100dvh;overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease;position:fixed;inset:0;margin:0}
 #app{display:contents}
-.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto;transform:translateY(var(--vv-top, 0px))}
-.below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4;transform:translateY(var(--vv-top, 0px))}
+.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
+.below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4}
 /* PWA standalone: layout НЕ сдвигаем — .top, .below, #doll сидят на тех же
    Y что и в Telegram. Топ-бар pwa-chrome floats поверх на z:10 в чистой зоне
    safe-area-top — кнопки видны на своём фоне, остальное прозрачно (видно
@@ -50,7 +50,7 @@ html,body{width:100%;height:100%;height:100dvh;min-height:var(--screen-h, 100dvh
    safe-area-bottom = ~34px и общий нижний отступ становится 52px. Компенсируем:
    педаль safe-area минус 16px (но не меньше 14px). На iPhone X+ это даёт ~18px,
    как в Telegram; на устройствах без home-indicator — 14px. */
-body.pwa-standalone .bottom{padding-bottom:20px;padding-top:0;position:absolute;left:0;right:0;bottom:0;background:var(--bg-tone, #000);z-index:4}
+body.pwa-standalone .bottom{padding-bottom:calc(6px + env(safe-area-inset-bottom, 0px));padding-top:0;position:absolute;left:0;right:0;bottom:0;background:var(--bg-tone, #000);z-index:4}
 body.pwa-standalone .below{padding-bottom:130px}
 /* Компактный режим при клавиатуре: куклу уменьшаем и поджимаем к верху,
    чтобы она целиком влезала в видимую область над клавиатурой.
@@ -58,8 +58,10 @@ body.pwa-standalone .below{padding-bottom:130px}
 /* Кукла и конечности больше НЕ реагируют на клавиатуру (v726) —
    остаются на месте сверху экрана. Раньше тут был compact-mode (scale .5)
    и translateY(--vv-top), но это давало видимое подпрыгивание. */
-body.kb-open.pwa-standalone .bottom{padding-bottom:6px;position:fixed;left:0;right:0;bottom:0;z-index:6}
-body.kb-open.pwa-standalone .below{padding-bottom:110px}
+/* v852: kb-handling упростил. body теперь position:fixed inset:0 + height:100dvh,
+   плюс JS подсовывает живой visualViewport.height. iOS auto-scroll не работает
+   (body фиксирован), composer absolute bottom:0 у body автоматически едет вверх
+   когда body ужимается под клавиатуру. Никаких kb-open-overrides. */
 body.kb-open .chat{pointer-events:none}
 /* iOS standalone PWA при появлении клавиатуры scroll'ит весь page вверх
    чтобы инпут попал в visualViewport. Это уносит position:fixed элементы
@@ -240,7 +242,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v851</span></div>
+<div class="title">Стич · Claude <span class="build">v852</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3925,26 +3927,9 @@ async function askWithImages(photos, userText) {
   syncVisualViewportTop();
   var inpForKb = document.getElementById('inp');
   if (inpForKb) {
-    // v851: после фокуса iOS пытается auto-scroll'ить документ чтобы
-    // textarea оказалась выше клавы. Принудительно держим scrollY=0
-    // на 1.5 секунды и периодически пересинхронизируем --vv-top. Так
-    // iOS не утаскивает страницу и .top/.below не «прыгают».
-    var __scrollLockUntil = 0;
-    inpForKb.addEventListener('focus', function(){
-      __scrollLockUntil = Date.now() + 1500;
-      setTimeout(syncVisualViewportTop, 100);
-      setTimeout(syncVisualViewportTop, 350);
-      setTimeout(syncVisualViewportTop, 700);
-    });
-    function __scrollLockTick(){
-      if (Date.now() < __scrollLockUntil) {
-        if (window.scrollY || document.documentElement.scrollTop) {
-          window.scrollTo(0, 0);
-        }
-      }
-      requestAnimationFrame(__scrollLockTick);
-    }
-    requestAnimationFrame(__scrollLockTick);
+    // v852: scroll-lock и focus-sync убраны. body теперь position:fixed
+    // inset:0 + height = visualViewport.height (см. syncBodyHeight ниже).
+    // Документ нечего скроллить, --vv-top больше не нужен.
     inpForKb.addEventListener('blur', function(){
       // Сбрасываем флаги при закрытии клавиатуры — иногда iOS не fires
       // visualViewport.resize.
