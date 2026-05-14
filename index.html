@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v780</span></div>
+<div class="title">Стич · Claude <span class="build">v781</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3696,23 +3696,39 @@ async function askWithImages(photos, userText) {
         L.cur.x = goal.x; L.cur.y = goal.y;
         L.trans.sx = goal.x; L.trans.sy = goal.y; L.trans.gx = goal.x; L.trans.gy = goal.y; L.trans.t0 = now;
       } else {
-        var goalShift = Math.hypot(goal.x - L.trans.gx, goal.y - L.trans.gy);
-        if (goalShift > 4) {
-          var dist = Math.hypot(goal.x - L.cur.x, goal.y - L.cur.y);
-          L.trans = {
-            sx: L.cur.x, sy: L.cur.y,
-            gx: goal.x,  gy: goal.y,
-            t0: now,
-            dur: Math.min(1800, Math.max(700, 500 + dist * 3.5))
-          };
-        } else {
-          L.trans.gx = goal.x; L.trans.gy = goal.y;
+        // Body в движении? (drag или ощутимое качание) — конечности тогда
+        // висят свободно: на каждый кадр чуть-чуть подтягиваются к dangle/
+        // bubble через low-pass, дают эффект «рук болтаются под куклой».
+        // Ease-curve transition при этом не запускаем (он бы дёрнул их к телу).
+        var bodyMoving = bodyDragXActive || Math.abs(bodyAngVel) > 0.25;
+        if (!bodyMoving) {
+          for (var bpid in bodyDragPointers) { bodyMoving = true; break; }
         }
-        var t = Math.min(1, (now - L.trans.t0) / L.trans.dur);
-        // Сглаженная sine-кривая ease-in-out (плавнее cubic).
-        var e = 0.5 - 0.5 * Math.cos(Math.PI * t);
-        L.cur.x = L.trans.sx + (L.trans.gx - L.trans.sx) * e;
-        L.cur.y = L.trans.sy + (L.trans.gy - L.trans.sy) * e;
+        if (bodyMoving) {
+          L.cur.x += (goal.x - L.cur.x) * 0.05;
+          L.cur.y += (goal.y - L.cur.y) * 0.05;
+          L.trans.sx = L.cur.x; L.trans.sy = L.cur.y;
+          L.trans.gx = goal.x;  L.trans.gy = goal.y;
+          L.trans.t0 = now; L.trans.dur = 1;
+        } else {
+          var goalShift = Math.hypot(goal.x - L.trans.gx, goal.y - L.trans.gy);
+          if (goalShift > 4) {
+            var dist = Math.hypot(goal.x - L.cur.x, goal.y - L.cur.y);
+            L.trans = {
+              sx: L.cur.x, sy: L.cur.y,
+              gx: goal.x,  gy: goal.y,
+              t0: now,
+              dur: Math.min(1800, Math.max(700, 500 + dist * 3.5))
+            };
+          } else {
+            L.trans.gx = goal.x; L.trans.gy = goal.y;
+          }
+          var t = Math.min(1, (now - L.trans.t0) / L.trans.dur);
+          // Сглаженная sine-кривая ease-in-out (плавнее cubic).
+          var e = 0.5 - 0.5 * Math.cos(Math.PI * t);
+          L.cur.x = L.trans.sx + (L.trans.gx - L.trans.sx) * e;
+          L.cur.y = L.trans.sy + (L.trans.gy - L.trans.sy) * e;
+        }
       }
       // При заморозке тоже используем сохранённую позицию плеча — чтобы
       // конечность не «следовала» за куклой если iOS её сдвинул при появлении
