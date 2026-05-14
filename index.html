@@ -266,7 +266,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v838</span></div>
+<div class="title">Стич · Claude <span class="build">v839</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3683,7 +3683,10 @@ async function askWithImages(photos, userText) {
     var dEl = document.getElementById('doll');
     var dollH = dEl ? dEl.getBoundingClientRect().height : 387;
     var natTop = getDollNaturalTop();
-    kbDescendTarget = Math.max(0, vH - dollH - natTop);
+    // Зазор сверху композера (≈ composer + сообщение): чтобы кукла не
+    // упиралась в composer и не закрывала чат. v839: 200px.
+    var BOTTOM_GAP = 200;
+    kbDescendTarget = Math.max(0, vH - dollH - natTop - BOTTOM_GAP);
   };
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
