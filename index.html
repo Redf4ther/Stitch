@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v787</span></div>
+<div class="title">Стич · Claude <span class="build">v788</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3872,10 +3872,14 @@ async function askWithImages(photos, userText) {
   setTimeout(function(){ __vvReady = true; }, 1500);
 
   function syncVisualViewportTop(){
-    // НЕ guard'им __vvReady — этот --vv-top нужен для синхронизации
-    // конечностей с куклой (applyBodyPhysics использует offsetTop
-    // напрямую без guard). Десинхрон = конечности отстают от куклы.
-    var top = (window.visualViewport && window.visualViewport.offsetTop) || 0;
+    // --vv-top нужен только для компенсации iOS-сдвига при kb-open
+    // (трансформирует .top/.below чтобы они остались на экране). При
+    // закрытой клавиатуре vv-top держим 0 — иначе rubber-band на inner
+    // scroll'е чата пинал visualViewport.offsetTop, .below дёргался
+    // вверх-вниз вместе с input'ом. Doll физика читает offsetTop
+    // напрямую, ей CSS-переменная не нужна.
+    var kbOpen = document.body.classList.contains('kb-open');
+    var top = kbOpen ? ((window.visualViewport && window.visualViewport.offsetTop) || 0) : 0;
     document.documentElement.style.setProperty('--vv-top', top + 'px');
   }
   function applyKbState(){
