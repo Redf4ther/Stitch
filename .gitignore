@@ -16,6 +16,7 @@ stich_doll_*.png
 Рисунок OpenDocument.odg
 Текстовый документ.txt
 README.md
+_*.py
 
 # OS / IDE
 .DS_Store
