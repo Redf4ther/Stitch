@@ -244,7 +244,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v871</span></div>
+<div class="title">Стич · Claude <span class="build">v872</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3471,9 +3471,9 @@ async function askWithImages(photos, userText) {
       t.closest('.pwa-chrome') || t.closest('.pwa-menu') ||
       t.closest('#settingsPanel')
     )) return;
-    // v871: проверка попадания на куклу ПЕРЕД фильтром chat. Иначе чат
-    // (z:4 > #doll z:0) перехватывает все тапы в области куклы.
-    if (isDollBodyHit(e.clientX, e.clientY)) {
+    // v872: попадание на куклу = тело/голова (isDollBodyHit) ИЛИ любая
+    // конечность (findLimbAt). Хватать можно за любую часть.
+    if (isDollBodyHit(e.clientX, e.clientY) || findLimbAt(e.clientX, e.clientY)) {
       bodyDragPointers[e.pointerId] = {
         startX: e.clientX, startY: e.clientY,
         startRopeX: ropeTargetX, startRopeY: ropeTargetY
