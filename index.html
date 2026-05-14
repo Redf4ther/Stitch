@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v782</span></div>
+<div class="title">Стич · Claude <span class="build">v783</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3553,6 +3553,10 @@ async function askWithImages(photos, userText) {
   // возвращает angle к 0 через restore-силу → визуальное качание.
   var bodyDragXActive = false, bodyDragAngleTarget = 0;
   var BODY_DRAG_ANGLE_MAX = 15;
+  // Free-limbs mode: пока кукла активно качается или её тянут, конечности
+  // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
+  // не за плечом. Hysteresis 700ms чтобы режим не мерцал на amplitude<0.15.
+  var _freeUntilT = 0;
   var SNAP_THRESHOLD = 50;  // px excess пока visual stretch
   var STRETCH_GAIN = 0.05;  // движение в фазе натяжения (медленно)
   var SNAP_GAIN = 1.5;      // движение после срыва (быстро)
@@ -3680,6 +3684,20 @@ async function askWithImages(photos, userText) {
       var bp = dragged || posed || (!L.frozen && L.bubble ? bubblePoint(L.bubble, L) : null);
       var attached = !!bp && !dragged;
       var goal = bp || (L.frozen ? L.frozen : dangleGoal(L));
+      // Body в движении? Любое из: активный body drag X, открытый body drag
+      // pointer, заметное угловое качание (>0.15 deg/frame).
+      var triggerFree = bodyDragXActive || Math.abs(bodyAngVel) > 0.15;
+      if (!triggerFree) {
+        for (var _bpid in bodyDragPointers) { triggerFree = true; break; }
+      }
+      if (triggerFree) _freeUntilT = now + 700;
+      var bodyMoving = now < _freeUntilT;
+      // Во время body-motion конечности болтаются под куклой, не цепляясь
+      // за bubble'ы (иначе плечо рвётся от тела и виден контортный изгиб).
+      if (bodyMoving && !dragged) {
+        goal = dangleGoal(L);
+        attached = false;
+      }
       if (!L.cur) L.cur = {x:goal.x, y:goal.y};
       if (!L.trans) L.trans = {sx:L.cur.x, sy:L.cur.y, gx:goal.x, gy:goal.y, t0:now, dur:1};
       // Защита от bent-limb на первых рендерах / layout-shift: если конечность
@@ -3698,20 +3716,15 @@ async function askWithImages(photos, userText) {
         L.cur.x = goal.x; L.cur.y = goal.y;
         L.trans.sx = goal.x; L.trans.sy = goal.y; L.trans.gx = goal.x; L.trans.gy = goal.y; L.trans.t0 = now;
       } else {
-        // Body в движении? (drag или ощутимое качание) — конечности тогда
-        // висят свободно: на каждый кадр чуть-чуть подтягиваются к dangle/
-        // bubble через low-pass, дают эффект «рук болтаются под куклой».
-        // Ease-curve transition при этом не запускаем (он бы дёрнул их к телу).
-        var bodyMoving = bodyDragXActive || Math.abs(bodyAngVel) > 0.25;
-        if (!bodyMoving) {
-          for (var bpid in bodyDragPointers) { bodyMoving = true; break; }
-        }
         if (bodyMoving) {
-          L.cur.x += (goal.x - L.cur.x) * 0.05;
-          L.cur.y += (goal.y - L.cur.y) * 0.05;
+          // Свободное болтание: тихий low-pass к dangle. trans.dur 700,
+          // чтобы переход обратно в ease-режим (mode flip когда тело
+          // успокаивается) не дёрнул конечность одним кадром.
+          L.cur.x += (goal.x - L.cur.x) * 0.04;
+          L.cur.y += (goal.y - L.cur.y) * 0.04;
           L.trans.sx = L.cur.x; L.trans.sy = L.cur.y;
           L.trans.gx = goal.x;  L.trans.gy = goal.y;
-          L.trans.t0 = now; L.trans.dur = 1;
+          L.trans.t0 = now; L.trans.dur = 700;
         } else {
           var goalShift = Math.hypot(goal.x - L.trans.gx, goal.y - L.trans.gy);
           if (goalShift > 4) {
