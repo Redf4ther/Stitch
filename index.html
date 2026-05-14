@@ -65,7 +65,8 @@ body.kb-open .chat{pointer-events:none}
    (doll, dollLimbs, dollHands) за пределы экрана. Скрываем их пока
    клавиатура открыта — нет дрожаний, нет улетающих частей. */
 body.pwa-standalone .mic-hint{display:none}
-body.pwa-standalone .status{display:none}
+/* v880: временно показываем status pill в PWA, чтобы было видно индикатор
+   «Думаю..» при диагностике почему Стич не отвечает. */
 .pwa-chrome{position:fixed;top:0;left:0;right:0;height:calc(44px + env(safe-area-inset-top, 0px));padding-top:env(safe-area-inset-top, 0px);background:transparent;display:none;align-items:center;justify-content:space-between;padding-left:8px;padding-right:8px;z-index:10;pointer-events:none}
 body.pwa-standalone .pwa-chrome{display:flex}
 /* Иконки X / ⋯ оформлены в тот же «стеклянный» стиль что и mic-btn:
@@ -244,7 +245,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v879</span></div>
+<div class="title">Стич · Claude <span class="build">v880</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
