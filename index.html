@@ -244,7 +244,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v878</span></div>
+<div class="title">Стич · Claude <span class="build">v879</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1536,8 +1536,10 @@ function setState(s) {
     micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="2.5" width="7" height="13" rx="3.5"/><path d="M19 11a7 7 0 0 1-14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>';
   }
   micHint.textContent = s==='listening'?'ОТПУСТИ...':busy?'НАЖМИ ЧТОБЫ ОСТАНОВИТЬ':'ДЕРЖИ И ГОВОРИ';
-  inp.disabled = busy;
-  sb.disabled = busy;
+  // v879: не дисейблим input/send. Если chat() висит — пользователь
+  // мог тыкать ещё раз, не быть запертым в нерабочем UI.
+  inp.disabled = false;
+  sb.disabled = false;
 }
 
 function isChatAtBottom() {
