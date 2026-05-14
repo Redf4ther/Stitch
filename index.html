@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v777</span></div>
+<div class="title">Стич · Claude <span class="build">v778</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3494,10 +3494,8 @@ async function askWithImages(photos, userText) {
   document.addEventListener('pointermove', function(e){
     var bd = bodyDragPointers[e.pointerId];
     if (bd) {
-      // Direct drag куклы — двигаем ropeTarget по delta pointer
-      var dxBd = e.clientX - bd.startX;
+      // Direct drag куклы — двигаем только по Y. X залочен (см. updateRope).
       var dyBd = e.clientY - bd.startY;
-      ropeTargetX = Math.max(-ROPE_MAX_X, Math.min(ROPE_MAX_X, bd.startRopeX + dxBd));
       ropeTargetY = Math.max(0, Math.min(ROPE_MAX_Y, bd.startRopeY + dyBd));
       return;
     }
@@ -3542,8 +3540,9 @@ async function askWithImages(photos, userText) {
   var SIDE_BUFFER = 20;
   var snappedY = false, snappedX = false;
   function updateRope(){
-    var pullY = 0, pullX = 0, nY = 0, nX = 0;
-    var maxExcessY = 0, maxExcessX = 0;
+    // X-ось залочена: кукла всегда по горизонтальному центру. Двигается
+    // только по Y (drag тела или конечности за reach).
+    var pullY = 0, nY = 0, maxExcessY = 0;
     for (var pid in draggingPointers) {
       var L = draggingPointers[pid];
       if (!L || !L.dragGoal) continue;
@@ -3560,31 +3559,18 @@ async function askWithImages(photos, userText) {
         pullY += excessY * gainY * (dy >= 0 ? 1 : -1);
         nY++;
       }
-      var absX = Math.abs(dx);
-      var excessX = absX - reach - SIDE_BUFFER;
-      if (excessX > 0) {
-        if (excessX > maxExcessX) maxExcessX = excessX;
-        var gainX = excessX > SNAP_THRESHOLD ? SNAP_GAIN : STRETCH_GAIN;
-        pullX += excessX * gainX * (dx >= 0 ? 1 : -1);
-        nX++;
-      }
     }
     snappedY = nY > 0 && maxExcessY > SNAP_THRESHOLD;
-    snappedX = nX > 0 && maxExcessX > SNAP_THRESHOLD;
-    // Sticky snap — пока пользователь не отпустил, оставаться в snap-режиме
     if (nY === 0) snappedY = false;
-    if (nX === 0) snappedX = false;
+    snappedX = false;
 
     if (nY) {
       ropeTargetY = Math.max(0, Math.min(ROPE_MAX_Y, ropeTargetY + (pullY/nY) * 0.05));
     }
-    if (nX) {
-      ropeTargetX = Math.max(-ROPE_MAX_X, Math.min(ROPE_MAX_X, ropeTargetX + (pullX/nX) * 0.05));
-    }
+    ropeTargetX = 0;
     var lerpY = snappedY ? ROPE_LERP_SNAP : ROPE_LERP_STRETCH;
-    var lerpX = snappedX ? ROPE_LERP_SNAP : ROPE_LERP_STRETCH;
     ropeY += (ropeTargetY - ropeY) * lerpY;
-    ropeX += (ropeTargetX - ropeX) * lerpX;
+    ropeX += (ropeTargetX - ropeX) * ROPE_LERP_STRETCH;
     if (doll) {
       doll.style.setProperty('--doll-rope-len', ropeY.toFixed(1) + 'px');
       doll.style.setProperty('--doll-rope-x', ropeX.toFixed(1) + 'px');
