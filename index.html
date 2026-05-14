@@ -258,7 +258,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v826</span></div>
+<div class="title">Стич · Claude <span class="build">v827</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3611,6 +3611,10 @@ async function askWithImages(photos, userText) {
   // возвращает angle к 0 через restore-силу → визуальное качание.
   var bodyDragXActive = false, bodyDragAngleTarget = 0;
   var BODY_DRAG_ANGLE_MAX = 28;  // v824: расширил с 15 — больший swing на сторону
+  // v827: при kb-open кукла спускается на верёвочке на kbDescendTarget px,
+  // чтобы быть видимой в меньшем поверх-клавиатуры пространстве. Плавно.
+  var kbDescendY = 0, kbDescendTarget = 0;
+  window.setDollKbOpen = function(open){ kbDescendTarget = open ? 120 : 0; };
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
   // не за плечом. Hysteresis 700ms чтобы режим не мерцал на amplitude<0.15.
@@ -3654,14 +3658,17 @@ async function askWithImages(photos, userText) {
     var lerpY = snappedY ? ROPE_LERP_SNAP : ROPE_LERP_STRETCH;
     ropeY += (ropeTargetY - ropeY) * lerpY;
     ropeX += (ropeTargetX - ropeX) * ROPE_LERP_STRETCH;
+    // v827: kbDescend плавно стремится к target (120 при kb-open, 0 при close).
+    kbDescendY += (kbDescendTarget - kbDescendY) * 0.08;
+    var visualY = ropeY + kbDescendY;
     if (doll) {
-      doll.style.setProperty('--doll-rope-len', ropeY.toFixed(1) + 'px');
+      doll.style.setProperty('--doll-rope-len', visualY.toFixed(1) + 'px');
       doll.style.setProperty('--doll-rope-x', ropeX.toFixed(1) + 'px');
       // Верёвочка идёт от фикс-потолка вниз к голове куклы. Когда кукла
-      // съезжает вниз (ropeY > 0), её SVG-фрейм едет вниз вместе с ней —
-      // компенсируем, удлинняя y1 вверх (CSS-px → SVG-units ≈ ×1.395).
+      // съезжает вниз, её SVG-фрейм едет вниз вместе с ней — компенсируем,
+      // удлинняя y1 вверх (CSS-px → SVG-units ≈ ×1.395).
       var rl = doll.querySelector('.dollRope');
-      if (rl) rl.setAttribute('y1', (-200 - ropeY * 1.395).toFixed(1));
+      if (rl) rl.setAttribute('y1', (-200 - visualY * 1.395).toFixed(1));
     }
   }
 
@@ -3964,6 +3971,7 @@ async function askWithImages(photos, userText) {
     if (!focused) {
       document.documentElement.style.setProperty('--kb-h', '0px');
       document.body.classList.remove('kb-open');
+      if (window.setDollKbOpen) window.setDollKbOpen(false);
       syncVisualViewportTop();
       return;
     }
@@ -3978,6 +3986,7 @@ async function askWithImages(photos, userText) {
     var open = kb > 100;
     document.documentElement.style.setProperty('--kb-h', (open ? kb : 0) + 'px');
     document.body.classList.toggle('kb-open', open);
+    if (window.setDollKbOpen) window.setDollKbOpen(open);
     syncVisualViewportTop();
   }
   if (window.visualViewport) {
