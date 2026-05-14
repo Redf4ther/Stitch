@@ -254,7 +254,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v897</span></div>
+<div class="title">Стич · Claude <span class="build">v898</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1614,41 +1614,27 @@ window.showApples = function(left, right){
   }
   c.appendChild(lz); c.appendChild(rz);
   document.body.appendChild(c);
-  // v897: Хореография-маятник, чередует стороны L/R. На каждом замахе:
-  //   - импульс bodyAngVel в сторону яблока (sign — v896 был перепутан)
-  //   - рука нацелена на яблоко, лерпит к нему
-  //   - в апогее (~ четверть периода) — яблоко падает И рука отпускается,
-  //     чтобы успеть вернуться к телу до следующего замаха.
-  var PERIOD = 620;
-  var APEX = 230;
+  // v898: без анимации тела. Просто: рука соответствующей стороны тянется
+  // к каждому яблоку по очереди и кладёт. Левые сначала (от ближнего к
+  // дальнему), потом правые.
+  var STEP = 700;
   var leftApples = Array.prototype.slice.call(lz.children).reverse();
   var rightApples = Array.prototype.slice.call(rz.children);
-  var plan = [];
-  var li = 0, ri = 0;
-  while (li < leftApples.length || ri < rightApples.length) {
-    if (li < leftApples.length) plan.push({ el: leftApples[li++], side: -1 });
-    if (ri < rightApples.length) plan.push({ el: rightApples[ri++], side: 1 });
-  }
+  var seq = leftApples.concat(rightApples);
   setTimeout(function(){
-    for (var k = 0; k < plan.length; k++) (function(p, idx){
+    for (var k = 0; k < seq.length; k++) (function(el, idx){
       setTimeout(function(){
-        var r = p.el.getBoundingClientRect();
+        var r = el.getBoundingClientRect();
         var cx = r.left + r.width/2;
         var cy = r.top + r.height/2;
-        window.dollHandTarget = { x: cx, y: cy, side: p.side };
-        // v897: sign flip — тело свингует в сторону яблока.
-        var impulse = p.side * 0.9;
-        if (typeof window.dollKick === 'function') window.dollKick(impulse);
-      }, idx * PERIOD);
-      setTimeout(function(){
-        p.el.classList.add('placed');
-        // v897: после броска отпускаем руку, чтобы не висела на яблоке.
-        window.dollHandTarget = null;
-      }, idx * PERIOD + APEX);
-    })(plan[k], k);
+        var screenCx = window.innerWidth / 2;
+        window.dollHandTarget = { x: cx, y: cy, side: cx < screenCx ? -1 : 1 };
+      }, idx * STEP);
+      setTimeout(function(){ el.classList.add('placed'); }, idx * STEP + 450);
+    })(seq[k], k);
     setTimeout(function(){
       window.dollHandTarget = null;
-    }, plan.length * PERIOD + 400);
+    }, seq.length * STEP + 200);
   }, 50);
 };
 window.hideApples = function(immediate){
