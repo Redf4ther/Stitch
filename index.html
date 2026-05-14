@@ -258,7 +258,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v823</span></div>
+<div class="title">Стич · Claude <span class="build">v824</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3522,23 +3522,15 @@ async function askWithImages(photos, userText) {
       t.closest('.pwa-chrome') || t.closest('.pwa-menu') ||
       t.closest('#settingsPanel')
     )) return;
-    // v823: тап по лимбу — растягивает ИМЕННО эту конечность за пальцем
-    // (без maxD лимита, см. v821). Тело при этом получает только лёгкий
-    // torque в applyBodyPhysics — тонкая реакция, не полноценный body drag.
-    // Тап мимо лимба, но по телу — обычный body drag (вся кукла на верёвке).
+    // v824: тап по чему угодно (лимб или тело) — body drag, кукла качается
+    // на верёвочке. Лимбы не растягиваются (v818, прикреплены к плечам).
     var L = findLimbAt(e.clientX, e.clientY);
     var hitBody = isDollBodyHit(e.clientX, e.clientY);
     if (!L && !hitBody) return;
-    if (L) {
-      draggingPointers[e.pointerId] = L;
-      L.dragGoal = {x: e.clientX, y: e.clientY};
-      L.cur = {x: e.clientX, y: e.clientY};
-    } else {
-      bodyDragPointers[e.pointerId] = {
-        startX: e.clientX, startY: e.clientY,
-        startRopeX: ropeTargetX, startRopeY: ropeTargetY
-      };
-    }
+    bodyDragPointers[e.pointerId] = {
+      startX: e.clientX, startY: e.clientY,
+      startRopeX: ropeTargetX, startRopeY: ropeTargetY
+    };
     window.dollDragging = true;
     // Открываем рот когда кого-то схватили, и закрываем через 2 секунды
     // автоматом даже если всё ещё держим.
@@ -3609,7 +3601,7 @@ async function askWithImages(photos, userText) {
   // Horizontal drag → pendulum angle (а не translateX). На release физика
   // возвращает angle к 0 через restore-силу → визуальное качание.
   var bodyDragXActive = false, bodyDragAngleTarget = 0;
-  var BODY_DRAG_ANGLE_MAX = 15;
+  var BODY_DRAG_ANGLE_MAX = 28;  // v824: расширил с 15 — больший swing на сторону
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
   // не за плечом. Hysteresis 700ms чтобы режим не мерцал на amplitude<0.15.
