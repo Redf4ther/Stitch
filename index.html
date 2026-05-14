@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v785</span></div>
+<div class="title">Стич · Claude <span class="build">v786</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3717,17 +3717,27 @@ async function askWithImages(photos, userText) {
         L.trans.sx = goal.x; L.trans.sy = goal.y; L.trans.gx = goal.x; L.trans.gy = goal.y; L.trans.t0 = now;
       } else {
         if (bodyMoving) {
-          // Ragdoll dangle. Кисть/стопа лочится строго под плечом (goal —
-          // dangleGoal в screen-coords). Никакого per-frame lag'а: low-pass
-          // даёт видимый stepping при быстрых движениях, а maxD-clamp
-          // на отстающем L.cur вынуждает IK дёргать локтем/коленом.
-          // Раскачивание появляется само через bodyAngle: плечо вращается
-          // → конечность поворачивается вместе с ним, оставаясь прямой.
-          L.cur.x = goal.x; L.cur.y = goal.y;
-          L.trans.sx = goal.x; L.trans.sy = goal.y;
-          L.trans.gx = goal.x; L.trans.gy = goal.y;
+          // Ragdoll dangle: реальная "брошенная" позиция кисти/стопы
+          // живёт в L.lag и плавно low-pass'ом подтягивается к dangle.
+          // Bend/unbend ранее был от того что maxD-clamp мутировал саму
+          // L.cur и feedback от clamp'а ломал лерп — теперь L.cur это
+          // ПРОЕКЦИЯ L.lag на круг максимального reach'а от плеча,
+          // L.lag не трогаем. Конечность визуально отстаёт от тела при
+          // быстрых движениях по любой оси, без рывков.
+          if (typeof L.lagX !== 'number') { L.lagX = L.cur.x; L.lagY = L.cur.y; }
+          L.lagX += (goal.x - L.lagX) * 0.05;
+          L.lagY += (goal.y - L.lagY) * 0.05;
+          var ldx = L.lagX - preS.x, ldy = L.lagY - preS.y;
+          var ldist = Math.hypot(ldx, ldy) || 0.001;
+          var reachR = L.L1 + L.L2;
+          var renderD = ldist > reachR ? reachR : ldist;
+          L.cur.x = preS.x + ldx / ldist * renderD;
+          L.cur.y = preS.y + ldy / ldist * renderD;
+          L.trans.sx = L.cur.x; L.trans.sy = L.cur.y;
+          L.trans.gx = goal.x;  L.trans.gy = goal.y;
           L.trans.t0 = now; L.trans.dur = 700;
         } else {
+          L.lagX = null; L.lagY = null;
           var goalShift = Math.hypot(goal.x - L.trans.gx, goal.y - L.trans.gy);
           if (goalShift > 4) {
             var dist = Math.hypot(goal.x - L.cur.x, goal.y - L.cur.y);
