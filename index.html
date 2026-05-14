@@ -51,12 +51,14 @@ html,body{width:100%;height:100%;height:100dvh;min-height:var(--screen-h, 100dvh
    педаль safe-area минус 16px (но не меньше 14px). На iPhone X+ это даёт ~18px,
    как в Telegram; на устройствах без home-indicator — 14px. */
 body.pwa-standalone .bottom{padding-bottom:20px;padding-top:0;position:absolute;left:0;right:0;bottom:0;background:var(--bg-tone, #000);z-index:4}
-body.pwa-standalone .below{padding-bottom:130px}
+/* padding-bottom .below = живая высота композера (ResizeObserver в JS пишет
+   --composer-h). Фолбэк 130px на случай если ResizeObserver не подцепился.
+   Раньше было статично 130/110; не хватало когда композер вырастал (photo
+   preview, многострочный textarea) — последние сообщения залезали под .bottom. */
+body.pwa-standalone .below{padding-bottom:var(--composer-h, 130px)}
 /* Кукла и конечности больше НЕ реагируют на клавиатуру (v726) —
-   остаются на месте сверху экрана. Раньше тут был compact-mode (scale .5)
-   и translateY(--vv-top), но это давало видимое подпрыгивание. */
+   остаются на месте сверху экрана. */
 body.kb-open.pwa-standalone .bottom{padding-bottom:6px;position:fixed;left:0;right:0;bottom:0;z-index:6}
-body.kb-open.pwa-standalone .below{padding-bottom:110px}
 /* Раньше тут было body.kb-open .chat{pointer-events:none} — это ломало
    inner scroll сообщений при открытой клавиатуре (тач уходил на body
    и iOS катал всю страницу). Снято: пользователь должен скроллить чат
@@ -246,7 +248,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v794</span></div>
+<div class="title">Стич · Claude <span class="build">v795</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -4015,6 +4017,29 @@ async function askWithImages(photos, userText) {
   window.addEventListener('orientationchange', setScreenVars);
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) setScreenVars(); });
   if (window.visualViewport) window.visualViewport.addEventListener('resize', setScreenVars);
+
+  // Live-измерение высоты .bottom (композер растёт от photo preview/
+  // многострочного textarea/состояния kb-open). --composer-h попадает в
+  // padding-bottom у .below — последние сообщения никогда не уползают
+  // под inputrow.
+  function syncComposerHeight(){
+    var b = document.querySelector('.bottom');
+    if (!b) return;
+    var h = b.getBoundingClientRect().height;
+    if (h > 0) document.documentElement.style.setProperty('--composer-h', h + 'px');
+  }
+  syncComposerHeight();
+  setTimeout(syncComposerHeight, 100);
+  setTimeout(syncComposerHeight, 800);
+  if (window.ResizeObserver) {
+    var bEl = document.querySelector('.bottom');
+    if (bEl) new ResizeObserver(syncComposerHeight).observe(bEl);
+  } else {
+    window.addEventListener('resize', syncComposerHeight);
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncComposerHeight);
+  }
 })();
 </script>
 <!-- DEBUG OVERLAY v6 (v761) — диагностика composer при клавиатуре -->
