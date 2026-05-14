@@ -228,7 +228,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 
 </head>
 <body>
-<script>(function(){try{if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone){document.body.classList.add('pwa-standalone');}}catch(_){}window.DISABLE_LIMBS=true;})();</script>
+<script>(function(){try{if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone){document.body.classList.add('pwa-standalone');}}catch(_){}})();</script>
 
 <div class="pwa-chrome" id="pwaChrome">
   <span></span>
@@ -258,7 +258,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v816</span></div>
+<div class="title">Стич · Claude <span class="build">v817</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -363,6 +363,10 @@ body.pwa-standalone .pwa-chrome{display:flex}
     <button id="toggleTests" style="margin-top:12px;display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;font-size:15px;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent">
       <span style="flex:1;text-align:left">Тест-кнопки</span>
       <span id="toggleTestsState" style="font-size:13px;opacity:.7">выкл</span>
+    </button>
+    <button id="toggleErase" style="margin-top:12px;display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;font-size:15px;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent">
+      <span style="flex:1;text-align:left">Стирание сообщений</span>
+      <span id="toggleEraseState" style="font-size:13px;opacity:.7">выкл</span>
     </button>
   </div>
 </div>
@@ -1410,6 +1414,25 @@ function showVoicePanel(name, steps, onDone) {
       haptic();
       if (window.toggleTestButtons) window.toggleTestButtons();
       refreshTestState();
+    });
+  }
+  // Переключатель «Стирание сообщений» — управляет window.ERASE_ON, который
+  // читает limb-tick в applyBodyPhysics-loop при попадании конечности на bubble.
+  var te = document.getElementById('toggleErase');
+  var teState = document.getElementById('toggleEraseState');
+  function refreshEraseState(){
+    var on = localStorage.getItem('stitch_erase') === '1';
+    if (teState) teState.textContent = on ? 'вкл' : 'выкл';
+    window.ERASE_ON = on;
+  }
+  refreshEraseState();
+  if (te && !te._wired) {
+    te._wired = true;
+    te.addEventListener('click', function(){
+      haptic();
+      var cur = localStorage.getItem('stitch_erase') === '1';
+      localStorage.setItem('stitch_erase', cur ? '0' : '1');
+      refreshEraseState();
     });
   }
 })();
@@ -3688,8 +3711,6 @@ async function askWithImages(photos, userText) {
         if (el && p.x) el.setAttribute('transform', 'translate('+p.x+' '+p.y+')');
       });
     }
-    // v816: лимбы временно отключены — не анимируются, не стирают краску.
-    if (window.DISABLE_LIMBS) { requestAnimationFrame(tick); return; }
     LIMBS.forEach(function(L){
       if (L.bubble && !document.body.contains(L.bubble)) L.bubble = null;
       // Если кукла ещё не разлэйаутилась (shoulderPoint=0,0), ждём — иначе
@@ -3862,7 +3883,9 @@ async function askWithImages(photos, userText) {
       // анимация по сообщениям), либо когда юзер сам тащит её пальцем — тогда
       // стираем любое сообщение под кистью/стопой (drag-режим).
       L._lastAttached = attached;  // для debug overlay
-      if (window.stPaint) {
+      // Стирание включается тумблером «Стирание сообщений» в настройках.
+      // По умолчанию выключено (v817).
+      if (window.stPaint && window.ERASE_ON) {
         var radius = L.isLeg ? 14 : 10;
         if (dragged) {
           var bbls2 = document.querySelectorAll('#chat .bbl');
