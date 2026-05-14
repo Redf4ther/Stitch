@@ -254,7 +254,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v895</span></div>
+<div class="title">Стич · Claude <span class="build">v896</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1614,33 +1614,41 @@ window.showApples = function(left, right){
   }
   c.appendChild(lz); c.appendChild(rz);
   document.body.appendChild(c);
-  // Хореография: правая рука куклы поочерёдно «ставит» каждое яблоко.
-  // Сначала левую сторону (от ближнего к дальнему), потом правую.
-  // Если яблоко далеко — кукла качается на верёвочке в его сторону (как
-  // реальная марионетка тянется к недосягаемой точке).
-  var STEP = 850;
+  // v896: Хореография как настоящий маятник. Кукла раскачивается на
+  // верёвочке, чередуя стороны (L,R,L,R...). На каждом замахе:
+  //   - импульс bodyAngVel в сторону яблока
+  //   - рука пред-нацелена на яблоко (вылетает вместе с телом)
+  //   - в апогее (через APEX) — яблоко «отпускается»
+  // PERIOD ≈ натуральному периоду пружины тела (~950ms), так что качание
+  // резонансное, не борется с физикой.
+  var PERIOD = 950;
+  var APEX = 320;
   var leftApples = Array.prototype.slice.call(lz.children).reverse();
   var rightApples = Array.prototype.slice.call(rz.children);
-  var seq = leftApples.concat(rightApples);
+  // Interleave: L, R, L, R..., оставшиеся подряд.
+  var plan = [];
+  var li = 0, ri = 0;
+  while (li < leftApples.length || ri < rightApples.length) {
+    if (li < leftApples.length) plan.push({ el: leftApples[li++], side: -1 });
+    if (ri < rightApples.length) plan.push({ el: rightApples[ri++], side: 1 });
+  }
   setTimeout(function(){
-    for (var k = 0; k < seq.length; k++) (function(el, idx){
+    for (var k = 0; k < plan.length; k++) (function(p, idx){
       setTimeout(function(){
-        var r = el.getBoundingClientRect();
+        var r = p.el.getBoundingClientRect();
         var cx = r.left + r.width/2;
         var cy = r.top + r.height/2;
-        // v893: сторона руки — по позиции яблока.
-        var screenCx = window.innerWidth / 2;
-        window.dollHandTarget = { x: cx, y: cy, side: cx < screenCx ? -1 : 1 };
-        // v894: лёгкое качание тела в сторону яблока.
-        var tilt = Math.max(-15, Math.min(15, (cx - screenCx) * 0.05));
-        if (typeof window.dollSwingTo === 'function') window.dollSwingTo(-tilt);
-      }, idx * STEP);
-      setTimeout(function(){ el.classList.add('placed'); }, idx * STEP + 600);
-    })(seq[k], k);
+        window.dollHandTarget = { x: cx, y: cy, side: p.side };
+        // p.side: -1 левое яблоко → bodyAngle растёт → kick +0.85
+        //         +1 правое яблоко → kick -0.85
+        var impulse = -p.side * 0.85;
+        if (typeof window.dollKick === 'function') window.dollKick(impulse);
+      }, idx * PERIOD);
+      setTimeout(function(){ p.el.classList.add('placed'); }, idx * PERIOD + APEX);
+    })(plan[k], k);
     setTimeout(function(){
       window.dollHandTarget = null;
-      if (typeof window.dollSwingTo === 'function') window.dollSwingTo(null);
-    }, seq.length * STEP + 200);
+    }, plan.length * PERIOD + 400);
   }, 50);
 };
 window.hideApples = function(immediate){
@@ -3662,15 +3670,12 @@ async function askWithImages(photos, userText) {
   // возвращает angle к 0 через restore-силу → визуальное качание.
   var bodyDragXActive = false, bodyDragAngleTarget = 0;
   var BODY_DRAG_ANGLE_MAX = 15;
-  // v894: программное качание тела (для apple-хореографии).
-  window.dollSwingTo = function(angle){
-    if (angle === null || angle === undefined) {
-      bodyDragXActive = false;
-      bodyDragAngleTarget = 0;
-    } else {
-      bodyDragXActive = true;
-      bodyDragAngleTarget = Math.max(-20, Math.min(20, angle));
-    }
+  // v896: направленный импульс маятника. positive impulse → bodyAngle растёт
+  // → тело куклы свингует влево (см. CSS rotate matrix). Для apple слева
+  // нужен +impulse, справа -impulse.
+  window.dollKick = function(impulse){
+    bodyDragXActive = false;
+    bodyAngVel += impulse;
   };
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
