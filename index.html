@@ -258,7 +258,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v829</span></div>
+<div class="title">Стич · Claude <span class="build">v830</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3644,6 +3644,16 @@ async function askWithImages(photos, userText) {
 
     if (nY) {
       ropeTargetY = Math.max(0, Math.min(ROPE_MAX_Y, ropeTargetY + (pullY/nY) * 0.05));
+    } else {
+      // v830: на release куклa возвращается в исходную (ropeY → 0). Если
+      // активен body/limb drag — не сворачиваем (пользователь держит).
+      var anyDrag = false;
+      for (var k1 in bodyDragPointers) { anyDrag = true; break; }
+      if (!anyDrag) { for (var k2 in draggingPointers) { anyDrag = true; break; } }
+      if (!anyDrag) {
+        ropeTargetY *= 0.92;
+        if (ropeTargetY < 0.5) ropeTargetY = 0;
+      }
     }
     ropeTargetX = 0;
     var lerpY = snappedY ? ROPE_LERP_SNAP : ROPE_LERP_STRETCH;
