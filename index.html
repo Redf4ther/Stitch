@@ -38,8 +38,8 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{width:100%;height:100%;height:100dvh;min-height:var(--screen-h, 100dvh);overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease;position:relative}
 #app{display:contents}
-.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto;transform:translateY(var(--vv-top, 0px))}
-.below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4;transform:translateY(var(--vv-top, 0px))}
+.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
+.below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4}
 /* PWA standalone: layout НЕ сдвигаем — .top, .below, #doll сидят на тех же
    Y что и в Telegram. Топ-бар pwa-chrome floats поверх на z:10 в чистой зоне
    safe-area-top — кнопки видны на своём фоне, остальное прозрачно (видно
@@ -124,7 +124,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 #doll.sway { animation: swayDoll 2.4s ease-out; }
 /* Руки/ноги (path) ПОВЕРХ тела куклы (z:1, #doll z:0) — конечности
    соединяются поверх тела, без visual gap. Шарниры-кружочки скрыты. */
-#dollLimbs{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1;transform:translateY(var(--vv-top, 0px))}
+#dollLimbs{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 #dollLimbs .leg{stroke:#1a1610;stroke-width:17;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 /* Тонкий тканевый блик вдоль рукавов/штанов. */
@@ -134,7 +134,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 /* Кисти/стопы СЗАДИ сообщений (z:1, тот же что #dollLimbs) — рука/нога
    садится на верх bubble и нижняя часть кисти прячется за облачком,
    создавая эффект «держит сверху». В отвязанном виде свисает за чатом. */
-#dollHands{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1;transform:translateY(var(--vv-top, 0px))}
+#dollHands{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1}
 #dollHands .hand,#dollHands .foot{filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
 @keyframes iB{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-5px) rotate(.3deg)}}
 @keyframes tN{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-3px) rotate(.8deg)}}
@@ -251,7 +251,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v805</span></div>
+<div class="title">Стич · Claude <span class="build">v806</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3659,7 +3659,10 @@ async function askWithImages(photos, userText) {
     // Контр-сдвиг по visualViewport.offsetTop — компенсирует iOS-скролл
     // на keyboard, чтобы кукла оставалась на экране.
     var vvTop = (window.visualViewport && window.visualViewport.offsetTop) || 0;
-    if (doll) doll.style.transform = 'translateX(calc(-50% + ' + ropeX.toFixed(1) + 'px)) translateY(' + vvTop.toFixed(1) + 'px) rotate(' + bodyAngle.toFixed(3) + 'deg)';
+    // vvTop-компенсация снята (v806). Кукла не подстраивается под iOS-сдвиг
+    // visualViewport: остаётся на месте, как и .top/.below. Если iOS
+    // скроллит layout — кукла уезжает с layout, это OK, важнее стабильность.
+    if (doll) doll.style.transform = 'translateX(calc(-50% + ' + ropeX.toFixed(1) + 'px)) rotate(' + bodyAngle.toFixed(3) + 'deg)';
   }
 
   function tick(){
