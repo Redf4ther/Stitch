@@ -57,7 +57,7 @@ body.pwa-standalone .bottom{padding-bottom:20px;padding-top:0;background:var(--b
    виепорт, потому что инпут оказывается выше клавиатуры самим CSS-сдвигом.
    Кукла специально не сдвигается — раньше тут был compact-mode (scale .5)
    и translateY(--vv-top), но это давало видимое подпрыгивание. */
-body.kb-open.pwa-standalone .below{transform:translateY(calc(-1 * var(--kb-h, 0px)))}
+body.kb-open.pwa-standalone .below{transform:translateY(calc(var(--vv-top, 0px) - var(--kb-h, 0px)))}
 /* Раньше тут было body.kb-open .chat{pointer-events:none} — это ломало
    inner scroll сообщений при открытой клавиатуре (тач уходил на body
    и iOS катал всю страницу). Снято: пользователь должен скроллить чат
@@ -247,7 +247,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v791</span></div>
+<div class="title">Стич · Claude <span class="build">v792</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
