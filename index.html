@@ -258,7 +258,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v818</span></div>
+<div class="title">Стич · Claude <span class="build">v819</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3522,22 +3522,16 @@ async function askWithImages(photos, userText) {
       t.closest('.pwa-chrome') || t.closest('.pwa-menu') ||
       t.closest('#settingsPanel')
     )) return;
+    // v819: любой захват куклы (конечность или тело/голова) трактуется как
+    // body drag — тянем всю куклу за верёвочку. Лимбы остаются прикреплены
+    // к телу (см. v818), не растягиваются за пальцем.
     var L = findLimbAt(e.clientX, e.clientY);
-    if (!L) {
-      // Не попали по конечности → проверяем body/head. Если да — body drag
-      // (двигает всю куклу через ropeTarget X/Y, конечности не трогаем).
-      if (isDollBodyHit(e.clientX, e.clientY)) {
-        bodyDragPointers[e.pointerId] = {
-          startX: e.clientX, startY: e.clientY,
-          startRopeX: ropeTargetX, startRopeY: ropeTargetY
-        };
-        window.dollDragging = true;
-      }
-      return;
-    }
-    draggingPointers[e.pointerId] = L;
-    L.dragGoal = {x: e.clientX, y: e.clientY};
-    L.cur = {x: e.clientX, y: e.clientY};
+    var hitBody = isDollBodyHit(e.clientX, e.clientY);
+    if (!L && !hitBody) return;
+    bodyDragPointers[e.pointerId] = {
+      startX: e.clientX, startY: e.clientY,
+      startRopeX: ropeTargetX, startRopeY: ropeTargetY
+    };
     window.dollDragging = true;
     // Открываем рот когда кого-то схватили, и закрываем через 2 секунды
     // автоматом даже если всё ещё держим.
