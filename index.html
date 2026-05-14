@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v855</span></div>
+<div class="title">Стич · Claude <span class="build">v856</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3653,131 +3653,21 @@ async function askWithImages(photos, userText) {
       });
     }
     LIMBS.forEach(function(L){
-      if (L.bubble && !document.body.contains(L.bubble)) L.bubble = null;
-      // Если кукла ещё не разлэйаутилась (shoulderPoint=0,0), ждём — иначе
-      // конечности «упадут» из (0,0) в правильную позицию при первом рендере.
+      // v856: лимбы статичны. Никаких bubble follow, drag, ease, lag,
+      // erase. Только listen-pose (рука к уху во время записи голоса)
+      // и финальный рендеринг IK.
       var preS = shoulderPoint(L.shoulderId);
       if (!preS.x && !preS.y) return;
-      // Поза «рука к уху» при записи голоса: правая рука куклы (sideSign>0)
-      // идёт РЯДОМ с правым ухом — не на ухо и не позади, а вплотную сбоку.
-      // Смещаем точку на ~16px наружу и слегка вниз от центра уха, чтобы
-      // кисть лежала рядом, не перекрывая ухо.
       var posed = null;
       if (window.dollListenPose && !L.isLeg && L.sideSign > 0) {
         var ear = shoulderPoint('ear-r');
-        if (ear.x || ear.y) {
-          posed = {x: ear.x + 22, y: ear.y - 2};
-          L.bubble = null;
-          L.frozen = null;  // listen-pose сильнее любой заморозки
-        }
+        if (ear.x || ear.y) posed = {x: ear.x + 22, y: ear.y - 2};
       }
-      // Если юзер тащит эту конечность пальцем — dragGoal сильнее всего
-      // остального. Координаты в экранных px, клампим к радиусу L1+L2 от плеча.
-      var dragged = null;
-      if (L.dragGoal) {
-        L.bubble = null;
-        L.frozen = null;
-        dragged = L.dragGoal;
-      }
-      // Если конечность «заморожена» (UI дрыгается — клавиатура/скролл/фокус)
-      // — держим её на сохранённой позиции, не реагируем на движение чата.
-      var bp = dragged || posed || (!L.frozen && L.bubble ? bubblePoint(L.bubble, L) : null);
-      var attached = !!bp && !dragged;
-      var goal = bp || (L.frozen ? L.frozen : dangleGoal(L));
-      // Body в движении? Любое из: активный body drag X, открытый body drag
-      // pointer, заметное угловое качание (>0.15 deg/frame).
-      var triggerFree = bodyDragXActive || Math.abs(bodyAngVel) > 0.15;
-      if (!triggerFree) {
-        for (var _bpid in bodyDragPointers) { triggerFree = true; break; }
-      }
-      if (triggerFree) _freeUntilT = now + 700;
-      var bodyMoving = now < _freeUntilT;
-      // Во время body-motion конечности болтаются под куклой, не цепляясь
-      // за bubble'ы (иначе плечо рвётся от тела и виден контортный изгиб).
-      if (bodyMoving && !dragged) {
-        goal = dangleGoal(L);
-        attached = false;
-      }
-      if (!L.cur) L.cur = {x:goal.x, y:goal.y};
-      if (!L.trans) L.trans = {sx:L.cur.x, sy:L.cur.y, gx:goal.x, gy:goal.y, t0:now, dur:1};
-      // Защита от bent-limb на первых рендерах / layout-shift: если конечность
-      // в свободном висении (нет bubble/drag/posed/frozen) и кисть оказалась
-      // НЕЕСТЕСТВЕННО близко к плечу (<70% L1+L2) — это значит что shoulder
-      // только что переехал и L.cur застрял в старой позиции. Snap к dangle.
-      if (!L.bubble && !L.dragGoal && !posed && !L.frozen) {
-        var distSh = Math.hypot(L.cur.x - preS.x, L.cur.y - preS.y);
-        if (distSh < (L.L1 + L.L2) * 0.7) {
-          L.cur.x = goal.x; L.cur.y = goal.y;
-          L.trans.sx = goal.x; L.trans.sy = goal.y; L.trans.gx = goal.x; L.trans.gy = goal.y;
-        }
-      }
-      if (dragged) {
-        // Прямое управление пальцем — без сглаживающего перехода.
-        L.cur.x = goal.x; L.cur.y = goal.y;
-        L.trans.sx = goal.x; L.trans.sy = goal.y; L.trans.gx = goal.x; L.trans.gy = goal.y; L.trans.t0 = now;
-      } else {
-        if (bodyMoving) {
-          // Ragdoll dangle: реальная "брошенная" позиция кисти/стопы
-          // живёт в L.lag и плавно low-pass'ом подтягивается к dangle.
-          // Bend/unbend ранее был от того что maxD-clamp мутировал саму
-          // L.cur и feedback от clamp'а ломал лерп — теперь L.cur это
-          // ПРОЕКЦИЯ L.lag на круг максимального reach'а от плеча,
-          // L.lag не трогаем. Конечность визуально отстаёт от тела при
-          // быстрых движениях по любой оси, без рывков.
-          if (typeof L.lagX !== 'number') { L.lagX = L.cur.x; L.lagY = L.cur.y; }
-          L.lagX += (goal.x - L.lagX) * 0.05;
-          L.lagY += (goal.y - L.lagY) * 0.05;
-          var ldx = L.lagX - preS.x, ldy = L.lagY - preS.y;
-          var ldist = Math.hypot(ldx, ldy) || 0.001;
-          var reachR = L.L1 + L.L2;
-          var renderD = ldist > reachR ? reachR : ldist;
-          L.cur.x = preS.x + ldx / ldist * renderD;
-          L.cur.y = preS.y + ldy / ldist * renderD;
-          L.trans.sx = L.cur.x; L.trans.sy = L.cur.y;
-          L.trans.gx = goal.x;  L.trans.gy = goal.y;
-          L.trans.t0 = now; L.trans.dur = 700;
-        } else {
-          L.lagX = null; L.lagY = null;
-          var goalShift = Math.hypot(goal.x - L.trans.gx, goal.y - L.trans.gy);
-          if (goalShift > 4) {
-            var dist = Math.hypot(goal.x - L.cur.x, goal.y - L.cur.y);
-            L.trans = {
-              sx: L.cur.x, sy: L.cur.y,
-              gx: goal.x,  gy: goal.y,
-              t0: now,
-              dur: Math.min(1800, Math.max(700, 500 + dist * 3.5))
-            };
-          } else {
-            L.trans.gx = goal.x; L.trans.gy = goal.y;
-          }
-          var t = Math.min(1, (now - L.trans.t0) / L.trans.dur);
-          // Сглаженная sine-кривая ease-in-out (плавнее cubic).
-          var e = 0.5 - 0.5 * Math.cos(Math.PI * t);
-          L.cur.x = L.trans.sx + (L.trans.gx - L.trans.sx) * e;
-          L.cur.y = L.trans.sy + (L.trans.gy - L.trans.sy) * e;
-        }
-      }
-      // При заморозке тоже используем сохранённую позицию плеча — чтобы
-      // конечность не «следовала» за куклой если iOS её сдвинул при появлении
-      // клавиатуры. preS уже посчитан выше с актуальной позицией.
-      var s = (L.frozen && L.frozenShoulder) ? L.frozenShoulder : shoulderPoint(L.shoulderId);
-      // Ограничение длины. Привязанной — до 92% макс., чтобы локоть/колено
-      // оставались чуть согнутыми, но без сильного изгиба. Висящей — полная.
-      var maxD = attached ? (L.L1 + L.L2) * 0.82 : (L.L1 + L.L2);
-      var ddx = L.cur.x - s.x, ddy = L.cur.y - s.y;
-      var dd = Math.hypot(ddx, ddy);
-      if (dd > maxD) {
-        L.cur.x = s.x + ddx / dd * maxD;
-        L.cur.y = s.y + ddy / dd * maxD;
-      }
-      // Анатомическое сгибание: два прямых отрезка от плеча к локтю и от
-      // локтя к кисти. Локоть/колено вычисляется через 2-bone IK по L1/L2.
-      // bendSign — противоположен sideSign в SVG-coords (Y вниз): чтобы
-      // локоть/колено уходило НАРУЖУ.
-      // Когда рука поднята выше плеча (любая ситуация, не только listen-pose)
-      // — инвертируем bendSign, иначе локоть-перекидывается через S-T линию
-      // в момент пересечения и выглядит как телепорт. Так локоть остаётся
-      // НАРУЖУ непрерывно.
+      var goal = posed || dangleGoal(L);
+      if (!L.cur) L.cur = {x: goal.x, y: goal.y};
+      L.cur.x = goal.x; L.cur.y = goal.y;
+      // IK render.
+      var s = preS;
       var bend = -L.sideSign;
       if (!L.isLeg && L.cur.y < s.y) bend = L.sideSign;
       var j = twoBoneJoint(s, L.cur, L.L1, L.L2, bend);
@@ -3788,26 +3678,13 @@ async function askWithImages(photos, userText) {
         L.hlEl.setAttribute('d',
           'M '+(s.x+hx)+' '+(s.y+2)+' L '+(j.x+hx)+' '+(j.y+2)+' L '+(L.cur.x+hx)+' '+(L.cur.y+2));
       }
-      if (L.jointEl) {
-        L.jointEl.setAttribute('transform', 'translate('+j.x+' '+j.y+')');
-      }
+      if (L.jointEl) L.jointEl.setAttribute('transform', 'translate('+j.x+' '+j.y+')');
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
-      // Телефон в правой руке. Появляется СРАЗУ при нажатии мика
-      // (window.phoneShown=true в pointerdown). После отпускания phoneShown
-      // сбрасывается → phoneFadeOut=true — держит телефон видимым ПОКА рука
-      // едет вниз. Когда рука достигла dangle — phoneFadeOut уходит. При drag
-      // или natural-attach телефон НЕ показывается (никаких флагов нет).
+      // Телефон в правой руке во время записи голоса.
       if (!L.isLeg && L.sideSign > 0) {
         var phone = document.getElementById('phone-r');
         if (phone) {
-          var dg = dangleGoal(L);
-          // Fadeout заканчивается когда: рука достигла dangle ИЛИ её перехватил
-          // bubble/drag — в обоих случаях анимация спуска прерывается, телефон
-          // должен исчезнуть сразу.
-          if (window.phoneFadeOut && (
-            (dg.y - L.cur.y <= 20) || L.bubble || L.dragGoal
-          )) window.phoneFadeOut = false;
           var phoneVisible = window.phoneShown || window.phoneFadeOut;
           if (phoneVisible) {
             phone.style.display = '';
@@ -3820,21 +3697,7 @@ async function askWithImages(photos, userText) {
           }
         }
       }
-      // Стираем краску: либо когда конечность ПРИВЯЗАНА к bubble (обычная
-      // анимация по сообщениям), либо когда юзер сам тащит её пальцем — тогда
-      // стираем любое сообщение под кистью/стопой (drag-режим).
-      L._lastAttached = attached;  // для debug overlay
-      if (window.stPaint) {
-        var radius = L.isLeg ? 14 : 10;
-        if (dragged) {
-          var bbls2 = document.querySelectorAll('#chat .bbl');
-          for (var bi3 = 0; bi3 < bbls2.length; bi3++) {
-            window.stPaint.erase(bbls2[bi3], L.cur.x, L.cur.y, radius);
-          }
-        } else if (L.bubble && attached) {
-          window.stPaint.erase(L.bubble, L.cur.x, L.cur.y, radius);
-        }
-      }
+      // v856: стирание краски отключено по запросу пользователя.
     });
     requestAnimationFrame(tick);
   }
