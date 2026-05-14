@@ -254,7 +254,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v896</span></div>
+<div class="title">Стич · Claude <span class="build">v897</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1614,18 +1614,15 @@ window.showApples = function(left, right){
   }
   c.appendChild(lz); c.appendChild(rz);
   document.body.appendChild(c);
-  // v896: Хореография как настоящий маятник. Кукла раскачивается на
-  // верёвочке, чередуя стороны (L,R,L,R...). На каждом замахе:
-  //   - импульс bodyAngVel в сторону яблока
-  //   - рука пред-нацелена на яблоко (вылетает вместе с телом)
-  //   - в апогее (через APEX) — яблоко «отпускается»
-  // PERIOD ≈ натуральному периоду пружины тела (~950ms), так что качание
-  // резонансное, не борется с физикой.
-  var PERIOD = 950;
-  var APEX = 320;
+  // v897: Хореография-маятник, чередует стороны L/R. На каждом замахе:
+  //   - импульс bodyAngVel в сторону яблока (sign — v896 был перепутан)
+  //   - рука нацелена на яблоко, лерпит к нему
+  //   - в апогее (~ четверть периода) — яблоко падает И рука отпускается,
+  //     чтобы успеть вернуться к телу до следующего замаха.
+  var PERIOD = 620;
+  var APEX = 230;
   var leftApples = Array.prototype.slice.call(lz.children).reverse();
   var rightApples = Array.prototype.slice.call(rz.children);
-  // Interleave: L, R, L, R..., оставшиеся подряд.
   var plan = [];
   var li = 0, ri = 0;
   while (li < leftApples.length || ri < rightApples.length) {
@@ -1639,12 +1636,15 @@ window.showApples = function(left, right){
         var cx = r.left + r.width/2;
         var cy = r.top + r.height/2;
         window.dollHandTarget = { x: cx, y: cy, side: p.side };
-        // p.side: -1 левое яблоко → bodyAngle растёт → kick +0.85
-        //         +1 правое яблоко → kick -0.85
-        var impulse = -p.side * 0.85;
+        // v897: sign flip — тело свингует в сторону яблока.
+        var impulse = p.side * 0.9;
         if (typeof window.dollKick === 'function') window.dollKick(impulse);
       }, idx * PERIOD);
-      setTimeout(function(){ p.el.classList.add('placed'); }, idx * PERIOD + APEX);
+      setTimeout(function(){
+        p.el.classList.add('placed');
+        // v897: после броска отпускаем руку, чтобы не висела на яблоке.
+        window.dollHandTarget = null;
+      }, idx * PERIOD + APEX);
     })(plan[k], k);
     setTimeout(function(){
       window.dollHandTarget = null;
@@ -3810,7 +3810,11 @@ async function askWithImages(photos, userText) {
           L.cur.y = preS.y + ddy / dd * maxR;
         }
       } else {
-        L.cur.x = goal.x; L.cur.y = goal.y;
+        // v897: после apple-pose плавно возвращаемся к dangle, иначе snap
+        // выглядит как ручка-тычок. В обычном статичном состоянии goal не
+        // меняется, и L.cur и так сидит на goal — лерп ничего не ломает.
+        L.cur.x += (goal.x - L.cur.x) * 0.18;
+        L.cur.y += (goal.y - L.cur.y) * 0.18;
       }
       // IK render.
       var s = preS;
