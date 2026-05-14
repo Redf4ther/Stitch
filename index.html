@@ -50,7 +50,7 @@ html,body{width:100%;height:100%;height:100dvh;min-height:var(--screen-h, 100dvh
    safe-area-bottom = ~34px и общий нижний отступ становится 52px. Компенсируем:
    педаль safe-area минус 16px (но не меньше 14px). На iPhone X+ это даёт ~18px,
    как в Telegram; на устройствах без home-indicator — 14px. */
-body.pwa-standalone .bottom{padding-bottom:20px;padding-top:0;background:var(--bg-tone, #000)}
+body.pwa-standalone .bottom{padding-bottom:calc(20px + env(safe-area-inset-bottom, 0px));padding-top:0;background:var(--bg-tone, #000)}
 body.pwa-standalone .below{padding-bottom:130px}
 /* Компактный режим при клавиатуре: куклу уменьшаем и поджимаем к верху,
    чтобы она целиком влезала в видимую область над клавиатурой.
@@ -173,7 +173,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 .dot.g{background:#5be09b;box-shadow:0 0 8px rgba(91,224,155,.7);animation:db 1s infinite}
 .dot.b{background:#7c5cff;box-shadow:0 0 8px rgba(124,92,255,.7);animation:db .4s infinite}
 .dot.r{background:#ff4757;box-shadow:0 0 8px rgba(255,71,87,.85);animation:db .5s infinite}
-.chat{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px;touch-action:pan-y;-webkit-touch-callout:none;transition:opacity .25s ease}
+.chat{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:4px 14px calc(var(--composer-h, 120px) + 12px);display:flex;flex-direction:column;gap:7px;touch-action:pan-y;-webkit-touch-callout:none;transition:opacity .25s ease}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 /* Слой «краски» поверх стеклянной подложки .bi. Canvas с z-index:-1 рисуется
@@ -189,7 +189,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 .cur::after{content:‘▋’;color:#7c5cff;animation:cur .4s steps(1) infinite}
 .err{flex-shrink:0;font-size:11px;color:#e84a5f;padding:0 14px;text-align:center}
 .err:not(:empty){padding:2px 14px}
-.bottom{flex-shrink:0;position:relative;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:transparent;display:flex;flex-direction:column;gap:6px;align-items:center}
+.bottom{flex-shrink:0;position:fixed;left:0;right:0;bottom:0;z-index:6;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:var(--bg-tone, #000);display:flex;flex-direction:column;gap:6px;align-items:center}
 .mic-btn{width:54px;height:54px;border-radius:50%;border:1px solid rgba(255,255,255,.22);font-size:24px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28);cursor:pointer;touch-action:none}
 .mic-btn.disabled{opacity:.5}
 .mic-btn:active{background:rgba(255,255,255,.05)}
@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v863</span></div>
+<div class="title">Стич · Claude <span class="build">v864</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -251,6 +251,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
   <div class="below">
   <div class="chat" id="chat"><div class="bbl"><div class="bi">Привет! Я Стич! Держи микрофон и говори!</div></div></div>
   <div class="err" id="err"></div>
+  </div>
   <div class="bottom">
     <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
     <div class="status"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
@@ -294,7 +295,6 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <button class="sbtn" id="sb" style="display:none;flex-shrink:0;margin-right:9px;opacity:0;transform:scale(.6);transform-origin:center;transition:opacity .22s ease,transform .22s cubic-bezier(.16,.7,.3,1.2);background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),var(--btn-tint, transparent);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1)">➤</button>
       </div>
     </div>
-  </div>
   </div>
 </div>
 
