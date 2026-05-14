@@ -254,7 +254,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v893</span></div>
+<div class="title">Стич · Claude <span class="build">v894</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1628,14 +1628,18 @@ window.showApples = function(left, right){
         var r = el.getBoundingClientRect();
         var cx = r.left + r.width/2;
         var cy = r.top + r.height/2;
-        // v893: тело висит на месте. Сторона руки — по позиции яблока.
+        // v893: сторона руки — по позиции яблока.
         var screenCx = window.innerWidth / 2;
         window.dollHandTarget = { x: cx, y: cy, side: cx < screenCx ? -1 : 1 };
+        // v894: лёгкое качание тела в сторону яблока.
+        var tilt = Math.max(-15, Math.min(15, (cx - screenCx) * 0.05));
+        if (typeof window.dollSwingTo === 'function') window.dollSwingTo(-tilt);
       }, idx * STEP);
       setTimeout(function(){ el.classList.add('placed'); }, idx * STEP + 220);
     })(seq[k], k);
     setTimeout(function(){
       window.dollHandTarget = null;
+      if (typeof window.dollSwingTo === 'function') window.dollSwingTo(null);
     }, seq.length * STEP + 200);
   }, 50);
 };
@@ -3658,6 +3662,16 @@ async function askWithImages(photos, userText) {
   // возвращает angle к 0 через restore-силу → визуальное качание.
   var bodyDragXActive = false, bodyDragAngleTarget = 0;
   var BODY_DRAG_ANGLE_MAX = 15;
+  // v894: программное качание тела (для apple-хореографии).
+  window.dollSwingTo = function(angle){
+    if (angle === null || angle === undefined) {
+      bodyDragXActive = false;
+      bodyDragAngleTarget = 0;
+    } else {
+      bodyDragXActive = true;
+      bodyDragAngleTarget = Math.max(-20, Math.min(20, angle));
+    }
+  };
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
   // не за плечом. Hysteresis 700ms чтобы режим не мерцал на amplitude<0.15.
