@@ -37,11 +37,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{width:100%;height:100%;height:100dvh;min-height:var(--screen-h, 100dvh);overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease;position:relative}
-#app{display:block;position:fixed;left:0;right:0;top:0;height:var(--screen-h, 100vh);transition:transform .22s ease}
-/* Telegram-стиль клавиатуры: при kb-open вся область .top + .below + .bottom
-   едет вверх ровно на --kb-h одной transform-сдвижкой. Layout внутри #app
-   при этом не меняется (.bottom остаётся absolute bottom:0 у #app и т.д.) */
-body.kb-open #app{transform:translateY(calc(-1 * var(--kb-h, 0px)))}
+#app{display:contents}
 .top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto;transform:translateY(var(--vv-top, 0px))}
 .below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4;transform:translateY(var(--vv-top, 0px))}
 /* PWA standalone: layout НЕ сдвигаем — .top, .below, #doll сидят на тех же
@@ -252,7 +248,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v800</span></div>
+<div class="title">Стич · Claude <span class="build">v801</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
