@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v783</span></div>
+<div class="title">Стич · Claude <span class="build">v784</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3717,11 +3717,13 @@ async function askWithImages(photos, userText) {
         L.trans.sx = goal.x; L.trans.sy = goal.y; L.trans.gx = goal.x; L.trans.gy = goal.y; L.trans.t0 = now;
       } else {
         if (bodyMoving) {
-          // Свободное болтание: тихий low-pass к dangle. trans.dur 700,
-          // чтобы переход обратно в ease-режим (mode flip когда тело
-          // успокаивается) не дёрнул конечность одним кадром.
+          // Свободное болтание. X — медленный low-pass (создаёт boku swing,
+          // конечности «отстают» по бокам когда тело тилтуется). Y — быстрое
+          // следование за плечом (≈гравитация: рука/нога всегда провисает
+          // под плечом, не растягивается в струну когда куклу тащат вниз
+          // и maxD-clamp иначе дёргает её рывками).
           L.cur.x += (goal.x - L.cur.x) * 0.04;
-          L.cur.y += (goal.y - L.cur.y) * 0.04;
+          L.cur.y += (goal.y - L.cur.y) * 0.30;
           L.trans.sx = L.cur.x; L.trans.sy = L.cur.y;
           L.trans.gx = goal.x;  L.trans.gy = goal.y;
           L.trans.t0 = now; L.trans.dur = 700;
