@@ -58,7 +58,10 @@ body.pwa-standalone .bottom{padding-bottom:20px;padding-top:0;position:absolute;
 body.pwa-standalone .below{padding-bottom:var(--composer-h, 130px)}
 /* Кукла и конечности больше НЕ реагируют на клавиатуру (v726) —
    остаются на месте сверху экрана. */
-/* Никаких kb-open-специфичных правок layout — #app transform делает всё. */
+/* При kb-open: композер pin к visible vp bottom (= выше клавиатуры),
+   .below сжимается до того же уровня. */
+body.kb-open.pwa-standalone .bottom{padding-bottom:6px;position:fixed;left:0;right:0;bottom:0;z-index:6}
+body.kb-open.pwa-standalone .below{bottom:var(--kb-h, 0px)}
 /* Раньше тут было body.kb-open .chat{pointer-events:none} — это ломало
    inner scroll сообщений при открытой клавиатуре (тач уходил на body
    и iOS катал всю страницу). Снято: пользователь должен скроллить чат
@@ -248,7 +251,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v801</span></div>
+<div class="title">Стич · Claude <span class="build">v802</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
