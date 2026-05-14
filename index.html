@@ -36,16 +36,10 @@
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease;position:fixed;inset:0}
-/* Recipe v751 (validated в [[stitch-ios-pwa-quirks]]): body min-height
-   = --screen-h (physical screen). Composer position:absolute bottom:0
-   от body — попадает на physical screen bottom (956), не на 894 в
-   bad-mode layout viewport. iOS standalone при kb сам ужимает layout
-   vp; composer кб-open переключается в position:fixed bottom:0 чтобы
-   попасть выше клавы. */
+html,body{width:100%;height:100%;height:100dvh;min-height:var(--screen-h, 100dvh);overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease;position:relative}
 #app{display:contents}
-.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
-.below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4}
+.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto;transform:translateY(var(--vv-top, 0px))}
+.below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4;transform:translateY(var(--vv-top, 0px))}
 /* PWA standalone: layout НЕ сдвигаем — .top, .below, #doll сидят на тех же
    Y что и в Telegram. Топ-бар pwa-chrome floats поверх на z:10 в чистой зоне
    safe-area-top — кнопки видны на своём фоне, остальное прозрачно (видно
@@ -57,22 +51,16 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:var(--
    педаль safe-area минус 16px (но не меньше 14px). На iPhone X+ это даёт ~18px,
    как в Telegram; на устройствах без home-indicator — 14px. */
 body.pwa-standalone .bottom{padding-bottom:20px;padding-top:0;position:absolute;left:0;right:0;bottom:0;background:var(--bg-tone, #000);z-index:4}
-body.kb-open.pwa-standalone .bottom{padding-bottom:6px;position:fixed;left:0;right:0;bottom:0;z-index:6}
-/* padding-bottom .below = живая высота композера (ResizeObserver в JS пишет
-   --composer-h). Фолбэк 130px на случай если ResizeObserver не подцепился.
-   Раньше было статично 130/110; не хватало когда композер вырастал (photo
-   preview, многострочный textarea) — последние сообщения залезали под .bottom. */
 body.pwa-standalone .below{padding-bottom:130px}
+/* Компактный режим при клавиатуре: куклу уменьшаем и поджимаем к верху,
+   чтобы она целиком влезала в видимую область над клавиатурой.
+   Bottom-блок чуть приподнимаем поверх iOS-аксессуара (кнопки ^ v Done). */
 /* Кукла и конечности больше НЕ реагируют на клавиатуру (v726) —
-   остаются на месте сверху экрана. */
-/* kb-open layout полностью отдан viewport meta interactive-widget=
-   resizes-content: iOS Safari 16.4+ сам ужимает viewport, и fixed-
-   элементы (.top, .below, .bottom) автоматически попадают в видимую
-   зону над клавиатурой. Ручных kb-open правил больше нет. */
-/* Раньше тут было body.kb-open .chat{pointer-events:none} — это ломало
-   inner scroll сообщений при открытой клавиатуре (тач уходил на body
-   и iOS катал всю страницу). Снято: пользователь должен скроллить чат
-   как обычно, даже когда клавиатура открыта. */
+   остаются на месте сверху экрана. Раньше тут был compact-mode (scale .5)
+   и translateY(--vv-top), но это давало видимое подпрыгивание. */
+body.kb-open.pwa-standalone .bottom{padding-bottom:6px;position:fixed;left:0;right:0;bottom:0;z-index:6}
+body.kb-open.pwa-standalone .below{padding-bottom:110px}
+body.kb-open .chat{pointer-events:none}
 /* iOS standalone PWA при появлении клавиатуры scroll'ит весь page вверх
    чтобы инпут попал в visualViewport. Это уносит position:fixed элементы
    (doll, dollLimbs, dollHands) за пределы экрана. Скрываем их пока
@@ -92,7 +80,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
    накладывался на сами плитки. */
 .pwa-menu .item{display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;text-align:left;padding:12px 16px;font-size:15px;font-weight:500;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:14px;background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),rgba(255,255,255,.10);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.22);box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28)}
 .pwa-menu .item:active{background:linear-gradient(135deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.18) 100%),rgba(255,255,255,.05)}
-.title{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 50px);right:4px;writing-mode:vertical-rl;text-orientation:mixed;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#ffffff;z-index:7;pointer-events:none}
+.title{padding-top:10px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#ffffff}
 .build{font-size:10px;opacity:.6;margin-left:4px}
 .stage{position:relative;width:160px;height:160px;margin-top:2px}
 .glow{display:none}
@@ -131,7 +119,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 #doll.sway { animation: swayDoll 2.4s ease-out; }
 /* Руки/ноги (path) ПОВЕРХ тела куклы (z:1, #doll z:0) — конечности
    соединяются поверх тела, без visual gap. Шарниры-кружочки скрыты. */
-#dollLimbs{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1}
+#dollLimbs{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1;transform:translateY(var(--vv-top, 0px))}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 #dollLimbs .leg{stroke:#1a1610;stroke-width:17;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 /* Тонкий тканевый блик вдоль рукавов/штанов. */
@@ -141,7 +129,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 /* Кисти/стопы СЗАДИ сообщений (z:1, тот же что #dollLimbs) — рука/нога
    садится на верх bubble и нижняя часть кисти прячется за облачком,
    создавая эффект «держит сверху». В отвязанном виде свисает за чатом. */
-#dollHands{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1}
+#dollHands{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1;transform:translateY(var(--vv-top, 0px))}
 #dollHands .hand,#dollHands .foot{filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
 @keyframes iB{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-5px) rotate(.3deg)}}
 @keyframes tN{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-3px) rotate(.8deg)}}
@@ -150,14 +138,6 @@ body.pwa-standalone .pwa-chrome{display:flex}
 @keyframes gT{0%,100%{opacity:.4}50%{opacity:.85}}
 @keyframes db{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-@keyframes appleIn{from{opacity:0;transform:scale(.3) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
-@keyframes appleOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.6)}}
-#applesContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 70px);left:0;right:0;height:120px;pointer-events:none;z-index:3;display:flex;justify-content:center;gap:160px}
-#applesContainer .zone{display:flex;flex-wrap:wrap-reverse;align-items:flex-end;gap:2px;width:90px;height:100%}
-#applesContainer .left{justify-content:flex-end}
-#applesContainer .right{justify-content:flex-start}
-#applesContainer .apple{font-size:22px;opacity:0;animation:appleIn .35s cubic-bezier(.34,1.56,.64,1) forwards}
-#applesContainer.fade .apple{animation:appleOut .25s ease forwards}
 @keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
 @keyframes saluteFall{0%{transform:translate(-50%,-50%);opacity:1;animation-timing-function:cubic-bezier(.05,.55,.4,1)}30%{transform:translate(calc(-50% + var(--peak-x,0)),calc(-50% + var(--peak-y,-260px)));opacity:1;animation-timing-function:cubic-bezier(.6,.04,.85,.55)}100%{transform:translate(calc(-50% + var(--end-x,0)),110vh);opacity:.85}}
@@ -193,13 +173,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 .dot.g{background:#5be09b;box-shadow:0 0 8px rgba(91,224,155,.7);animation:db 1s infinite}
 .dot.b{background:#7c5cff;box-shadow:0 0 8px rgba(124,92,255,.7);animation:db .4s infinite}
 .dot.r{background:#ff4757;box-shadow:0 0 8px rgba(255,71,87,.85);animation:db .5s infinite}
-.chat{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px;touch-action:pan-y;-webkit-touch-callout:none;transition:opacity .25s ease}
-/* Spacer вместо justify-content:flex-end. flex-end на flex-контейнере с
-   overflow ломал inner scroll на iOS (всё окно скроллилось, .chat нет).
-   ::before — гибкая пустая «полка» сверху: пока сообщений мало, она
-   занимает оставшееся место и пушит их к низу. Когда сообщений много,
-   spacer сжимается до 0 и работает обычный scroll. */
-.chat::before{content:'';flex:1 1 0;min-height:0}
+.chat{flex:1;min-height:0;overflow-y:auto;padding:4px 14px 12px;display:flex;flex-direction:column;gap:7px;touch-action:pan-y;-webkit-touch-callout:none;transition:opacity .25s ease}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 /* Слой «краски» поверх стеклянной подложки .bi. Canvas с z-index:-1 рисуется
@@ -266,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v844</span></div>
+<div class="title">Стич · Claude <span class="build">v845</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -371,10 +345,6 @@ body.pwa-standalone .pwa-chrome{display:flex}
     <button id="toggleTests" style="margin-top:12px;display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;font-size:15px;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent">
       <span style="flex:1;text-align:left">Тест-кнопки</span>
       <span id="toggleTestsState" style="font-size:13px;opacity:.7">выкл</span>
-    </button>
-    <button id="toggleErase" style="margin-top:12px;display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;font-size:15px;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent">
-      <span style="flex:1;text-align:left">Стирание сообщений</span>
-      <span id="toggleEraseState" style="font-size:13px;opacity:.7">выкл</span>
     </button>
   </div>
 </div>
@@ -1424,25 +1394,6 @@ function showVoicePanel(name, steps, onDone) {
       refreshTestState();
     });
   }
-  // Переключатель «Стирание сообщений» — управляет window.ERASE_ON, который
-  // читает limb-tick в applyBodyPhysics-loop при попадании конечности на bubble.
-  var te = document.getElementById('toggleErase');
-  var teState = document.getElementById('toggleEraseState');
-  function refreshEraseState(){
-    var on = localStorage.getItem('stitch_erase') === '1';
-    if (teState) teState.textContent = on ? 'вкл' : 'выкл';
-    window.ERASE_ON = on;
-  }
-  refreshEraseState();
-  if (te && !te._wired) {
-    te._wired = true;
-    te.addEventListener('click', function(){
-      haptic();
-      var cur = localStorage.getItem('stitch_erase') === '1';
-      localStorage.setItem('stitch_erase', cur ? '0' : '1');
-      refreshEraseState();
-    });
-  }
 })();
 // Camera button haptic on press (label triggers a hidden file input on tap).
 (function(){
@@ -1491,30 +1442,15 @@ var chat = document.getElementById('chat');
 var errEl = document.getElementById('err');
 var inp = document.getElementById('inp');
 var sb = document.getElementById('sb');
-// При ТАПЕ по чату (без drag-scroll) снимаем фокус с textarea → закрывается
-// клавиатура. Раньше дисмиссили на pointerdown → скролл (который тоже
-// начинается с pointerdown) сразу гасил кб. Теперь отслеживаем движение
-// между down и up; >6px = scroll, blur не вызываем.
+// При тапе по чату снимаем фокус с textarea, чтобы caret не "вылетал" из
+// поля ввода (в iOS WebView он визуально оставался поверх чата при тапах
+// по сообщениям, пока фокус был у inp). Закрывает заодно клавиатуру.
 (function(){
   var chatEl = document.getElementById('chat');
   if (!chatEl) return;
-  var sx = 0, sy = 0, st = 0, moved = false, pid = -1;
-  chatEl.addEventListener('pointerdown', function(e){
-    sx = e.clientX; sy = e.clientY; st = performance.now(); moved = false; pid = e.pointerId;
+  chatEl.addEventListener('pointerdown', function(){
+    if (document.activeElement === inp) inp.blur();
   }, {passive:true});
-  chatEl.addEventListener('pointermove', function(e){
-    if (e.pointerId !== pid) return;
-    if (Math.abs(e.clientX - sx) > 6 || Math.abs(e.clientY - sy) > 6) moved = true;
-  }, {passive:true});
-  chatEl.addEventListener('pointerup', function(e){
-    if (e.pointerId !== pid) return;
-    pid = -1;
-    var dur = performance.now() - st;
-    // Резкий тап = без движения И короткий по времени (≤250ms). Long-press
-    // или drag-scroll → клавиатуру не трогаем.
-    if (!moved && dur < 250 && document.activeElement === inp) inp.blur();
-  }, {passive:true});
-  chatEl.addEventListener('pointercancel', function(){ pid = -1; moved = false; }, {passive:true});
 })();
 var micBtn = document.getElementById('micBtn');
 var micHint = document.getElementById('micHint');
@@ -1606,60 +1542,8 @@ function isChatAtBottom() {
 function autoScrollChat() {
   chat.scrollTop = chat.scrollHeight;
 }
-// Парсер маркера [apples N+M] (или -/×/÷). Возвращает {left,right,clean}
-// или null если маркера нет. Лимит 10 на сторону.
-function parseApplesMarker(text){
-  if (!text) return null;
-  var m = text.match(/\[apples\s+(\d{1,2})\s*([+\-*x×\/÷])\s*(\d{1,2})\]/i);
-  if (!m) return null;
-  var L = Math.min(10, parseInt(m[1], 10));
-  var R = Math.min(10, parseInt(m[3], 10));
-  return { left:L, right:R, op:m[2], clean: text.replace(m[0], '').trim() };
-}
-function showApples(left, right){
-  hideApples(true);
-  if (!left && !right) return;
-  var c = document.createElement('div'); c.id = 'applesContainer';
-  var lz = document.createElement('div'); lz.className = 'zone left';
-  var rz = document.createElement('div'); rz.className = 'zone right';
-  for (var i = 0; i < left; i++) {
-    var a = document.createElement('span'); a.className = 'apple';
-    a.textContent = '🍎';
-    a.style.animationDelay = (i * 0.07) + 's';
-    lz.appendChild(a);
-  }
-  for (var j = 0; j < right; j++) {
-    var a2 = document.createElement('span'); a2.className = 'apple';
-    a2.textContent = '🍎';
-    a2.style.animationDelay = (j * 0.07) + 's';
-    rz.appendChild(a2);
-  }
-  c.appendChild(lz); c.appendChild(rz);
-  document.body.appendChild(c);
-}
-function hideApples(immediate){
-  var c = document.getElementById('applesContainer');
-  if (!c) return;
-  if (immediate) { c.remove(); return; }
-  c.classList.add('fade');
-  setTimeout(function(){ try { c.remove(); } catch(_) {} }, 280);
-}
-
 function addMsg(role, text) {
   var follow = isChatAtBottom();
-  // Новое сообщение от пользователя/системы → убираем старые яблоки.
-  if (role === 'u') hideApples();
-  // Ассистент: парсим [apples ...] маркер, показываем яблоки, чистим текст.
-  if (role === 'a' && text) {
-    var ap = parseApplesMarker(text);
-    if (ap) {
-      text = ap.clean || '...';
-      showApples(ap.left, ap.right);
-    } else {
-      // Ассистент написал без маркера → можно убрать предыдущие яблоки.
-      hideApples();
-    }
-  }
   var w = document.createElement('div'); w.className = 'bbl'+(role==='u'?' u':'');
   var b = document.createElement('div'); b.className = 'bi'; b.textContent = text;
   w.appendChild(b); chat.appendChild(w);
@@ -1764,7 +1648,7 @@ function maybeCelebrate(text) {
   } catch(_) {}
 }
 
-var prompt = 'Ты — персональный репетитор. НИКОГДА не спрашивай "как тебя зовут?" и не пытайся узнать имя ученика. Если ученик сам себя назовёт — запомни и используй, но сам никогда не спрашивай. Не представляйся первым — не называй своё имя, не говори кто ты, не описывай себя по своей инициативе. ИСКЛЮЧЕНИЕ: если ученик САМ спросит "как тебя зовут?", "кто ты?" или похожее — ответь коротко: тебя зовут Липо Стич, ты инопланетный помощник-репетитор. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, представляться без вопроса. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. СТИЛЬ: общайся как обычный ChatGPT-репетитор — спокойно, ясно, по-человечески. НЕ называй ученика "зверёк", "малыш" и подобными словечками. НЕ вставляй "хи-хи", "бум", "ха", "ага" в каждый ответ. Просто понятные фразы простым языком для 8-9 лет. ИСКЛЮЧЕНИЕ: КОГДА РЕБЁНОК САМ НАЗВАЛ ВЕРНЫЙ ОТВЕТ — обязательно начни ответ со слова "Бум!" и подтверди (например: "Бум! Точно так!", "Бум! Ты угадал!", "Бум! Молодец, верно!"). Если ответ неверный — не говори "Бум", мягко направь наводящим вопросом без лишних междометий. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь, верный ответ — Бум-подтверждение. ОБЪЯСНЕНИЕ ЧЕРЕЗ ПРИМЕРЫ: если ученик не понимает суть задачи или правила — объясни через несколько разных примеров из детского мира (яблоки, конфеты, игрушки, машинки, котята, дни рождения, мультяшные герои, школьные ситуации). Если первый пример не зашёл — попробуй второй из другой области. Один и тот же приём показывай на 2-3 разных историях, чтобы ребёнок увидел общую идею. Если просит ответ: предложи разобрать вместе. Главное правило: ученик должен САМ прийти к ответу, а ты подтвердить через "Бум!". Если фото и не понимаешь — просто спроси что с этим делать. ВИЗУАЛЬНАЯ ПОМОЩЬ С ЯБЛОКАМИ: когда объясняешь сложение или вычитание МАЛЫХ чисел (до 10 на каждой стороне) в контексте задачи или примера, вставь в свой ответ ровно одну команду в квадратных скобках: [apples N+M] для сложения или [apples N-M] для вычитания. Фронт это распознает и нарисует N яблок слева от тебя и M справа, ребёнок их увидит. Например для "2+3" пиши: "Смотри, у меня 2 яблока, а у тебя 3. [apples 2+3] Сколько всего?" Не злоупотребляй — только когда яблоки реально помогают: на счёте 1-10. Для больших чисел или умножения/деления не используй.';
+var prompt = 'Ты — персональный репетитор. НИКОГДА не спрашивай "как тебя зовут?" и не пытайся узнать имя ученика. Если ученик сам себя назовёт — запомни и используй, но сам никогда не спрашивай. Не представляйся первым — не называй своё имя, не говори кто ты, не описывай себя по своей инициативе. ИСКЛЮЧЕНИЕ: если ученик САМ спросит "как тебя зовут?", "кто ты?" или похожее — ответь коротко: тебя зовут Липо Стич, ты инопланетный помощник-репетитор. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, представляться без вопроса. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. СТИЛЬ: общайся как обычный ChatGPT-репетитор — спокойно, ясно, по-человечески. НЕ называй ученика "зверёк", "малыш" и подобными словечками. НЕ вставляй "хи-хи", "бум", "ха", "ага" в каждый ответ. Просто понятные фразы простым языком для 8-9 лет. ИСКЛЮЧЕНИЕ: КОГДА РЕБЁНОК САМ НАЗВАЛ ВЕРНЫЙ ОТВЕТ — обязательно начни ответ со слова "Бум!" и подтверди (например: "Бум! Точно так!", "Бум! Ты угадал!", "Бум! Молодец, верно!"). Если ответ неверный — не говори "Бум", мягко направь наводящим вопросом без лишних междометий. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь, верный ответ — Бум-подтверждение. ОБЪЯСНЕНИЕ ЧЕРЕЗ ПРИМЕРЫ: если ученик не понимает суть задачи или правила — объясни через несколько разных примеров из детского мира (яблоки, конфеты, игрушки, машинки, котята, дни рождения, мультяшные герои, школьные ситуации). Если первый пример не зашёл — попробуй второй из другой области. Один и тот же приём показывай на 2-3 разных историях, чтобы ребёнок увидел общую идею. Если просит ответ: предложи разобрать вместе. Главное правило: ученик должен САМ прийти к ответу, а ты подтвердить через "Бум!". Если фото и не понимаешь — просто спроси что с этим делать.';
 
 async function askClaude(msg) {
   errEl.textContent = '';
@@ -3549,7 +3433,7 @@ async function askWithImages(photos, userText) {
   var draggingPointers = {};
 
   function findLimbAt(x, y){
-    var HIT = 28;  // v825: компромисс — лимбы ловятся, но тело не съедается
+    var HIT = 36;
     var best = null, bestD = HIT;
     for (var i = 0; i < LIMBS.length; i++) {
       var L = LIMBS[i];
@@ -3582,15 +3466,22 @@ async function askWithImages(photos, userText) {
       t.closest('.pwa-chrome') || t.closest('.pwa-menu') ||
       t.closest('#settingsPanel')
     )) return;
-    // v829: тап на куклу (лимб или тело) → body drag. Отдельный захват
-    // лимба отключён — лимбы остаются прикреплены к плечам.
     var L = findLimbAt(e.clientX, e.clientY);
-    var hitBody = isDollBodyHit(e.clientX, e.clientY);
-    if (!L && !hitBody) return;
-    bodyDragPointers[e.pointerId] = {
-      startX: e.clientX, startY: e.clientY,
-      startRopeX: ropeTargetX, startRopeY: ropeTargetY
-    };
+    if (!L) {
+      // Не попали по конечности → проверяем body/head. Если да — body drag
+      // (двигает всю куклу через ropeTarget X/Y, конечности не трогаем).
+      if (isDollBodyHit(e.clientX, e.clientY)) {
+        bodyDragPointers[e.pointerId] = {
+          startX: e.clientX, startY: e.clientY,
+          startRopeX: ropeTargetX, startRopeY: ropeTargetY
+        };
+        window.dollDragging = true;
+      }
+      return;
+    }
+    draggingPointers[e.pointerId] = L;
+    L.dragGoal = {x: e.clientX, y: e.clientY};
+    L.cur = {x: e.clientX, y: e.clientY};
     window.dollDragging = true;
     // Открываем рот когда кого-то схватили, и закрываем через 2 секунды
     // автоматом даже если всё ещё держим.
@@ -3661,26 +3552,7 @@ async function askWithImages(photos, userText) {
   // Horizontal drag → pendulum angle (а не translateX). На release физика
   // возвращает angle к 0 через restore-силу → визуальное качание.
   var bodyDragXActive = false, bodyDragAngleTarget = 0;
-  var BODY_DRAG_ANGLE_MAX = 28;  // v824: расширил с 15 — больший swing на сторону
-  // v827: при kb-open кукла спускается на верёвочке на kbDescendTarget px,
-  // чтобы быть видимой в меньшем поверх-клавиатуры пространстве. Плавно.
-  var kbDescendY = 0, kbDescendTarget = 0;
-  // Динамический descent: позиционируем низ куклы у нижнего края видимой
-  // зоны. Реальный natural top куклы (после safe-area-inset-top, -14, etc)
-  // меряем через getBoundingClientRect — работает на любом устройстве/notch.
-  var DOLL_NATURAL_TOP = null;
-  function getDollNaturalTop(){
-    if (DOLL_NATURAL_TOP !== null) return DOLL_NATURAL_TOP;
-    var d = document.getElementById('doll');
-    if (!d) return 50;
-    var r = d.getBoundingClientRect();
-    DOLL_NATURAL_TOP = r.top - (kbDescendY + ropeY);
-    return DOLL_NATURAL_TOP;
-  }
-  // v841: кукла остаётся на своей натуральной позиции (под status bar),
-  // не подстраивается под клавиатуру. Если нужно вернуть descent — раскомментируй
-  // прошлый код или дай новый расчёт.
-  window.setDollKbOpen = function(){ kbDescendTarget = 0; };
+  var BODY_DRAG_ANGLE_MAX = 15;
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
   // не за плечом. Hysteresis 700ms чтобы режим не мерцал на amplitude<0.15.
@@ -3719,32 +3591,19 @@ async function askWithImages(photos, userText) {
 
     if (nY) {
       ropeTargetY = Math.max(0, Math.min(ROPE_MAX_Y, ropeTargetY + (pullY/nY) * 0.05));
-    } else {
-      // v830: на release куклa возвращается в исходную (ropeY → 0). Если
-      // активен body/limb drag — не сворачиваем (пользователь держит).
-      var anyDrag = false;
-      for (var k1 in bodyDragPointers) { anyDrag = true; break; }
-      if (!anyDrag) { for (var k2 in draggingPointers) { anyDrag = true; break; } }
-      if (!anyDrag) {
-        ropeTargetY *= 0.92;
-        if (ropeTargetY < 0.5) ropeTargetY = 0;
-      }
     }
     ropeTargetX = 0;
     var lerpY = snappedY ? ROPE_LERP_SNAP : ROPE_LERP_STRETCH;
     ropeY += (ropeTargetY - ropeY) * lerpY;
     ropeX += (ropeTargetX - ropeX) * ROPE_LERP_STRETCH;
-    // v827: kbDescend плавно стремится к target (120 при kb-open, 0 при close).
-    kbDescendY += (kbDescendTarget - kbDescendY) * 0.08;
-    var visualY = ropeY + kbDescendY;
     if (doll) {
-      doll.style.setProperty('--doll-rope-len', visualY.toFixed(1) + 'px');
+      doll.style.setProperty('--doll-rope-len', ropeY.toFixed(1) + 'px');
       doll.style.setProperty('--doll-rope-x', ropeX.toFixed(1) + 'px');
       // Верёвочка идёт от фикс-потолка вниз к голове куклы. Когда кукла
-      // съезжает вниз, её SVG-фрейм едет вниз вместе с ней — компенсируем,
-      // удлинняя y1 вверх (CSS-px → SVG-units ≈ ×1.395).
+      // съезжает вниз (ropeY > 0), её SVG-фрейм едет вниз вместе с ней —
+      // компенсируем, удлинняя y1 вверх (CSS-px → SVG-units ≈ ×1.395).
       var rl = doll.querySelector('.dollRope');
-      if (rl) rl.setAttribute('y1', (-200 - visualY * 1.395).toFixed(1));
+      if (rl) rl.setAttribute('y1', (-200 - ropeY * 1.395).toFixed(1));
     }
   }
 
@@ -3773,12 +3632,6 @@ async function askWithImages(photos, userText) {
     }
     // Контр-сдвиг по visualViewport.offsetTop — компенсирует iOS-скролл
     // на keyboard, чтобы кукла оставалась на экране.
-    var vvTop = (window.visualViewport && window.visualViewport.offsetTop) || 0;
-    // v837: возвращаю translateY(vvTop) на куклу — без него iOS auto-scroll
-    // при kb-open уносит position:fixed элементы вверх вместе с layout
-    // (голова куклы пропадает за status bar). vvTop = visualViewport.offsetTop,
-    // компенсация возвращает куклу в visible viewport. kbDescendY (ниже)
-    // дополнительно опускает её по верёвочке.
     var vvTop = (window.visualViewport && window.visualViewport.offsetTop) || 0;
     if (doll) doll.style.transform = 'translateX(calc(-50% + ' + ropeX.toFixed(1) + 'px)) translateY(' + vvTop.toFixed(1) + 'px) rotate(' + bodyAngle.toFixed(3) + 'deg)';
   }
@@ -3828,10 +3681,7 @@ async function askWithImages(photos, userText) {
       }
       // Если конечность «заморожена» (UI дрыгается — клавиатура/скролл/фокус)
       // — держим её на сохранённой позиции, не реагируем на движение чата.
-      // v818: лимбы прикреплены к телу — не следуют за bubble'ами. Можно
-      // только дёрнуть пальцем (dragged) или поставить в позу (posed).
-      // Если включишь обратно, поставь L.bubble обратно в условие.
-      var bp = dragged || posed;
+      var bp = dragged || posed || (!L.frozen && L.bubble ? bubblePoint(L.bubble, L) : null);
       var attached = !!bp && !dragged;
       var goal = bp || (L.frozen ? L.frozen : dangleGoal(L));
       // Body в движении? Любое из: активный body drag X, открытый body drag
@@ -3887,25 +3737,32 @@ async function askWithImages(photos, userText) {
           L.trans.gx = goal.x;  L.trans.gy = goal.y;
           L.trans.t0 = now; L.trans.dur = 700;
         } else {
-          // v838: лимбы всегда прикреплены к плечам (v818), ease-curve не
-          // нужен — он лагал когда плечо jump'ало (vvTop/kbDescend/тилт).
-          // Snap к dangleGoal каждый кадр. Если плечо двигается плавно —
-          // и лимб с ним, без видимой рассинхронизации.
           L.lagX = null; L.lagY = null;
-          L.cur.x = goal.x; L.cur.y = goal.y;
-          L.trans.sx = goal.x; L.trans.sy = goal.y;
-          L.trans.gx = goal.x; L.trans.gy = goal.y;
-          L.trans.t0 = now;
+          var goalShift = Math.hypot(goal.x - L.trans.gx, goal.y - L.trans.gy);
+          if (goalShift > 4) {
+            var dist = Math.hypot(goal.x - L.cur.x, goal.y - L.cur.y);
+            L.trans = {
+              sx: L.cur.x, sy: L.cur.y,
+              gx: goal.x,  gy: goal.y,
+              t0: now,
+              dur: Math.min(1800, Math.max(700, 500 + dist * 3.5))
+            };
+          } else {
+            L.trans.gx = goal.x; L.trans.gy = goal.y;
+          }
+          var t = Math.min(1, (now - L.trans.t0) / L.trans.dur);
+          // Сглаженная sine-кривая ease-in-out (плавнее cubic).
+          var e = 0.5 - 0.5 * Math.cos(Math.PI * t);
+          L.cur.x = L.trans.sx + (L.trans.gx - L.trans.sx) * e;
+          L.cur.y = L.trans.sy + (L.trans.gy - L.trans.sy) * e;
         }
       }
       // При заморозке тоже используем сохранённую позицию плеча — чтобы
       // конечность не «следовала» за куклой если iOS её сдвинул при появлении
       // клавиатуры. preS уже посчитан выше с актуальной позицией.
       var s = (L.frozen && L.frozenShoulder) ? L.frozenShoulder : shoulderPoint(L.shoulderId);
-      // Ограничение длины. Привязанной — до 92% макс. Иначе (включая drag) —
-      // полная длина L1+L2. Лимб не растягивается за reach: если палец
-      // уходит дальше, лимб «упирается», torque + rope-pull (updateRope)
-      // тянут тело за пальцем — физическая марионетка на верёвочке.
+      // Ограничение длины. Привязанной — до 92% макс., чтобы локоть/колено
+      // оставались чуть согнутыми, но без сильного изгиба. Висящей — полная.
       var maxD = attached ? (L.L1 + L.L2) * 0.82 : (L.L1 + L.L2);
       var ddx = L.cur.x - s.x, ddy = L.cur.y - s.y;
       var dd = Math.hypot(ddx, ddy);
@@ -3967,9 +3824,7 @@ async function askWithImages(photos, userText) {
       // анимация по сообщениям), либо когда юзер сам тащит её пальцем — тогда
       // стираем любое сообщение под кистью/стопой (drag-режим).
       L._lastAttached = attached;  // для debug overlay
-      // Стирание включается тумблером «Стирание сообщений» в настройках.
-      // По умолчанию выключено (v817).
-      if (window.stPaint && window.ERASE_ON) {
+      if (window.stPaint) {
         var radius = L.isLeg ? 14 : 10;
         if (dragged) {
           var bbls2 = document.querySelectorAll('#chat .bbl');
@@ -4017,14 +3872,10 @@ async function askWithImages(photos, userText) {
   setTimeout(function(){ __vvReady = true; }, 1500);
 
   function syncVisualViewportTop(){
-    // --vv-top нужен только для компенсации iOS-сдвига при kb-open
-    // (трансформирует .top/.below чтобы они остались на экране). При
-    // закрытой клавиатуре vv-top держим 0 — иначе rubber-band на inner
-    // scroll'е чата пинал visualViewport.offsetTop, .below дёргался
-    // вверх-вниз вместе с input'ом. Doll физика читает offsetTop
-    // напрямую, ей CSS-переменная не нужна.
-    var kbOpen = document.body.classList.contains('kb-open');
-    var top = kbOpen ? ((window.visualViewport && window.visualViewport.offsetTop) || 0) : 0;
+    // НЕ guard'им __vvReady — этот --vv-top нужен для синхронизации
+    // конечностей с куклой (applyBodyPhysics использует offsetTop
+    // напрямую без guard). Десинхрон = конечности отстают от куклы.
+    var top = (window.visualViewport && window.visualViewport.offsetTop) || 0;
     document.documentElement.style.setProperty('--vv-top', top + 'px');
   }
   function applyKbState(){
@@ -4041,30 +3892,22 @@ async function askWithImages(photos, userText) {
     if (!focused) {
       document.documentElement.style.setProperty('--kb-h', '0px');
       document.body.classList.remove('kb-open');
-      if (window.setDollKbOpen) window.setDollKbOpen(false);
       syncVisualViewportTop();
       return;
     }
-    // kb-h = реальная высота клавиатуры. screen.height — физический экран
-    // (956 на iPhone 14+ Pro Max), не меняется. visualViewport.height
-    // ужимается под кб. Разница — точная высота клавиатуры.
-    // innerHeight не годится: в standalone PWA он сам частично ужимается
-    // под кб (без interactive-widget meta), даёт неверное значение.
-    var sH = (window.screen && window.screen.height) || window.innerHeight || 0;
-    var vH = (window.visualViewport && window.visualViewport.height) || sH;
-    var kb = Math.max(0, sH - vH);
+    // На iOS PWA standalone window.innerHeight тоже ужимается с
+    // клавиатурой (= visualViewport.height), их разница 0. Нужно
+    // сравнивать с screen.height — physical screen не меняется.
+    var sh = (window.screen && window.screen.height) ? window.screen.height : 0;
+    var kb = (sh > 0) ? Math.max(0, sh - window.innerHeight) : 0;
     var open = kb > 100;
     document.documentElement.style.setProperty('--kb-h', (open ? kb : 0) + 'px');
     document.body.classList.toggle('kb-open', open);
-    if (window.setDollKbOpen) window.setDollKbOpen(open);
     syncVisualViewportTop();
   }
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', applyKbState);
-    // visualViewport.scroll слушать не надо: на iOS оно фаерится во время
-    // inner-scroll'а чата (rubber-band) и offsetTop микро-дрожит, что таскало
-    // .below и composer влево-вправо. --vv-top обновляется только на resize
-    // (kb open/close), когда geometry реально меняется.
+    window.visualViewport.addEventListener('scroll', syncVisualViewportTop);
     // Throttled rag-doll реакция на любой resize visualViewport (клавиатура,
     // share-sheet, iOS UI). 800ms throttle чтобы не флопало много раз
     // в течение одной анимации поднятия клавиатуры.
@@ -4162,10 +4005,6 @@ async function askWithImages(photos, userText) {
   window.addEventListener('orientationchange', setScreenVars);
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) setScreenVars(); });
   if (window.visualViewport) window.visualViewport.addEventListener('resize', setScreenVars);
-
-  // syncComposerHeight убран (v810): динамический --composer-h перетряхивал
-  // padding-bottom у .below при каждом изменении высоты композера → user
-  // видел «блоки подстраиваются». Перешли на статичный 130px в CSS.
 })();
 </script>
 <!-- DEBUG OVERLAY v6 (v761) — диагностика composer при клавиатуре -->
