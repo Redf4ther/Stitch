@@ -266,7 +266,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v839</span></div>
+<div class="title">Стич · Claude <span class="build">v840</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3679,14 +3679,15 @@ async function askWithImages(photos, userText) {
   }
   window.setDollKbOpen = function(open){
     if (!open) { kbDescendTarget = 0; return; }
-    var vH = (window.visualViewport && window.visualViewport.height) || 600;
     var dEl = document.getElementById('doll');
-    var dollH = dEl ? dEl.getBoundingClientRect().height : 387;
+    var bEl = document.querySelector('.bottom');
+    if (!dEl || !bEl) { kbDescendTarget = 0; return; }
+    var dollH = dEl.getBoundingClientRect().height;
+    var composerTop = bEl.getBoundingClientRect().top;
     var natTop = getDollNaturalTop();
-    // Зазор сверху композера (≈ composer + сообщение): чтобы кукла не
-    // упиралась в composer и не закрывала чат. v839: 200px.
-    var BOTTOM_GAP = 200;
-    kbDescendTarget = Math.max(0, vH - dollH - natTop - BOTTOM_GAP);
+    // Точная цель: низ куклы ровно у верха композера. composerTop меряем
+    // живой через getBoundingClientRect — учитывает любую высоту composer'а.
+    kbDescendTarget = Math.max(0, composerTop - dollH - natTop);
   };
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
