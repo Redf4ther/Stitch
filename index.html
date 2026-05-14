@@ -3874,12 +3874,25 @@ async function askWithImages(photos, userText) {
   setTimeout(function(){ __vvReady = true; }, 1500);
 
   function syncVisualViewportTop(){
-    // НЕ guard'им __vvReady — этот --vv-top нужен для синхронизации
-    // конечностей с куклой (applyBodyPhysics использует offsetTop
-    // напрямую без guard). Десинхрон = конечности отстают от куклы.
-    var top = (window.visualViewport && window.visualViewport.offsetTop) || 0;
-    document.documentElement.style.setProperty('--vv-top', top + 'px');
+    // v852: --vv-top больше не используется в CSS (body фикс к visible vp,
+    // никакой компенсации не надо). Оставлен no-op.
   }
+  // v852: body высота = visualViewport.height. С position:fixed inset:0
+  // body точно совпадает с видимой зоной. Никаких overflow, iOS auto-scroll'у
+  // нечего таскать. Композер у bottom:0 body автоматически едет вверх
+  // когда клавиатура поднимается.
+  function syncBodyHeight(){
+    var vH = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    if (vH > 0) {
+      document.documentElement.style.height = vH + 'px';
+      document.body.style.height = vH + 'px';
+    }
+  }
+  syncBodyHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncBodyHeight);
+  }
+  window.addEventListener('resize', syncBodyHeight);
   function applyKbState(){
     // __vvReady guard убран в v760 — focus-guard на activeElement и так
     // защищает от ложных kb-h без focused input. С guard'ом kb-open
