@@ -254,7 +254,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v889</span></div>
+<div class="title">Стич · Claude <span class="build">v890</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -486,7 +486,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
   bA.addEventListener('click', function(){ if (typeof addMsg === 'function') addMsg('a', pick(asstLines)); });
   bU.addEventListener('click', function(){ if (typeof addMsg === 'function') addMsg('u', pick(userLines)); });
   // Тестовая яблочная демо-кнопка — каждое нажатие циклит варианты.
-  var APPLE_DEMOS = [[2,3],[1,1],[4,2],[3,5],[0,0]];
+  var APPLE_DEMOS = [[2,3],[1,1],[4,2],[3,5],[5,5],[7,3],[10,10],[0,0]];
   var apIdx = 0;
   bAp.addEventListener('click', function(){
     var pair = APPLE_DEMOS[apIdx % APPLE_DEMOS.length]; apIdx++;
@@ -3754,9 +3754,9 @@ async function askWithImages(photos, userText) {
       });
     }
     LIMBS.forEach(function(L){
-      // v856: лимбы статичны. Никаких bubble follow, drag, ease, lag,
-      // erase. Только listen-pose (рука к уху во время записи голоса)
-      // и финальный рендеринг IK.
+      // v856 + v889: лимбы статичны (snap к dangle), кроме двух случаев:
+      // (1) listen-pose — правая рука к уху во время записи голоса;
+      // (2) яблочная хореография — правая рука тянется к dollHandTarget.
       var preS = shoulderPoint(L.shoulderId);
       if (!preS.x && !preS.y) return;
       var posed = null;
@@ -3764,9 +3764,25 @@ async function askWithImages(photos, userText) {
         var ear = shoulderPoint('ear-r');
         if (ear.x || ear.y) posed = {x: ear.x + 22, y: ear.y - 2};
       }
+      if (!posed && window.dollHandTarget && !L.isLeg && L.sideSign > 0) {
+        posed = window.dollHandTarget;
+      }
       var goal = posed || dangleGoal(L);
       if (!L.cur) L.cur = {x: goal.x, y: goal.y};
-      L.cur.x = goal.x; L.cur.y = goal.y;
+      if (posed) {
+        L.cur.x += (goal.x - L.cur.x) * 0.25;
+        L.cur.y += (goal.y - L.cur.y) * 0.25;
+        // Clamp к длине руки.
+        var ddx = L.cur.x - preS.x, ddy = L.cur.y - preS.y;
+        var dd = Math.hypot(ddx, ddy);
+        var maxR = L.L1 + L.L2;
+        if (dd > maxR) {
+          L.cur.x = preS.x + ddx / dd * maxR;
+          L.cur.y = preS.y + ddy / dd * maxR;
+        }
+      } else {
+        L.cur.x = goal.x; L.cur.y = goal.y;
+      }
       // IK render.
       var s = preS;
       var bend = -L.sideSign;
