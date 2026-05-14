@@ -189,7 +189,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 .cur::after{content:‘▋’;color:#7c5cff;animation:cur .4s steps(1) infinite}
 .err{flex-shrink:0;font-size:11px;color:#e84a5f;padding:0 14px;text-align:center}
 .err:not(:empty){padding:2px 14px}
-.bottom{flex-shrink:0;position:relative;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:transparent;display:flex;flex-direction:column;gap:6px;align-items:center}
+.bottom{flex-shrink:0;position:fixed;left:0;right:0;bottom:0;z-index:4;padding:6px 12px calc(18px + env(safe-area-inset-bottom,0px));background:transparent;display:flex;flex-direction:column;gap:6px;align-items:center}
 .mic-btn{width:54px;height:54px;border-radius:50%;border:1px solid rgba(255,255,255,.22);font-size:24px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28);cursor:pointer;touch-action:none}
 .mic-btn.disabled{opacity:.5}
 .mic-btn:active{background:rgba(255,255,255,.05)}
@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v859</span></div>
+<div class="title">Стич · Claude <span class="build">v860</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
