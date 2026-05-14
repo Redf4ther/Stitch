@@ -245,7 +245,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v882</span></div>
+<div class="title">Стич · Claude <span class="build">v883</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1758,9 +1758,10 @@ async function askClaude(msg) {
     stopMouth();
     if (e && e.name !== 'AbortError') {
       errEl.textContent = 'Ошибка: '+e.message;
-      // v882: показываем ошибку и в чате как assistant-бабл, чтобы её
-      // было видно даже когда errEl скрыт за composer'ом.
       try { addMsg('a', '⚠️ ' + e.message); } catch(_) {}
+      // v883: ещё и alert чтобы было ОЧЕНЬ видно во время диагностики
+      // «не отвечает». Уберём как только разберёмся.
+      try { alert('Стич error: ' + e.message); } catch(_) {}
       reportErr('askClaude', (e.stack || e.message));
     }
     setState('idle');
