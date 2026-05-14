@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v781</span></div>
+<div class="title">Стич · Claude <span class="build">v782</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3501,8 +3501,10 @@ async function askWithImages(photos, userText) {
       var dxBd = e.clientX - bd.startX;
       var dyBd = e.clientY - bd.startY;
       ropeTargetY = Math.max(0, Math.min(ROPE_MAX_Y, bd.startRopeY + dyBd));
+      // Знак минус: палец справа → CCW-rotate в screen-coords → низ куклы
+      // едет вправо (за пальцем). См. тот же sign-trick в torque'е limb drag.
       bodyDragAngleTarget = Math.max(-BODY_DRAG_ANGLE_MAX,
-        Math.min(BODY_DRAG_ANGLE_MAX, dxBd * 0.07));
+        Math.min(BODY_DRAG_ANGLE_MAX, -dxBd * 0.07));
       bodyDragXActive = true;
       return;
     }
