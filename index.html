@@ -258,7 +258,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v824</span></div>
+<div class="title">Стич · Claude <span class="build">v825</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3489,7 +3489,7 @@ async function askWithImages(photos, userText) {
   var draggingPointers = {};
 
   function findLimbAt(x, y){
-    var HIT = 60;  // v820: расширил с 36 — лимбы должны легче ловиться
+    var HIT = 28;  // v825: компромисс — лимбы ловятся, но тело не съедается
     var best = null, bestD = HIT;
     for (var i = 0; i < LIMBS.length; i++) {
       var L = LIMBS[i];
