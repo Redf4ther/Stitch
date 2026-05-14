@@ -245,7 +245,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v880</span></div>
+<div class="title">Стич · Claude <span class="build">v881</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -653,13 +653,28 @@ window.hasApiAuth = function(){
 window.stApi = (function(){
   function url(path){ return window.API_BASE + path; }
   async function chat(messages, signal){
-    var r = await fetch(url('/api/chat'), {
-      method: 'POST',
-      headers: window.apiHeaders({'Content-Type':'application/json'}),
-      body: JSON.stringify({messages: messages}),
-      signal: signal,
-    });
-    var data = await r.json();
+    // v881: добавил 30s timeout — если fetch висит, fail с понятной ошибкой.
+    var ctrl = new AbortController();
+    var timeoutId = setTimeout(function(){ try { ctrl.abort(); } catch(_){} }, 30000);
+    if (signal) {
+      try { signal.addEventListener('abort', function(){ try { ctrl.abort(); } catch(_){} }); } catch(_){}
+    }
+    var r;
+    try {
+      r = await fetch(url('/api/chat'), {
+        method: 'POST',
+        headers: window.apiHeaders({'Content-Type':'application/json'}),
+        body: JSON.stringify({messages: messages}),
+        signal: ctrl.signal,
+      });
+    } catch (netErr) {
+      clearTimeout(timeoutId);
+      if (signal && signal.aborted) throw netErr;
+      throw new Error('Сеть: ' + (netErr.message || 'fetch failed') + ' (URL: ' + url('/api/chat') + ')');
+    }
+    clearTimeout(timeoutId);
+    var data;
+    try { data = await r.json(); } catch (_) { throw new Error('Не json от бэка, HTTP ' + r.status); }
     if (r.status === 403 && data && data.code === 'limit') {
       if (typeof window.showTopupBanner === 'function') window.showTopupBanner(data.error);
       throw new Error(data.error || 'Лимит исчерпан');
