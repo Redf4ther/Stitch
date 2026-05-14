@@ -150,6 +150,14 @@ body.pwa-standalone .pwa-chrome{display:flex}
 @keyframes gT{0%,100%{opacity:.4}50%{opacity:.85}}
 @keyframes db{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes appleIn{from{opacity:0;transform:scale(.3) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes appleOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.6)}}
+#applesContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 70px);left:0;right:0;height:120px;pointer-events:none;z-index:3;display:flex;justify-content:center;gap:160px}
+#applesContainer .zone{display:flex;flex-wrap:wrap-reverse;align-items:flex-end;gap:2px;width:90px;height:100%}
+#applesContainer .left{justify-content:flex-end}
+#applesContainer .right{justify-content:flex-start}
+#applesContainer .apple{font-size:22px;opacity:0;animation:appleIn .35s cubic-bezier(.34,1.56,.64,1) forwards}
+#applesContainer.fade .apple{animation:appleOut .25s ease forwards}
 @keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
 @keyframes saluteFall{0%{transform:translate(-50%,-50%);opacity:1;animation-timing-function:cubic-bezier(.05,.55,.4,1)}30%{transform:translate(calc(-50% + var(--peak-x,0)),calc(-50% + var(--peak-y,-260px)));opacity:1;animation-timing-function:cubic-bezier(.6,.04,.85,.55)}100%{transform:translate(calc(-50% + var(--end-x,0)),110vh);opacity:.85}}
@@ -258,7 +266,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v830</span></div>
+<div class="title">Стич · Claude <span class="build">v831</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1598,8 +1606,60 @@ function isChatAtBottom() {
 function autoScrollChat() {
   chat.scrollTop = chat.scrollHeight;
 }
+// Парсер маркера [apples N+M] (или -/×/÷). Возвращает {left,right,clean}
+// или null если маркера нет. Лимит 10 на сторону.
+function parseApplesMarker(text){
+  if (!text) return null;
+  var m = text.match(/\[apples\s+(\d{1,2})\s*([+\-*x×\/÷])\s*(\d{1,2})\]/i);
+  if (!m) return null;
+  var L = Math.min(10, parseInt(m[1], 10));
+  var R = Math.min(10, parseInt(m[3], 10));
+  return { left:L, right:R, op:m[2], clean: text.replace(m[0], '').trim() };
+}
+function showApples(left, right){
+  hideApples(true);
+  if (!left && !right) return;
+  var c = document.createElement('div'); c.id = 'applesContainer';
+  var lz = document.createElement('div'); lz.className = 'zone left';
+  var rz = document.createElement('div'); rz.className = 'zone right';
+  for (var i = 0; i < left; i++) {
+    var a = document.createElement('span'); a.className = 'apple';
+    a.textContent = '🍎';
+    a.style.animationDelay = (i * 0.07) + 's';
+    lz.appendChild(a);
+  }
+  for (var j = 0; j < right; j++) {
+    var a2 = document.createElement('span'); a2.className = 'apple';
+    a2.textContent = '🍎';
+    a2.style.animationDelay = (j * 0.07) + 's';
+    rz.appendChild(a2);
+  }
+  c.appendChild(lz); c.appendChild(rz);
+  document.body.appendChild(c);
+}
+function hideApples(immediate){
+  var c = document.getElementById('applesContainer');
+  if (!c) return;
+  if (immediate) { c.remove(); return; }
+  c.classList.add('fade');
+  setTimeout(function(){ try { c.remove(); } catch(_) {} }, 280);
+}
+
 function addMsg(role, text) {
   var follow = isChatAtBottom();
+  // Новое сообщение от пользователя/системы → убираем старые яблоки.
+  if (role === 'u') hideApples();
+  // Ассистент: парсим [apples ...] маркер, показываем яблоки, чистим текст.
+  if (role === 'a' && text) {
+    var ap = parseApplesMarker(text);
+    if (ap) {
+      text = ap.clean || '...';
+      showApples(ap.left, ap.right);
+    } else {
+      // Ассистент написал без маркера → можно убрать предыдущие яблоки.
+      hideApples();
+    }
+  }
   var w = document.createElement('div'); w.className = 'bbl'+(role==='u'?' u':'');
   var b = document.createElement('div'); b.className = 'bi'; b.textContent = text;
   w.appendChild(b); chat.appendChild(w);
@@ -1704,7 +1764,7 @@ function maybeCelebrate(text) {
   } catch(_) {}
 }
 
-var prompt = 'Ты — персональный репетитор. НИКОГДА не спрашивай "как тебя зовут?" и не пытайся узнать имя ученика. Если ученик сам себя назовёт — запомни и используй, но сам никогда не спрашивай. Не представляйся первым — не называй своё имя, не говори кто ты, не описывай себя по своей инициативе. ИСКЛЮЧЕНИЕ: если ученик САМ спросит "как тебя зовут?", "кто ты?" или похожее — ответь коротко: тебя зовут Липо Стич, ты инопланетный помощник-репетитор. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, представляться без вопроса. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. СТИЛЬ: общайся как обычный ChatGPT-репетитор — спокойно, ясно, по-человечески. НЕ называй ученика "зверёк", "малыш" и подобными словечками. НЕ вставляй "хи-хи", "бум", "ха", "ага" в каждый ответ. Просто понятные фразы простым языком для 8-9 лет. ИСКЛЮЧЕНИЕ: КОГДА РЕБЁНОК САМ НАЗВАЛ ВЕРНЫЙ ОТВЕТ — обязательно начни ответ со слова "Бум!" и подтверди (например: "Бум! Точно так!", "Бум! Ты угадал!", "Бум! Молодец, верно!"). Если ответ неверный — не говори "Бум", мягко направь наводящим вопросом без лишних междометий. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь, верный ответ — Бум-подтверждение. ОБЪЯСНЕНИЕ ЧЕРЕЗ ПРИМЕРЫ: если ученик не понимает суть задачи или правила — объясни через несколько разных примеров из детского мира (яблоки, конфеты, игрушки, машинки, котята, дни рождения, мультяшные герои, школьные ситуации). Если первый пример не зашёл — попробуй второй из другой области. Один и тот же приём показывай на 2-3 разных историях, чтобы ребёнок увидел общую идею. Если просит ответ: предложи разобрать вместе. Главное правило: ученик должен САМ прийти к ответу, а ты подтвердить через "Бум!". Если фото и не понимаешь — просто спроси что с этим делать.';
+var prompt = 'Ты — персональный репетитор. НИКОГДА не спрашивай "как тебя зовут?" и не пытайся узнать имя ученика. Если ученик сам себя назовёт — запомни и используй, но сам никогда не спрашивай. Не представляйся первым — не называй своё имя, не говори кто ты, не описывай себя по своей инициативе. ИСКЛЮЧЕНИЕ: если ученик САМ спросит "как тебя зовут?", "кто ты?" или похожее — ответь коротко: тебя зовут Липо Стич, ты инопланетный помощник-репетитор. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, представляться без вопроса. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. СТИЛЬ: общайся как обычный ChatGPT-репетитор — спокойно, ясно, по-человечески. НЕ называй ученика "зверёк", "малыш" и подобными словечками. НЕ вставляй "хи-хи", "бум", "ха", "ага" в каждый ответ. Просто понятные фразы простым языком для 8-9 лет. ИСКЛЮЧЕНИЕ: КОГДА РЕБЁНОК САМ НАЗВАЛ ВЕРНЫЙ ОТВЕТ — обязательно начни ответ со слова "Бум!" и подтверди (например: "Бум! Точно так!", "Бум! Ты угадал!", "Бум! Молодец, верно!"). Если ответ неверный — не говори "Бум", мягко направь наводящим вопросом без лишних междометий. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь, верный ответ — Бум-подтверждение. ОБЪЯСНЕНИЕ ЧЕРЕЗ ПРИМЕРЫ: если ученик не понимает суть задачи или правила — объясни через несколько разных примеров из детского мира (яблоки, конфеты, игрушки, машинки, котята, дни рождения, мультяшные герои, школьные ситуации). Если первый пример не зашёл — попробуй второй из другой области. Один и тот же приём показывай на 2-3 разных историях, чтобы ребёнок увидел общую идею. Если просит ответ: предложи разобрать вместе. Главное правило: ученик должен САМ прийти к ответу, а ты подтвердить через "Бум!". Если фото и не понимаешь — просто спроси что с этим делать. ВИЗУАЛЬНАЯ ПОМОЩЬ С ЯБЛОКАМИ: когда объясняешь сложение или вычитание МАЛЫХ чисел (до 10 на каждой стороне) в контексте задачи или примера, вставь в свой ответ ровно одну команду в квадратных скобках: [apples N+M] для сложения или [apples N-M] для вычитания. Фронт это распознает и нарисует N яблок слева от тебя и M справа, ребёнок их увидит. Например для "2+3" пиши: "Смотри, у меня 2 яблока, а у тебя 3. [apples 2+3] Сколько всего?" Не злоупотребляй — только когда яблоки реально помогают: на счёте 1-10. Для больших чисел или умножения/деления не используй.';
 
 async function askClaude(msg) {
   errEl.textContent = '';
