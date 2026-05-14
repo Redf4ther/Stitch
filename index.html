@@ -266,7 +266,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v840</span></div>
+<div class="title">Стич · Claude <span class="build">v841</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3677,18 +3677,10 @@ async function askWithImages(photos, userText) {
     DOLL_NATURAL_TOP = r.top - (kbDescendY + ropeY);
     return DOLL_NATURAL_TOP;
   }
-  window.setDollKbOpen = function(open){
-    if (!open) { kbDescendTarget = 0; return; }
-    var dEl = document.getElementById('doll');
-    var bEl = document.querySelector('.bottom');
-    if (!dEl || !bEl) { kbDescendTarget = 0; return; }
-    var dollH = dEl.getBoundingClientRect().height;
-    var composerTop = bEl.getBoundingClientRect().top;
-    var natTop = getDollNaturalTop();
-    // Точная цель: низ куклы ровно у верха композера. composerTop меряем
-    // живой через getBoundingClientRect — учитывает любую высоту composer'а.
-    kbDescendTarget = Math.max(0, composerTop - dollH - natTop);
-  };
+  // v841: кукла остаётся на своей натуральной позиции (под status bar),
+  // не подстраивается под клавиатуру. Если нужно вернуть descent — раскомментируй
+  // прошлый код или дай новый расчёт.
+  window.setDollKbOpen = function(){ kbDescendTarget = 0; };
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
   // не за плечом. Hysteresis 700ms чтобы режим не мерцал на amplitude<0.15.
