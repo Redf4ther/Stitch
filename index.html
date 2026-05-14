@@ -139,6 +139,14 @@ body.pwa-standalone .pwa-chrome{display:flex}
 @keyframes gT{0%,100%{opacity:.4}50%{opacity:.85}}
 @keyframes db{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes appleIn{from{opacity:0;transform:scale(.3) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes appleOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.6)}}
+#applesContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 70px);left:0;right:0;height:140px;pointer-events:none;z-index:3;display:flex;justify-content:center;gap:160px}
+#applesContainer .zone{display:flex;flex-wrap:wrap-reverse;align-items:flex-end;gap:2px;width:96px;height:100%}
+#applesContainer .left{justify-content:flex-end}
+#applesContainer .right{justify-content:flex-start}
+#applesContainer .apple{font-size:24px;opacity:0;animation:appleIn .35s cubic-bezier(.34,1.56,.64,1) forwards}
+#applesContainer.fade .apple{animation:appleOut .25s ease forwards}
 @keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
 @keyframes saluteFall{0%{transform:translate(-50%,-50%);opacity:1;animation-timing-function:cubic-bezier(.05,.55,.4,1)}30%{transform:translate(calc(-50% + var(--peak-x,0)),calc(-50% + var(--peak-y,-260px)));opacity:1;animation-timing-function:cubic-bezier(.6,.04,.85,.55)}100%{transform:translate(calc(-50% + var(--end-x,0)),110vh);opacity:.85}}
@@ -245,7 +253,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v885</span></div>
+<div class="title">Стич · Claude <span class="build">v886</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -446,6 +454,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 <!-- Тест-кнопки для куклы (по умолчанию скрыты, включаются в настройках). -->
 <button id="testAsst" style="display:none;position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.04) 55%,rgba(0,0,0,.08));border:1px solid rgba(255,255,255,.32);color:#fff;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.45);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%)">+ стич</button>
 <button id="testUser" style="display:none;position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.04) 55%,rgba(0,0,0,.08));border:1px solid rgba(255,255,255,.32);color:#fff;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.45);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%)">+ я</button>
+<button id="testApples" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom, 0px) + 140px);background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.04) 55%,rgba(0,0,0,.08));border:1px solid rgba(255,255,255,.32);color:#fff;padding:7px 14px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:50;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.45);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%)">🍎 2+3</button>
 <script>
 (function(){
   // Длинные тестовые реплики, ~80 символов каждая.
@@ -472,13 +481,23 @@ body.pwa-standalone .pwa-chrome{display:flex}
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
   var bA = document.getElementById('testAsst');
   var bU = document.getElementById('testUser');
+  var bAp = document.getElementById('testApples');
   bA.addEventListener('click', function(){ if (typeof addMsg === 'function') addMsg('a', pick(asstLines)); });
   bU.addEventListener('click', function(){ if (typeof addMsg === 'function') addMsg('u', pick(userLines)); });
+  // Тестовая яблочная демо-кнопка — каждое нажатие циклит варианты.
+  var APPLE_DEMOS = [[2,3],[1,1],[4,2],[3,5],[0,0]];
+  var apIdx = 0;
+  bAp.addEventListener('click', function(){
+    var pair = APPLE_DEMOS[apIdx % APPLE_DEMOS.length]; apIdx++;
+    bAp.textContent = '🍎 ' + pair[0] + '+' + pair[1];
+    if (typeof window.showApples === 'function') window.showApples(pair[0], pair[1]);
+  });
   // Переключатель из settings.
   var TEST_KEY = 'stitch_show_tests';
   function applyTestVisibility(on){
     bA.style.display = on ? '' : 'none';
     bU.style.display = on ? '' : 'none';
+    bAp.style.display = on ? '' : 'none';
   }
   applyTestVisibility(localStorage.getItem(TEST_KEY) === '1');
   window.toggleTestButtons = function(){
@@ -1564,8 +1583,61 @@ function isChatAtBottom() {
 function autoScrollChat() {
   chat.scrollTop = chat.scrollHeight;
 }
+// Парсер маркера [apples N+M] / [apples N-M] из ассистент-текста.
+window.parseApplesMarker = function(text){
+  if (!text) return null;
+  var m = text.match(/\[apples\s+(\d{1,2})\s*([+\-−])\s*(\d{1,2})\]/i);
+  if (!m) return null;
+  return {
+    left: Math.min(10, parseInt(m[1], 10)),
+    right: Math.min(10, parseInt(m[3], 10)),
+    op: m[2],
+    clean: text.replace(m[0], '').trim()
+  };
+};
+window.showApples = function(left, right){
+  window.hideApples(true);
+  if (!left && !right) return;
+  var c = document.createElement('div'); c.id = 'applesContainer';
+  var lz = document.createElement('div'); lz.className = 'zone left';
+  var rz = document.createElement('div'); rz.className = 'zone right';
+  for (var i = 0; i < left; i++) {
+    var a = document.createElement('span'); a.className = 'apple';
+    a.textContent = '🍎';
+    a.style.animationDelay = (i * 0.07) + 's';
+    lz.appendChild(a);
+  }
+  for (var j = 0; j < right; j++) {
+    var a2 = document.createElement('span'); a2.className = 'apple';
+    a2.textContent = '🍎';
+    a2.style.animationDelay = (j * 0.07) + 's';
+    rz.appendChild(a2);
+  }
+  c.appendChild(lz); c.appendChild(rz);
+  document.body.appendChild(c);
+};
+window.hideApples = function(immediate){
+  var c = document.getElementById('applesContainer');
+  if (!c) return;
+  if (immediate) { c.remove(); return; }
+  c.classList.add('fade');
+  setTimeout(function(){ try { c.remove(); } catch(_) {} }, 280);
+};
+
 function addMsg(role, text) {
   var follow = isChatAtBottom();
+  // Сообщение от пользователя → убираем старые яблоки.
+  if (role === 'u') window.hideApples();
+  // Ассистент с маркером [apples ...] → рендерим яблоки, чистим текст.
+  if (role === 'a' && text) {
+    var ap = window.parseApplesMarker(text);
+    if (ap) {
+      text = ap.clean || '...';
+      window.showApples(ap.left, ap.right);
+    } else {
+      window.hideApples();
+    }
+  }
   var w = document.createElement('div'); w.className = 'bbl'+(role==='u'?' u':'');
   var b = document.createElement('div'); b.className = 'bi'; b.textContent = text;
   w.appendChild(b); chat.appendChild(w);
