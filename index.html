@@ -258,7 +258,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v820</span></div>
+<div class="title">Стич · Claude <span class="build">v821</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3522,9 +3522,9 @@ async function askWithImages(photos, userText) {
       t.closest('.pwa-chrome') || t.closest('.pwa-menu') ||
       t.closest('#settingsPanel')
     )) return;
-    // v819: любой захват куклы (конечность или тело/голова) трактуется как
-    // body drag — тянем всю куклу за верёвочку. Лимбы остаются прикреплены
-    // к телу (см. v818), не растягиваются за пальцем.
+    // v821: лимб-тап ловится ОТДЕЛЬНО (рука растягивается за пальцем) + тело
+    // одновременно качается через ту же body-drag механику. Тап мимо лимба
+    // но по телу куклы — только body drag.
     var L = findLimbAt(e.clientX, e.clientY);
     var hitBody = isDollBodyHit(e.clientX, e.clientY);
     if (!L && !hitBody) return;
@@ -3532,6 +3532,11 @@ async function askWithImages(photos, userText) {
       startX: e.clientX, startY: e.clientY,
       startRopeX: ropeTargetX, startRopeY: ropeTargetY
     };
+    if (L) {
+      draggingPointers[e.pointerId] = L;
+      L.dragGoal = {x: e.clientX, y: e.clientY};
+      L.cur = {x: e.clientX, y: e.clientY};
+    }
     window.dollDragging = true;
     // Открываем рот когда кого-то схватили, и закрываем через 2 секунды
     // автоматом даже если всё ещё держим.
@@ -3818,8 +3823,9 @@ async function askWithImages(photos, userText) {
       // клавиатуры. preS уже посчитан выше с актуальной позицией.
       var s = (L.frozen && L.frozenShoulder) ? L.frozenShoulder : shoulderPoint(L.shoulderId);
       // Ограничение длины. Привязанной — до 92% макс., чтобы локоть/колено
-      // оставались чуть согнутыми, но без сильного изгиба. Висящей — полная.
-      var maxD = attached ? (L.L1 + L.L2) * 0.82 : (L.L1 + L.L2);
+      // оставались чуть согнутыми. Висящей — полная. При drag'е пользователем —
+      // НЕ ограничиваем (v821), пусть конечность тянется насколько он тащит.
+      var maxD = dragged ? Infinity : (attached ? (L.L1 + L.L2) * 0.82 : (L.L1 + L.L2));
       var ddx = L.cur.x - s.x, ddy = L.cur.y - s.y;
       var dd = Math.hypot(ddx, ddy);
       if (dd > maxD) {
