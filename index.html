@@ -266,7 +266,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v837</span></div>
+<div class="title">Стич · Claude <span class="build">v838</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3891,24 +3891,15 @@ async function askWithImages(photos, userText) {
           L.trans.gx = goal.x;  L.trans.gy = goal.y;
           L.trans.t0 = now; L.trans.dur = 700;
         } else {
+          // v838: лимбы всегда прикреплены к плечам (v818), ease-curve не
+          // нужен — он лагал когда плечо jump'ало (vvTop/kbDescend/тилт).
+          // Snap к dangleGoal каждый кадр. Если плечо двигается плавно —
+          // и лимб с ним, без видимой рассинхронизации.
           L.lagX = null; L.lagY = null;
-          var goalShift = Math.hypot(goal.x - L.trans.gx, goal.y - L.trans.gy);
-          if (goalShift > 4) {
-            var dist = Math.hypot(goal.x - L.cur.x, goal.y - L.cur.y);
-            L.trans = {
-              sx: L.cur.x, sy: L.cur.y,
-              gx: goal.x,  gy: goal.y,
-              t0: now,
-              dur: Math.min(1800, Math.max(700, 500 + dist * 3.5))
-            };
-          } else {
-            L.trans.gx = goal.x; L.trans.gy = goal.y;
-          }
-          var t = Math.min(1, (now - L.trans.t0) / L.trans.dur);
-          // Сглаженная sine-кривая ease-in-out (плавнее cubic).
-          var e = 0.5 - 0.5 * Math.cos(Math.PI * t);
-          L.cur.x = L.trans.sx + (L.trans.gx - L.trans.sx) * e;
-          L.cur.y = L.trans.sy + (L.trans.gy - L.trans.sy) * e;
+          L.cur.x = goal.x; L.cur.y = goal.y;
+          L.trans.sx = goal.x; L.trans.sy = goal.y;
+          L.trans.gx = goal.x; L.trans.gy = goal.y;
+          L.trans.t0 = now;
         }
       }
       // При заморозке тоже используем сохранённую позицию плеча — чтобы
