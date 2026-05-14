@@ -3,7 +3,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Стич · Claude</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2c4e3a">
@@ -36,7 +36,14 @@
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{width:100%;height:100%;height:100dvh;min-height:var(--screen-h, 100dvh);overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease;position:relative}
+html,body{width:100%;height:var(--screen-h, 100dvh);overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease;position:relative}
+body{transition:transform .25s ease, background .45s ease}
+/* Telegram-стиль: клавиатура выезжает → body сдвигается ровно на --kb-h
+   вверх. Всё внутри (включая куклу) едет одной плитой, layout НЕ меняется.
+   body имеет фикс высоту var(--screen-h) — viewport iOS не ужимается под
+   клавиатуру (overlays-content), поэтому fixed-дети двигаются с body, не
+   рестятся к мелкому visualViewport. */
+body.kb-open{transform:translateY(calc(-1 * var(--kb-h, 0px)))}
 #app{display:contents}
 .top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
 .below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4}
@@ -251,7 +258,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v808</span></div>
+<div class="title">Стич · Claude <span class="build">v809</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3928,11 +3935,12 @@ async function askWithImages(photos, userText) {
       syncVisualViewportTop();
       return;
     }
-    // На iOS PWA standalone window.innerHeight тоже ужимается с
-    // клавиатурой (= visualViewport.height), их разница 0. Нужно
-    // сравнивать с screen.height — physical screen не меняется.
-    var sh = (window.screen && window.screen.height) ? window.screen.height : 0;
-    var kb = (sh > 0) ? Math.max(0, sh - window.innerHeight) : 0;
+    // Без interactive-widget=resizes-content layout vp не ужимается
+    // (innerHeight стабилен), но visualViewport.height ужимается с кб.
+    // Разница = реальная высота клавиатуры.
+    var iH = window.innerHeight || 0;
+    var vH = (window.visualViewport && window.visualViewport.height) || iH;
+    var kb = Math.max(0, iH - vH);
     var open = kb > 100;
     document.documentElement.style.setProperty('--kb-h', (open ? kb : 0) + 'px');
     document.body.classList.toggle('kb-open', open);
