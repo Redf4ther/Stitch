@@ -240,7 +240,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v779</span></div>
+<div class="title">Стич · Claude <span class="build">v780</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2670,7 +2670,7 @@ async function askWithImages(photos, userText) {
       '<stop offset="100%" stop-color="#100c08"/>'+
     '</radialGradient>'+
     '</defs>'+
-    '<line x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
+    '<line class="dollRope" x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
     '<circle cx="110" cy="50" r="3" fill="#5a4a30"/>'+
     '<rect x="103" y="170" width="14" height="30" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
     // Голова в группе — наклоняется при listening.
@@ -2780,7 +2780,7 @@ async function askWithImages(photos, userText) {
       '</radialGradient>'+
       '<filter id="d-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.5"/></filter>'+
     '</defs>'+
-    '<line x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
+    '<line class="dollRope" x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
     '<circle cx="110" cy="50" r="3" fill="#5a4a30"/>'+
     '<rect x="102" y="170" width="16" height="40" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
     '<ellipse cx="110" cy="120" rx="55" ry="60" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.5"/>'+
@@ -3495,9 +3495,15 @@ async function askWithImages(photos, userText) {
   document.addEventListener('pointermove', function(e){
     var bd = bodyDragPointers[e.pointerId];
     if (bd) {
-      // Direct drag куклы — двигаем только по Y. X залочен (см. updateRope).
+      // Y — drag вниз/вверх (тянем за нитку). X — отклоняем как маятник:
+      // bodyDragAngleTarget трактуется в applyBodyPhysics как «куда хочет
+      // быть кукла прямо сейчас», на отпуске → пружинно качается обратно.
+      var dxBd = e.clientX - bd.startX;
       var dyBd = e.clientY - bd.startY;
       ropeTargetY = Math.max(0, Math.min(ROPE_MAX_Y, bd.startRopeY + dyBd));
+      bodyDragAngleTarget = Math.max(-BODY_DRAG_ANGLE_MAX,
+        Math.min(BODY_DRAG_ANGLE_MAX, dxBd * 0.07));
+      bodyDragXActive = true;
       return;
     }
     var L = draggingPointers[e.pointerId];
@@ -3507,6 +3513,14 @@ async function askWithImages(photos, userText) {
   function releasePointer(e){
     if (bodyDragPointers[e.pointerId]) {
       delete bodyDragPointers[e.pointerId];
+      var anyBodyLeft = false;
+      for (var k2 in bodyDragPointers) { anyBodyLeft = true; break; }
+      if (!anyBodyLeft) {
+        // Снимаем direct-control, оставляем bodyAngle где есть — физика
+        // (restore + damp в applyBodyPhysics) дальше отыграет качание к 0.
+        bodyDragXActive = false;
+        bodyDragAngleTarget = 0;
+      }
     }
     var L = draggingPointers[e.pointerId];
     if (!L) return;
@@ -3533,6 +3547,10 @@ async function askWithImages(photos, userText) {
   var ropeTargetY = 0, ropeY = 0;
   var ropeTargetX = 0, ropeX = 0;
   var ROPE_MAX_Y = 700, ROPE_MAX_X = 300;
+  // Horizontal drag → pendulum angle (а не translateX). На release физика
+  // возвращает angle к 0 через restore-силу → визуальное качание.
+  var bodyDragXActive = false, bodyDragAngleTarget = 0;
+  var BODY_DRAG_ANGLE_MAX = 15;
   var SNAP_THRESHOLD = 50;  // px excess пока visual stretch
   var STRETCH_GAIN = 0.05;  // движение в фазе натяжения (медленно)
   var SNAP_GAIN = 1.5;      // движение после срыва (быстро)
@@ -3575,29 +3593,37 @@ async function askWithImages(photos, userText) {
     if (doll) {
       doll.style.setProperty('--doll-rope-len', ropeY.toFixed(1) + 'px');
       doll.style.setProperty('--doll-rope-x', ropeX.toFixed(1) + 'px');
+      // Верёвочка идёт от фикс-потолка вниз к голове куклы. Когда кукла
+      // съезжает вниз (ropeY > 0), её SVG-фрейм едет вниз вместе с ней —
+      // компенсируем, удлинняя y1 вверх (CSS-px → SVG-units ≈ ×1.395).
+      var rl = doll.querySelector('.dollRope');
+      if (rl) rl.setAttribute('y1', (-200 - ropeY * 1.395).toFixed(1));
     }
   }
 
   function applyBodyPhysics(){
-    // Считаем крутящий момент от каждой подёрнутой конечности.
-    // Лево/право от плеча/бедра → положительный/отрицательный момент.
-    var torque = 0;
-    for (var pid in draggingPointers) {
-      var L = draggingPointers[pid];
-      if (!L || !L.dragGoal) continue;
-      var s = shoulderPoint(L.shoulderId);
-      // CSS rotate(+θ) crank counterclockwise the bottom-of-pivot point в screen-
-      // coords (Y вниз): точка ниже пивота сдвигается влево при положительном θ.
-      // Чтобы тело тянулось ЗА пальцем, торк должен быть с обратным знаком —
-      // палец справа → отрицательный θ → тело идёт вправо.
-      torque -= (L.dragGoal.x - s.x) * 0.00012;
+    if (bodyDragXActive) {
+      // Пользователь тянет тело по X → bodyAngle следует за пальцем
+      // напрямую, физика отключена. На release включится else-ветка,
+      // и restore-сила раскачает куклу обратно к центру.
+      bodyAngle += (bodyDragAngleTarget - bodyAngle) * 0.35;
+      bodyAngVel = 0;
+    } else {
+      // Торк от drag'а конечностей + restore-пружина + damping.
+      var torque = 0;
+      for (var pid in draggingPointers) {
+        var L = draggingPointers[pid];
+        if (!L || !L.dragGoal) continue;
+        var s = shoulderPoint(L.shoulderId);
+        torque -= (L.dragGoal.x - s.x) * 0.00012;
+      }
+      var restore = -bodyAngle * 0.012;
+      var damp = -bodyAngVel * 0.035;
+      bodyAngVel += torque + restore + damp;
+      bodyAngle += bodyAngVel;
+      if (bodyAngle > 28) { bodyAngle = 28; if (bodyAngVel > 0) bodyAngVel = 0; }
+      if (bodyAngle < -28) { bodyAngle = -28; if (bodyAngVel < 0) bodyAngVel = 0; }
     }
-    var restore = -bodyAngle * 0.012;
-    var damp = -bodyAngVel * 0.06;
-    bodyAngVel += torque + restore + damp;
-    bodyAngle += bodyAngVel;
-    if (bodyAngle > 28) { bodyAngle = 28; if (bodyAngVel > 0) bodyAngVel = 0; }
-    if (bodyAngle < -28) { bodyAngle = -28; if (bodyAngVel < 0) bodyAngVel = 0; }
     // Контр-сдвиг по visualViewport.offsetTop — компенсирует iOS-скролл
     // на keyboard, чтобы кукла оставалась на экране.
     var vvTop = (window.visualViewport && window.visualViewport.offsetTop) || 0;
@@ -3756,7 +3782,7 @@ async function askWithImages(photos, userText) {
       // стираем любое сообщение под кистью/стопой (drag-режим).
       L._lastAttached = attached;  // для debug overlay
       if (window.stPaint) {
-        var radius = L.isLeg ? 18 : 14;
+        var radius = L.isLeg ? 14 : 10;
         if (dragged) {
           var bbls2 = document.querySelectorAll('#chat .bbl');
           for (var bi3 = 0; bi3 < bbls2.length; bi3++) {
