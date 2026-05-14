@@ -174,6 +174,10 @@ body.pwa-standalone .pwa-chrome{display:flex}
 .dot.b{background:#7c5cff;box-shadow:0 0 8px rgba(124,92,255,.7);animation:db .4s infinite}
 .dot.r{background:#ff4757;box-shadow:0 0 8px rgba(255,71,87,.85);animation:db .5s infinite}
 .chat{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:4px 14px calc(var(--composer-h, 120px) + 12px);display:flex;flex-direction:column;gap:7px;touch-action:pan-y;-webkit-touch-callout:none;transition:opacity .25s ease}
+/* v868: spacer-псевдоэлемент сверху чата — пока сообщений мало, он
+   растёт и пушит их к низу (== над composer'ом). Когда сообщений
+   больше чем влезает, spacer сжимается до 0 и работает обычный scroll. */
+.chat::before{content:'';flex:1 1 0;min-height:0}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 /* Слой «краски» поверх стеклянной подложки .bi. Canvas с z-index:-1 рисуется
@@ -240,7 +244,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v867</span></div>
+<div class="title">Стич · Claude <span class="build">v868</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
