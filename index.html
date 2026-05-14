@@ -62,7 +62,7 @@ body.pwa-standalone .bottom{padding-bottom:20px;padding-top:0;position:absolute;
    --composer-h). Фолбэк 130px на случай если ResizeObserver не подцепился.
    Раньше было статично 130/110; не хватало когда композер вырастал (photo
    preview, многострочный textarea) — последние сообщения залезали под .bottom. */
-body.pwa-standalone .below{padding-bottom:var(--composer-h, 130px)}
+body.pwa-standalone .below{padding-bottom:130px}
 /* Кукла и конечности больше НЕ реагируют на клавиатуру (v726) —
    остаются на месте сверху экрана. */
 /* kb-open layout полностью отдан viewport meta interactive-widget=
@@ -258,7 +258,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v809</span></div>
+<div class="title">Стич · Claude <span class="build">v810</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -4050,28 +4050,9 @@ async function askWithImages(photos, userText) {
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) setScreenVars(); });
   if (window.visualViewport) window.visualViewport.addEventListener('resize', setScreenVars);
 
-  // Live-измерение высоты .bottom (композер растёт от photo preview/
-  // многострочного textarea/состояния kb-open). --composer-h попадает в
-  // padding-bottom у .below — последние сообщения никогда не уползают
-  // под inputrow.
-  function syncComposerHeight(){
-    var b = document.querySelector('.bottom');
-    if (!b) return;
-    var h = b.getBoundingClientRect().height;
-    if (h > 0) document.documentElement.style.setProperty('--composer-h', h + 'px');
-  }
-  syncComposerHeight();
-  setTimeout(syncComposerHeight, 100);
-  setTimeout(syncComposerHeight, 800);
-  if (window.ResizeObserver) {
-    var bEl = document.querySelector('.bottom');
-    if (bEl) new ResizeObserver(syncComposerHeight).observe(bEl);
-  } else {
-    window.addEventListener('resize', syncComposerHeight);
-  }
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', syncComposerHeight);
-  }
+  // syncComposerHeight убран (v810): динамический --composer-h перетряхивал
+  // padding-bottom у .below при каждом изменении высоты композера → user
+  // видел «блоки подстраиваются». Перешли на статичный 130px в CSS.
 })();
 </script>
 <!-- DEBUG OVERLAY v6 (v761) — диагностика composer при клавиатуре -->
