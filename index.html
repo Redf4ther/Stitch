@@ -3,7 +3,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Стич · Claude</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2c4e3a">
@@ -37,7 +37,11 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{width:100%;height:100%;height:100dvh;min-height:var(--screen-h, 100dvh);overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease;position:relative}
-#app{display:contents}
+#app{display:block;position:relative;height:100%;transition:transform .22s ease}
+/* Telegram-стиль клавиатуры: при kb-open вся область .top + .below + .bottom
+   едет вверх ровно на --kb-h одной transform-сдвижкой. Layout внутри #app
+   при этом не меняется (.bottom остаётся absolute bottom:0 у #app и т.д.) */
+body.kb-open #app{transform:translateY(calc(-1 * var(--kb-h, 0px)))}
 .top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto;transform:translateY(var(--vv-top, 0px))}
 .below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4;transform:translateY(var(--vv-top, 0px))}
 /* PWA standalone: layout НЕ сдвигаем — .top, .below, #doll сидят на тех же
@@ -58,12 +62,7 @@ body.pwa-standalone .bottom{padding-bottom:20px;padding-top:0;position:absolute;
 body.pwa-standalone .below{padding-bottom:var(--composer-h, 130px)}
 /* Кукла и конечности больше НЕ реагируют на клавиатуру (v726) —
    остаются на месте сверху экрана. */
-body.kb-open.pwa-standalone .bottom{padding-bottom:6px;position:fixed;left:0;right:0;bottom:0;z-index:6}
-/* При открытой клавиатуре .below не должна тянуться до layout-bottom (там
-   кб). Сжимаем её до top-of-kb через bottom:var(--kb-h). Сообщения
-   (anchored в .chat::before + padding-bottom:composer-h) автоматически
-   оказываются прямо над композером. */
-body.kb-open.pwa-standalone .below{bottom:var(--kb-h, 0px)}
+/* Никаких kb-open-специфичных правок layout — #app transform делает всё. */
 /* Раньше тут было body.kb-open .chat{pointer-events:none} — это ломало
    inner scroll сообщений при открытой клавиатуре (тач уходил на body
    и iOS катал всю страницу). Снято: пользователь должен скроллить чат
@@ -253,7 +252,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v796</span></div>
+<div class="title">Стич · Claude <span class="build">v798</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
