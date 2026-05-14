@@ -254,7 +254,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v891</span></div>
+<div class="title">Стич · Claude <span class="build">v892</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1629,18 +1629,23 @@ window.showApples = function(left, right){
         var cx = r.left + r.width/2;
         var cy = r.top + r.height/2;
         window.dollHandTarget = { x: cx, y: cy };
-        // Поворот тела в сторону яблока (через тот же body-drag канал).
         var screenCx = window.innerWidth / 2;
         var tilt = Math.max(-20, Math.min(20, (cx - screenCx) * 0.06));
-        // Знак минус: палец справа → CCW-rotate в screen, низ куклы едет
-        // вправо. См. тот же sign-trick в pointermove body drag.
         if (typeof window.dollSwingTo === 'function') window.dollSwingTo(-tilt);
+        // v892: подъём/опускание на верёвочке к высоте яблока. Натуральная
+        // shoulder.y у куклы ≈ safe-top + 230 (грубо). Если apple выше —
+        // negative lift; ниже — positive.
+        var safeTop = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-top')) || 50;
+        var dollNaturalShoulderY = safeTop + 230;
+        var liftDelta = (cy - dollNaturalShoulderY) - 60;
+        if (typeof window.dollRopeLift === 'function') window.dollRopeLift(liftDelta);
       }, idx * STEP);
       setTimeout(function(){ el.classList.add('placed'); }, idx * STEP + 220);
     })(seq[k], k);
     setTimeout(function(){
       window.dollHandTarget = null;
       if (typeof window.dollSwingTo === 'function') window.dollSwingTo(null);
+      if (typeof window.dollRopeLift === 'function') window.dollRopeLift(null);
     }, seq.length * STEP + 200);
   }, 50);
 };
@@ -3674,6 +3679,14 @@ async function askWithImages(photos, userText) {
       bodyDragAngleTarget = Math.max(-25, Math.min(25, angle));
     }
   };
+  // v892: программное поднятие/опускание на верёвочке для apple-хореографии.
+  window.dollRopeLift = function(deltaY){
+    if (deltaY === null || deltaY === undefined) {
+      window._extraRopeYTarget = 0;
+    } else {
+      window._extraRopeYTarget = Math.max(-100, Math.min(200, deltaY));
+    }
+  };
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
   // не за плечом. Hysteresis 700ms чтобы режим не мерцал на amplitude<0.15.
@@ -3717,14 +3730,18 @@ async function askWithImages(photos, userText) {
     var lerpY = snappedY ? ROPE_LERP_SNAP : ROPE_LERP_STRETCH;
     ropeY += (ropeTargetY - ropeY) * lerpY;
     ropeX += (ropeTargetX - ropeX) * ROPE_LERP_STRETCH;
+    // v892: дополнительный rope-offset для apple-хореографии. Может быть
+    // отрицательным (кукла поднимается на верёвочке к верхним яблокам)
+    // или положительным (опускается к нижним).
+    if (typeof window._extraRopeY !== 'number') window._extraRopeY = 0;
+    if (typeof window._extraRopeYTarget !== 'number') window._extraRopeYTarget = 0;
+    window._extraRopeY += (window._extraRopeYTarget - window._extraRopeY) * 0.18;
+    var visualY = ropeY + window._extraRopeY;
     if (doll) {
-      doll.style.setProperty('--doll-rope-len', ropeY.toFixed(1) + 'px');
+      doll.style.setProperty('--doll-rope-len', visualY.toFixed(1) + 'px');
       doll.style.setProperty('--doll-rope-x', ropeX.toFixed(1) + 'px');
-      // Верёвочка идёт от фикс-потолка вниз к голове куклы. Когда кукла
-      // съезжает вниз (ropeY > 0), её SVG-фрейм едет вниз вместе с ней —
-      // компенсируем, удлинняя y1 вверх (CSS-px → SVG-units ≈ ×1.395).
       var rl = doll.querySelector('.dollRope');
-      if (rl) rl.setAttribute('y1', (-200 - ropeY * 1.395).toFixed(1));
+      if (rl) rl.setAttribute('y1', (-200 - visualY * 1.395).toFixed(1));
     }
   }
 
