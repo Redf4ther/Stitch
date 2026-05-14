@@ -244,7 +244,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v868</span></div>
+<div class="title">Стич · Claude <span class="build">v869</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3470,14 +3470,9 @@ async function askWithImages(photos, userText) {
       t.closest('.pwa-chrome') || t.closest('.pwa-menu') ||
       t.closest('#settingsPanel') || t.closest('#chat')
     )) return;
-    // v867: тап по #chat не запускает body drag — приоритет за скроллом
-    // сообщений. v859: захват за конечности отключён, только тело/голова.
-    if (!isDollBodyHit(e.clientX, e.clientY)) return;
-    bodyDragPointers[e.pointerId] = {
-      startX: e.clientX, startY: e.clientY,
-      startRopeX: ropeTargetX, startRopeY: ropeTargetY
-    };
-    window.dollDragging = true;
+    // v869: захват куклы полностью отключён. Любой тач на куклу = скролл
+    // сообщений или ничего. Doll просто статичная визуалка.
+    return;
   }, true);
   document.addEventListener('pointermove', function(e){
     var bd = bodyDragPointers[e.pointerId];
