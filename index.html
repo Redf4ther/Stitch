@@ -254,7 +254,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v898</span></div>
+<div class="title">Стич · Claude <span class="build">v899</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1614,27 +1614,15 @@ window.showApples = function(left, right){
   }
   c.appendChild(lz); c.appendChild(rz);
   document.body.appendChild(c);
-  // v898: без анимации тела. Просто: рука соответствующей стороны тянется
-  // к каждому яблоку по очереди и кладёт. Левые сначала (от ближнего к
-  // дальнему), потом правые.
-  var STEP = 700;
+  // v899: яблоки появляются сами по очереди, без участия рук куклы.
+  var STEP = 300;
   var leftApples = Array.prototype.slice.call(lz.children).reverse();
   var rightApples = Array.prototype.slice.call(rz.children);
   var seq = leftApples.concat(rightApples);
   setTimeout(function(){
     for (var k = 0; k < seq.length; k++) (function(el, idx){
-      setTimeout(function(){
-        var r = el.getBoundingClientRect();
-        var cx = r.left + r.width/2;
-        var cy = r.top + r.height/2;
-        var screenCx = window.innerWidth / 2;
-        window.dollHandTarget = { x: cx, y: cy, side: cx < screenCx ? -1 : 1 };
-      }, idx * STEP);
-      setTimeout(function(){ el.classList.add('placed'); }, idx * STEP + 450);
+      setTimeout(function(){ el.classList.add('placed'); }, idx * STEP);
     })(seq[k], k);
-    setTimeout(function(){
-      window.dollHandTarget = null;
-    }, seq.length * STEP + 200);
   }, 50);
 };
 window.hideApples = function(immediate){
@@ -3764,9 +3752,8 @@ async function askWithImages(photos, userText) {
       });
     }
     LIMBS.forEach(function(L){
-      // v856 + v889: лимбы статичны (snap к dangle), кроме двух случаев:
-      // (1) listen-pose — правая рука к уху во время записи голоса;
-      // (2) яблочная хореография — правая рука тянется к dollHandTarget.
+      // v899: лимбы статичны (snap к dangle). Единственное исключение —
+      // listen-pose (правая рука к уху во время записи голоса).
       var preS = shoulderPoint(L.shoulderId);
       if (!preS.x && !preS.y) return;
       var posed = null;
@@ -3774,34 +3761,9 @@ async function askWithImages(photos, userText) {
         var ear = shoulderPoint('ear-r');
         if (ear.x || ear.y) posed = {x: ear.x + 22, y: ear.y - 2};
       }
-      // v893: рука соответствует стороне яблока. Если side не задан —
-      // legacy: правая рука.
-      if (!posed && window.dollHandTarget && !L.isLeg) {
-        var want = (typeof window.dollHandTarget.side === 'number')
-          ? window.dollHandTarget.side : 1;
-        if (L.sideSign === want) posed = window.dollHandTarget;
-      }
       var goal = posed || dangleGoal(L);
       if (!L.cur) L.cur = {x: goal.x, y: goal.y};
-      if (posed) {
-        // v895: плавнее тянемся к яблоку.
-        L.cur.x += (goal.x - L.cur.x) * 0.10;
-        L.cur.y += (goal.y - L.cur.y) * 0.10;
-        // Clamp к длине руки.
-        var ddx = L.cur.x - preS.x, ddy = L.cur.y - preS.y;
-        var dd = Math.hypot(ddx, ddy);
-        var maxR = L.L1 + L.L2;
-        if (dd > maxR) {
-          L.cur.x = preS.x + ddx / dd * maxR;
-          L.cur.y = preS.y + ddy / dd * maxR;
-        }
-      } else {
-        // v897: после apple-pose плавно возвращаемся к dangle, иначе snap
-        // выглядит как ручка-тычок. В обычном статичном состоянии goal не
-        // меняется, и L.cur и так сидит на goal — лерп ничего не ломает.
-        L.cur.x += (goal.x - L.cur.x) * 0.18;
-        L.cur.y += (goal.y - L.cur.y) * 0.18;
-      }
+      L.cur.x = goal.x; L.cur.y = goal.y;
       // IK render.
       var s = preS;
       var bend = -L.sideSign;
