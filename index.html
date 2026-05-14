@@ -251,7 +251,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v802</span></div>
+<div class="title">Стич · Claude <span class="build">v803</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1453,15 +1453,27 @@ var chat = document.getElementById('chat');
 var errEl = document.getElementById('err');
 var inp = document.getElementById('inp');
 var sb = document.getElementById('sb');
-// При тапе по чату снимаем фокус с textarea, чтобы caret не "вылетал" из
-// поля ввода (в iOS WebView он визуально оставался поверх чата при тапах
-// по сообщениям, пока фокус был у inp). Закрывает заодно клавиатуру.
+// При ТАПЕ по чату (без drag-scroll) снимаем фокус с textarea → закрывается
+// клавиатура. Раньше дисмиссили на pointerdown → скролл (который тоже
+// начинается с pointerdown) сразу гасил кб. Теперь отслеживаем движение
+// между down и up; >6px = scroll, blur не вызываем.
 (function(){
   var chatEl = document.getElementById('chat');
   if (!chatEl) return;
-  chatEl.addEventListener('pointerdown', function(){
-    if (document.activeElement === inp) inp.blur();
+  var sx = 0, sy = 0, moved = false, pid = -1;
+  chatEl.addEventListener('pointerdown', function(e){
+    sx = e.clientX; sy = e.clientY; moved = false; pid = e.pointerId;
   }, {passive:true});
+  chatEl.addEventListener('pointermove', function(e){
+    if (e.pointerId !== pid) return;
+    if (Math.abs(e.clientX - sx) > 6 || Math.abs(e.clientY - sy) > 6) moved = true;
+  }, {passive:true});
+  chatEl.addEventListener('pointerup', function(e){
+    if (e.pointerId !== pid) return;
+    pid = -1;
+    if (!moved && document.activeElement === inp) inp.blur();
+  }, {passive:true});
+  chatEl.addEventListener('pointercancel', function(){ pid = -1; moved = false; }, {passive:true});
 })();
 var micBtn = document.getElementById('micBtn');
 var micHint = document.getElementById('micHint');
