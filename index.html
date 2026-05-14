@@ -258,7 +258,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v817</span></div>
+<div class="title">Стич · Claude <span class="build">v818</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3740,7 +3740,10 @@ async function askWithImages(photos, userText) {
       }
       // Если конечность «заморожена» (UI дрыгается — клавиатура/скролл/фокус)
       // — держим её на сохранённой позиции, не реагируем на движение чата.
-      var bp = dragged || posed || (!L.frozen && L.bubble ? bubblePoint(L.bubble, L) : null);
+      // v818: лимбы прикреплены к телу — не следуют за bubble'ами. Можно
+      // только дёрнуть пальцем (dragged) или поставить в позу (posed).
+      // Если включишь обратно, поставь L.bubble обратно в условие.
+      var bp = dragged || posed;
       var attached = !!bp && !dragged;
       var goal = bp || (L.frozen ? L.frozen : dangleGoal(L));
       // Body в движении? Любое из: активный body drag X, открытый body drag
