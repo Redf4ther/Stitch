@@ -254,7 +254,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v890</span></div>
+<div class="title">Стич · Claude <span class="build">v891</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1616,6 +1616,8 @@ window.showApples = function(left, right){
   document.body.appendChild(c);
   // Хореография: правая рука куклы поочерёдно «ставит» каждое яблоко.
   // Сначала левую сторону (от ближнего к дальнему), потом правую.
+  // Если яблоко далеко — кукла качается на верёвочке в его сторону (как
+  // реальная марионетка тянется к недосягаемой точке).
   var STEP = 450;
   var leftApples = Array.prototype.slice.call(lz.children).reverse();
   var rightApples = Array.prototype.slice.call(rz.children);
@@ -1624,11 +1626,22 @@ window.showApples = function(left, right){
     for (var k = 0; k < seq.length; k++) (function(el, idx){
       setTimeout(function(){
         var r = el.getBoundingClientRect();
-        window.dollHandTarget = { x: r.left + r.width/2, y: r.top + r.height/2 };
+        var cx = r.left + r.width/2;
+        var cy = r.top + r.height/2;
+        window.dollHandTarget = { x: cx, y: cy };
+        // Поворот тела в сторону яблока (через тот же body-drag канал).
+        var screenCx = window.innerWidth / 2;
+        var tilt = Math.max(-20, Math.min(20, (cx - screenCx) * 0.06));
+        // Знак минус: палец справа → CCW-rotate в screen, низ куклы едет
+        // вправо. См. тот же sign-trick в pointermove body drag.
+        if (typeof window.dollSwingTo === 'function') window.dollSwingTo(-tilt);
       }, idx * STEP);
       setTimeout(function(){ el.classList.add('placed'); }, idx * STEP + 220);
     })(seq[k], k);
-    setTimeout(function(){ window.dollHandTarget = null; }, seq.length * STEP + 200);
+    setTimeout(function(){
+      window.dollHandTarget = null;
+      if (typeof window.dollSwingTo === 'function') window.dollSwingTo(null);
+    }, seq.length * STEP + 200);
   }, 50);
 };
 window.hideApples = function(immediate){
@@ -3650,6 +3663,17 @@ async function askWithImages(photos, userText) {
   // возвращает angle к 0 через restore-силу → визуальное качание.
   var bodyDragXActive = false, bodyDragAngleTarget = 0;
   var BODY_DRAG_ANGLE_MAX = 15;
+  // v891: программное качание (для apple-хореографии). Если значение
+  // задано → tilt body как при body drag, на null → отпускаем.
+  window.dollSwingTo = function(angle){
+    if (angle === null || angle === undefined) {
+      bodyDragXActive = false;
+      bodyDragAngleTarget = 0;
+    } else {
+      bodyDragXActive = true;
+      bodyDragAngleTarget = Math.max(-25, Math.min(25, angle));
+    }
+  };
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
   // не за плечом. Hysteresis 700ms чтобы режим не мерцал на amplitude<0.15.
