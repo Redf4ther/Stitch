@@ -266,7 +266,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v835</span></div>
+<div class="title">Стич · Claude <span class="build">v836</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -3666,12 +3666,24 @@ async function askWithImages(photos, userText) {
   // чтобы быть видимой в меньшем поверх-клавиатуры пространстве. Плавно.
   var kbDescendY = 0, kbDescendTarget = 0;
   // Динамический descent: позиционируем низ куклы у нижнего края видимой
-  // зоны (visualViewport.height). natural_top ≈ safe-top + 0 ≈ 50.
+  // зоны. Реальный natural top куклы (после safe-area-inset-top, -14, etc)
+  // меряем через getBoundingClientRect — работает на любом устройстве/notch.
+  var DOLL_NATURAL_TOP = null;
+  function getDollNaturalTop(){
+    if (DOLL_NATURAL_TOP !== null) return DOLL_NATURAL_TOP;
+    var d = document.getElementById('doll');
+    if (!d) return 50;
+    var r = d.getBoundingClientRect();
+    DOLL_NATURAL_TOP = r.top - (kbDescendY + ropeY);
+    return DOLL_NATURAL_TOP;
+  }
   window.setDollKbOpen = function(open){
     if (!open) { kbDescendTarget = 0; return; }
     var vH = (window.visualViewport && window.visualViewport.height) || 600;
-    var DOLL_H = 387, NAT_TOP = 50;
-    kbDescendTarget = Math.max(0, vH - DOLL_H - NAT_TOP);
+    var dEl = document.getElementById('doll');
+    var dollH = dEl ? dEl.getBoundingClientRect().height : 387;
+    var natTop = getDollNaturalTop();
+    kbDescendTarget = Math.max(0, vH - dollH - natTop);
   };
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
