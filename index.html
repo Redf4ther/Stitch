@@ -92,7 +92,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
    накладывался на сами плитки. */
 .pwa-menu .item{display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;text-align:left;padding:12px 16px;font-size:15px;font-weight:500;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:14px;background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),rgba(255,255,255,.10);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.22);box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.28)}
 .pwa-menu .item:active{background:linear-gradient(135deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.18) 100%),rgba(255,255,255,.05)}
-.title{position:fixed;top:env(safe-area-inset-top, 0px);left:0;right:0;text-align:center;padding:2px 0 0;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#ffffff;z-index:7;pointer-events:none}
+.title{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 50px);right:4px;writing-mode:vertical-rl;text-orientation:mixed;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#ffffff;z-index:7;pointer-events:none}
 .build{font-size:10px;opacity:.6;margin-left:4px}
 .stage{position:relative;width:160px;height:160px;margin-top:2px}
 .glow{display:none}
@@ -266,7 +266,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v832</span></div>
+<div class="title">Стич · Claude <span class="build">v833</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
