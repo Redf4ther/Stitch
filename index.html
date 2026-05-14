@@ -251,7 +251,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v803</span></div>
+<div class="title">Стич · Claude <span class="build">v804</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1460,9 +1460,9 @@ var sb = document.getElementById('sb');
 (function(){
   var chatEl = document.getElementById('chat');
   if (!chatEl) return;
-  var sx = 0, sy = 0, moved = false, pid = -1;
+  var sx = 0, sy = 0, st = 0, moved = false, pid = -1;
   chatEl.addEventListener('pointerdown', function(e){
-    sx = e.clientX; sy = e.clientY; moved = false; pid = e.pointerId;
+    sx = e.clientX; sy = e.clientY; st = performance.now(); moved = false; pid = e.pointerId;
   }, {passive:true});
   chatEl.addEventListener('pointermove', function(e){
     if (e.pointerId !== pid) return;
@@ -1471,7 +1471,10 @@ var sb = document.getElementById('sb');
   chatEl.addEventListener('pointerup', function(e){
     if (e.pointerId !== pid) return;
     pid = -1;
-    if (!moved && document.activeElement === inp) inp.blur();
+    var dur = performance.now() - st;
+    // Резкий тап = без движения И короткий по времени (≤250ms). Long-press
+    // или drag-scroll → клавиатуру не трогаем.
+    if (!moved && dur < 250 && document.activeElement === inp) inp.blur();
   }, {passive:true});
   chatEl.addEventListener('pointercancel', function(){ pid = -1; moved = false; }, {passive:true});
 })();
