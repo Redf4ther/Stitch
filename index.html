@@ -254,7 +254,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v902</span></div>
+<div class="title">Стич · Claude <span class="build">v903</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1612,7 +1612,7 @@ window.parseApplesMarker = function(text){
     clean: text.replace(m[0], '').trim()
   };
 };
-window.showApples = function(left, right, emoji){
+window.showApples = function(left, right, emoji, sync){
   window.hideApples(true);
   if (!left && !right) return;
   emoji = emoji || '🍎';
@@ -1631,7 +1631,9 @@ window.showApples = function(left, right, emoji){
   }
   c.appendChild(lz); c.appendChild(rz);
   document.body.appendChild(c);
-  // v899: яблоки появляются сами по очереди, без участия рук куклы.
+  // sync=true → зоны раскрывает typewriter (placeAppleGroup) по ходу печати
+  // чисел. Иначе (тест-кнопка, история) — показываем все сразу по очереди.
+  if (sync) return;
   var STEP = 300;
   var leftApples = Array.prototype.slice.call(lz.children).reverse();
   var rightApples = Array.prototype.slice.call(rz.children);
@@ -1641,6 +1643,22 @@ window.showApples = function(left, right, emoji){
       setTimeout(function(){ el.classList.add('placed'); }, idx * STEP);
     })(seq[k], k);
   }, 50);
+};
+
+// Раскрыть одну зону эмодзи по очереди — для синхронной печати: typewriter
+// зовёт это, допечатав очередное число в тексте.
+window.placeAppleGroup = function(side){
+  var c = document.getElementById('applesContainer');
+  if (!c) return;
+  var zone = c.querySelector('.zone.' + side);
+  if (!zone) return;
+  var items = Array.prototype.slice.call(zone.children);
+  if (side === 'left') items.reverse();   // left заполняется от центра наружу
+  var STEP = 240;
+  items.forEach(function(el, idx){
+    if (el.classList.contains('placed')) return;
+    setTimeout(function(){ el.classList.add('placed'); }, idx * STEP);
+  });
 };
 window.hideApples = function(immediate){
   var c = document.getElementById('applesContainer');
@@ -1819,7 +1837,7 @@ async function askClaude(msg) {
     setState('talking');
     var el = addMsg('a', '');
     el.classList.add('cur');
-    if (applesData) window.showApples(applesData.left, applesData.right, applesData.emoji);
+    if (applesData) window.showApples(applesData.left, applesData.right, applesData.emoji, true);
     startMouth();
     maybeCelebrate(text);
 
@@ -1843,11 +1861,25 @@ async function askClaude(msg) {
     }
 
     // Type text simultaneously
+    var appleGroups = 0;  // сколько зон эмодзи раскрыто (0..2)
     for (var i=1; i<=text.length; i++) {
       if (typingCancel) break;
       el.textContent = text.slice(0,i);
+      // синхронно с печатью: допечатали очередное число → раскрыть зону эмодзи
+      if (applesData && appleGroups < 2) {
+        var pc = text.charAt(i-1), nc = text.charAt(i);
+        if (pc >= '0' && pc <= '9' && !(nc >= '0' && nc <= '9')) {
+          appleGroups++;
+          window.placeAppleGroup(appleGroups === 1 ? 'left' : 'right');
+        }
+      }
       autoScrollChat();
       await sleep(55);
+    }
+    // если чисел в тексте оказалось меньше двух — добираем оставшиеся зоны
+    if (applesData) {
+      if (appleGroups < 1) window.placeAppleGroup('left');
+      if (appleGroups < 2) window.placeAppleGroup('right');
     }
     el.classList.remove('cur');
     stopMouth();
@@ -2710,7 +2742,7 @@ async function askWithImages(photos, userText) {
     setState('talking');
     var el = addMsg('a','');
     el.classList.add('cur');
-    if (applesData) window.showApples(applesData.left, applesData.right, applesData.emoji);
+    if (applesData) window.showApples(applesData.left, applesData.right, applesData.emoji, true);
     startMouth();
     maybeCelebrate(text);
     if (audioBlob) {
@@ -2730,11 +2762,23 @@ async function askWithImages(photos, userText) {
       audio.onerror = function(){ if(currentAudio===audio) currentAudio=null; };
       audio.play().catch(function(){});
     }
+    var appleGroups = 0;  // сколько зон эмодзи раскрыто (0..2)
     for (var i=1;i<=text.length;i++) {
       if (typingCancel) break;
       el.textContent=text.slice(0,i);
+      if (applesData && appleGroups < 2) {
+        var pc = text.charAt(i-1), nc = text.charAt(i);
+        if (pc >= '0' && pc <= '9' && !(nc >= '0' && nc <= '9')) {
+          appleGroups++;
+          window.placeAppleGroup(appleGroups === 1 ? 'left' : 'right');
+        }
+      }
       autoScrollChat();
       await sleep(55);
+    }
+    if (applesData) {
+      if (appleGroups < 1) window.placeAppleGroup('left');
+      if (appleGroups < 2) window.placeAppleGroup('right');
     }
     el.classList.remove('cur');
     stopMouth();
