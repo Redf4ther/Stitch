@@ -254,7 +254,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v900</span></div>
+<div class="title">Стич · Claude <span class="build">v901</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1798,6 +1798,10 @@ async function askClaude(msg) {
       text = await window.stApi.chat(messages, currentAbort.signal);
     } catch(e1) { throw e1; }
     if (!text) text = 'Хм, я задумался… попробуй спросить ещё раз!';
+    // v901: вынуть счётный маркер [count ЭМОДЗИ N+M] ДО TTS/печати/истории —
+    // иначе он озвучивается и печатается текстом в пузыре.
+    var applesData = window.parseApplesMarker(text);
+    if (applesData) text = applesData.clean || '...';
     hist.push({role:'assistant', content:text});
     saveHist();
 
@@ -1815,6 +1819,7 @@ async function askClaude(msg) {
     setState('talking');
     var el = addMsg('a', '');
     el.classList.add('cur');
+    if (applesData) window.showApples(applesData.left, applesData.right, applesData.emoji);
     startMouth();
     maybeCelebrate(text);
 
@@ -2687,6 +2692,9 @@ async function askWithImages(photos, userText) {
       text = await window.stApi.chat([{role:'system',content:prompt}].concat(hist), currentAbort.signal);
     } catch(e1) { throw e1; }
     if (!text) text = 'Хм, я задумался… попробуй спросить ещё раз!';
+    // v901: вынуть счётный маркер [count ЭМОДЗИ N+M] ДО TTS/печати/истории.
+    var applesData = window.parseApplesMarker(text);
+    if (applesData) text = applesData.clean || '...';
     hist.push({role:'assistant', content:text});
     saveHist();
 
@@ -2702,6 +2710,7 @@ async function askWithImages(photos, userText) {
     setState('talking');
     var el = addMsg('a','');
     el.classList.add('cur');
+    if (applesData) window.showApples(applesData.left, applesData.right, applesData.emoji);
     startMouth();
     maybeCelebrate(text);
     if (audioBlob) {
