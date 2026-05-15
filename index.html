@@ -218,8 +218,8 @@ body.pwa-standalone .pwa-chrome{display:flex}
 .sbtn:active{background:rgba(255,255,255,.05)}
 .sbtn:disabled{background:#d8cce8;opacity:.5;box-shadow:none}
 .img-msg{max-width:200px;border-radius:12px;margin-top:4px;display:block}
-#tonePicker::-webkit-scrollbar,#btnTonePicker::-webkit-scrollbar,#msgTonePicker::-webkit-scrollbar,#asstTonePicker::-webkit-scrollbar,#clothTonePicker::-webkit-scrollbar{display:none}
-#tonePicker > button,#btnTonePicker > button,#msgTonePicker > button,#asstTonePicker > button,#clothTonePicker > button{flex-shrink:0}
+#voicePicker::-webkit-scrollbar,#tonePicker::-webkit-scrollbar,#btnTonePicker::-webkit-scrollbar,#msgTonePicker::-webkit-scrollbar,#asstTonePicker::-webkit-scrollbar,#clothTonePicker::-webkit-scrollbar{display:none}
+#voicePicker > button,#tonePicker > button,#btnTonePicker > button,#msgTonePicker > button,#asstTonePicker > button,#clothTonePicker > button{flex-shrink:0}
 </style>
 
 </head>
@@ -254,7 +254,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v904</span></div>
+<div class="title">Стич · Claude <span class="build">v908</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -319,14 +319,10 @@ body.pwa-standalone .pwa-chrome{display:flex}
       <div style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff;opacity:.85">Настройки</div>
       <button id="settingsClose" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;opacity:.7;padding:0;-webkit-tap-highlight-color:transparent">✕</button>
     </div>
-    <button id="voicesBtn" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;font-size:15px;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
-        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-      </svg>
-      <span>Голоса</span>
-    </button>
+    <div style="padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Голос</div>
+      <div id="voicePicker" style="display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:3px 3px 5px;-webkit-overflow-scrolling:touch"></div>
+    </div>
     <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон фона</div>
       <div id="tonePicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:3px 3px 5px;-webkit-overflow-scrolling:touch"></div>
@@ -970,7 +966,7 @@ function cycleVoice() {
 }
 function fetchPreviewUrl(voice) {
   if (!window.hasApiAuth()) return Promise.resolve(null);
-  var h = window.stApi.tts('Привет! Я Стич, теперь буду говорить вот так.', voice, 1.2);
+  var h = window.stApi.tts('Привет! Теперь я буду говорить вот так.', voice, 1.2);
   return h.promise.then(function(audio){
     if (!audio) return null;
     var blob = new Blob([audio], {type: 'audio/mpeg'});
@@ -1074,7 +1070,55 @@ function showVoicePanel(name, steps, onDone) {
   if (sb2 && !sb2._wired) { sb2._wired = true; sb2.addEventListener('click', function(){ haptic(); openS(); }); }
   if (sc && !sc._wired) { sc._wired = true; sc.addEventListener('click', function(){ haptic(); closeS(); }); }
   if (bd && !bd._wired) { bd._wired = true; bd.addEventListener('click', closeS); }
-  if (vb && !vb._wired) { vb._wired = true; vb.addEventListener('click', function(){ haptic(); closeS(); cycleVoice(); }); }
+  // Голос — горизонтальный скролл-пикер (как палитры цветов): тап по имени
+  // выбирает голос, сохраняет в localStorage и проигрывает превью.
+  var vp = document.getElementById('voicePicker');
+  if (vp && !vp._wired) {
+    vp._wired = true;
+    var voicePreviewSeq = 0;
+    function refreshVoiceRings(active){
+      Array.prototype.forEach.call(vp.children, function(b){
+        var on = b.dataset.voice === active;
+        b.style.background = on ? 'rgba(255,255,255,.92)' : 'rgba(255,255,255,.08)';
+        b.style.color = on ? '#1b1b1b' : '#fff';
+        b.style.borderColor = on ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.18)';
+      });
+    }
+    VOICES.forEach(function(name){
+      var b = document.createElement('button');
+      b.dataset.voice = name;
+      b.textContent = name;
+      b.style.cssText = 'flex-shrink:0;padding:9px 16px;border-radius:50px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-weight:600;text-transform:lowercase;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,color .15s';
+      b.addEventListener('click', function(){
+        haptic();
+        currentVoice = name;
+        try { localStorage.setItem(KEY_VOICE, name); } catch(_){}
+        refreshVoiceRings(name);
+        closeS();   // выбрали голос — закрываем меню настроек
+        // Новый голос обрывает предыдущее превью.
+        if (currentAudio) { try { currentAudio.pause(); } catch(_){} currentAudio = null; }
+        stopMouth(); head.className = 'head'; glow.className = 'glow';
+        var oldPanel = document.getElementById('voicePanel');
+        if (oldPanel) oldPanel.remove();
+        var seq = ++voicePreviewSeq;
+        var urlPromise = fetchPreviewUrl(name);
+        showVoicePanel(name, 3, function(close){
+          urlPromise.then(function(url){
+            if (seq !== voicePreviewSeq) {        // пока грузилось — выбрали другой
+              if (url) { try { URL.revokeObjectURL(url); } catch(_){} }
+              close(); return;
+            }
+            if (url) playPreviewUrl(url);
+            close();
+          });
+        });
+      });
+      vp.appendChild(b);
+    });
+    refreshVoiceRings(currentVoice);
+    var actV = vp.querySelector('button[data-voice="' + currentVoice + '"]');
+    if (actV) try { actV.scrollIntoView({inline:'center', block:'nearest'}); } catch(_){}
+  }
   // Тап по голове Стича открывает то же меню (раньше было — по hamburger
   // справа сверху, который теперь скрыт). cursor:pointer для desktop.
   var hd = document.getElementById('head');
@@ -1786,7 +1830,7 @@ function maybeCelebrate(text) {
   } catch(_) {}
 }
 
-var prompt = 'Ты — персональный репетитор. НИКОГДА не спрашивай "как тебя зовут?" и не пытайся узнать имя ученика. Если ученик сам себя назовёт — запомни и используй, но сам никогда не спрашивай. Не представляйся первым — не называй своё имя, не говори кто ты, не описывай себя по своей инициативе. ИСКЛЮЧЕНИЕ: если ученик САМ спросит "как тебя зовут?", "кто ты?" или похожее — ответь коротко: тебя зовут Липо Стич, ты инопланетный помощник-репетитор. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, представляться без вопроса. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. СТИЛЬ: общайся как обычный ChatGPT-репетитор — спокойно, ясно, по-человечески. НЕ называй ученика "зверёк", "малыш" и подобными словечками. НЕ вставляй "хи-хи", "бум", "ха", "ага" в каждый ответ. Просто понятные фразы простым языком для 8-9 лет. ИСКЛЮЧЕНИЕ: КОГДА РЕБЁНОК САМ НАЗВАЛ ВЕРНЫЙ ОТВЕТ — обязательно начни ответ со слова "Бум!" и подтверди (например: "Бум! Точно так!", "Бум! Ты угадал!", "Бум! Молодец, верно!"). Если ответ неверный — не говори "Бум", мягко направь наводящим вопросом без лишних междометий. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь, верный ответ — Бум-подтверждение. ОБЪЯСНЕНИЕ ЧЕРЕЗ ПРИМЕРЫ: если ученик не понимает суть задачи или правила — объясни через несколько разных примеров из детского мира (яблоки, игрушки, машинки, котята, дни рождения, мультяшные герои, школьные ситуации) — но НЕ через конфеты или сладости. Если первый пример не зашёл — попробуй второй из другой области. Один и тот же приём показывай на 2-3 разных историях, чтобы ребёнок увидел общую идею. Если просит ответ: предложи разобрать вместе. Главное правило: ученик должен САМ прийти к ответу, а ты подтвердить через "Бум!". Если фото и не понимаешь — просто спроси что с этим делать. ЭМОДЗИ-СЧЁТ: В КАЖДОМ своём сообщении, где ты разбираешь пример на сложение или вычитание в пределах 10 (2+3, 5-2 и т.п.) — ВКЛЮЧАЯ повторное объяснение того же примера, исправление ошибки ученика и счёт шаг за шагом — В САМОМ КОНЦЕ сообщения добавляй служебный маркер в квадратных скобках: [count ЭМОДЗИ N+M] или [count ЭМОДЗИ N-M]. ЭМОДЗИ — один стандартный эмодзи под твою историю (🍎 яблоки, 🐱 котята, ⭐ звёздочки, 🚗 машинки, 🎈 шарики, 🐟 рыбки), N и M — числа из примера. НЕ используй конфеты и сладости в примерах. Пример сообщения: "Смотри: у тебя 2 яблока, и тебе дали ещё 3 — сколько станет? [count 🍎 2+3]". Если объясняешь тот же пример снова — обязательно ставь маркер опять, с тем же эмодзи. Маркер — ровно один на сообщение, в самом конце; после него НИЧЕГО не пиши и вслух про маркер не упоминай. Только если в сообщении вообще нет конкретного счётного примера до 10 — тогда маркер не добавляй.';
+var prompt = 'Ты — персональный репетитор. НИКОГДА не спрашивай "как тебя зовут?" и не пытайся узнать имя ученика. Если ученик сам себя назовёт — запомни и используй, но сам никогда не спрашивай. Не представляйся первым — не называй своё имя, не говори кто ты, не описывай себя по своей инициативе. ИСКЛЮЧЕНИЕ: если ученик САМ спросит "как тебя зовут?", "кто ты?" или похожее — ответь коротко: тебя зовут Липо Стич, ты инопланетный помощник-репетитор. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, представляться без вопроса. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. СТИЛЬ: общайся как обычный ChatGPT-репетитор — спокойно, ясно, по-человечески. НЕ называй ученика "зверёк", "малыш" и подобными словечками. НЕ вставляй "хи-хи", "бум", "ха", "ага" в каждый ответ. Просто понятные фразы простым языком для 8-9 лет. ИСКЛЮЧЕНИЕ: КОГДА РЕБЁНОК САМ НАЗВАЛ ВЕРНЫЙ ОТВЕТ — обязательно начни ответ со слова "Бум!" и подтверди (например: "Бум! Точно так!", "Бум! Ты угадал!", "Бум! Молодец, верно!"). Если ответ неверный — не говори "Бум", мягко направь наводящим вопросом без лишних междометий. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь, верный ответ — Бум-подтверждение. ОБЪЯСНЕНИЕ ЧЕРЕЗ ПРИМЕРЫ: если ученик не понимает суть задачи или правила — объясни через несколько разных примеров из детского мира (яблоки, игрушки, машинки, котята, дни рождения, мультяшные герои, школьные ситуации) — но НЕ через конфеты или сладости. Если первый пример не зашёл — попробуй второй из другой области. Один и тот же приём показывай на 2-3 разных историях, чтобы ребёнок увидел общую идею. Если просит ответ: предложи разобрать вместе. Главное правило: ученик должен САМ прийти к ответу, а ты подтвердить через "Бум!". Если фото и не понимаешь — просто спроси что с этим делать. ЭМОДЗИ-СЧЁТ: В КАЖДОМ своём сообщении, где ты разбираешь пример на сложение или вычитание в пределах 10 (2+3, 5-2 и т.п.) — ВКЛЮЧАЯ повторное объяснение того же примера, исправление ошибки ученика и счёт шаг за шагом — В САМОМ КОНЦЕ сообщения добавляй служебный маркер в квадратных скобках: [count ЭМОДЗИ N+M] или [count ЭМОДЗИ N-M]. ЭМОДЗИ — один стандартный эмодзи под твою историю (🍎 яблоки, 🐱 котята, ⭐ звёздочки, 🚗 машинки, 🎈 шарики, 🐟 рыбки), N и M — числа из примера. НЕ используй конфеты и сладости в примерах. Пример сообщения: "Смотри: у тебя 2 яблока, и тебе дали ещё 3 — сколько станет? [count 🍎 2+3]". Если объясняешь тот же пример снова — обязательно ставь маркер опять, с тем же эмодзи. Маркер — ровно один на сообщение, в самом конце; после него НИЧЕГО не пиши и вслух про маркер не упоминай. Маркер добавляй ТОЛЬКО когда оба числа примера не больше 10 — тогда эмодзи помещаются у головы куклы. Если хотя бы одно число больше 10, или в сообщении нет конкретного счётного примера — маркер НЕ добавляй и не пытайся его впихнуть, просто спокойно продолжай объяснять словами как обычно, без эмодзи-счёта.';
 
 async function askClaude(msg) {
   errEl.textContent = '';
