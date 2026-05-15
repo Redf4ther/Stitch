@@ -50,16 +50,22 @@ html,body{width:100%;height:100%;height:100dvh;min-height:var(--screen-h, 100dvh
    safe-area-bottom = ~34px и общий нижний отступ становится 52px. Компенсируем:
    педаль safe-area минус 16px (но не меньше 14px). На iPhone X+ это даёт ~18px,
    как в Telegram; на устройствах без home-indicator — 14px. */
-body.pwa-standalone .bottom{padding-bottom:calc(20px + env(safe-area-inset-bottom, 0px));padding-top:0;background:var(--bg-tone, #000)}
-body.pwa-standalone .below{padding-bottom:130px}
+/* v937 (Quirk 6, validated v751): композер position:absolute от body.
+   body имеет min-height:var(--screen-h) → body bottom = ФИЗИЧЕСКИЙ низ 956,
+   поэтому absolute-композер достаёт до реального низа экрана, а не до 894
+   (bad-mode layout viewport, куда упирается position:fixed). */
+body.pwa-standalone .bottom{position:absolute;left:0;right:0;bottom:0;padding-bottom:env(safe-area-inset-bottom, 0px);padding-top:0;background:var(--bg-tone, #000)}
+body.pwa-standalone .below{padding-bottom:0}
 /* Компактный режим при клавиатуре: куклу уменьшаем и поджимаем к верху,
    чтобы она целиком влезала в видимую область над клавиатурой.
    Bottom-блок чуть приподнимаем поверх iOS-аксессуара (кнопки ^ v Done). */
 /* Кукла и конечности больше НЕ реагируют на клавиатуру (v726) —
    остаются на месте сверху экрана. Раньше тут был compact-mode (scale .5)
    и translateY(--vv-top), но это давало видимое подпрыгивание. */
-body.kb-open.pwa-standalone .bottom{padding-bottom:6px}
-body.kb-open .chat{pointer-events:none}
+/* v937: при клавиатуре композер снова position:fixed — iOS сам ужимает
+   layout viewport и поднимает fixed-bottom элемент над клавиатурой (Quirk 4). */
+body.kb-open.pwa-standalone .bottom{padding-bottom:6px;position:fixed}
+/* v937: чат скроллится при открытой клавиатуре (убрано pointer-events:none). */
 /* iOS standalone PWA при появлении клавиатуры scroll'ит весь page вверх
    чтобы инпут попал в visualViewport. Это уносит position:fixed элементы
    (doll, dollLimbs, dollHands) за пределы экрана. Скрываем их пока
@@ -176,6 +182,8 @@ body.pwa-standalone .pwa-chrome{display:flex}
 @keyframes ringPop{from{transform:translate(-50%,-50%) scale(.55);opacity:0}}
 
 .status{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 6px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#9aa0b0;opacity:.85}
+/* v939: тестовые кнопки — чёрный фон. */
+#testAsst,#testUser,#testApples{background:#000 !important}
 #stxt{display:none}
 .dot{width:64px;height:4px;border-radius:2px;background:#3a3c42;transition:background .25s,box-shadow .25s}
 .dot.ok{background:#5be09b;box-shadow:0 0 8px rgba(91,224,155,.7)}
@@ -254,7 +262,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v908</span></div>
+<div class="title">Стич · Claude <span class="build">v939</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -1535,9 +1543,49 @@ var sb = document.getElementById('sb');
 (function(){
   var chatEl = document.getElementById('chat');
   if (!chatEl) return;
-  chatEl.addEventListener('pointerdown', function(){
-    if (document.activeElement === inp) inp.blur();
+  // v937: клавиатуру закрываем только на быстрый тап по чату на месте
+  // (≤250мс, без сдвига) — скролл сообщений её не трогает.
+  var kbTapT = 0, kbTapX = 0, kbTapY = 0;
+  chatEl.addEventListener('pointerdown', function(e){
+    kbTapT = Date.now(); kbTapX = e.clientX; kbTapY = e.clientY;
   }, {passive:true});
+  chatEl.addEventListener('pointerup', function(e){
+    var dt = Date.now() - kbTapT;
+    var moved = Math.abs(e.clientX - kbTapX) + Math.abs(e.clientY - kbTapY);
+    if (dt <= 250 && moved < 10 && document.activeElement === inp) inp.blur();
+  }, {passive:true});
+  // v937: drag-to-dismiss — пустой/короткий чат: любой свайп убирает
+  // клавиатуру; чат со скроллом: убираем когда палец ушёл ниже поля ввода.
+  chatEl.addEventListener('touchmove', function(e){
+    if (document.activeElement !== inp) return;
+    var t = e.touches && e.touches[0];
+    if (!t) return;
+    // v939: долгое удержание / дрожание пальца на сообщении — это НЕ свайп,
+    // клавиатуру не трогаем. Реагируем только на заметное движение.
+    var moved = Math.abs(t.clientX - kbTapX) + Math.abs(t.clientY - kbTapY);
+    if (moved < 16) return;
+    if (chatEl.scrollHeight - chatEl.clientHeight < 4) { inp.blur(); return; }
+    if (t.clientY > inp.getBoundingClientRect().bottom) inp.blur();
+  }, {passive:true});
+})();
+// v938: чат резервирует место точно под панель ввода — последнее сообщение
+// садится прямо над блоком с микрофоном (--composer-h = низ чата − верх панели).
+(function(){
+  var chatPadEl = document.getElementById('chat');
+  var padBottomEl = document.querySelector('.bottom');
+  if (!chatPadEl || !padBottomEl) return;
+  function syncChatPad(){
+    var gap = chatPadEl.getBoundingClientRect().bottom - padBottomEl.getBoundingClientRect().top;
+    document.documentElement.style.setProperty('--composer-h', Math.max(0, Math.round(gap)) + 'px');
+  }
+  syncChatPad();
+  if ('ResizeObserver' in window){
+    try { new ResizeObserver(syncChatPad).observe(padBottomEl); } catch(_){}
+  }
+  window.addEventListener('resize', syncChatPad);
+  window.addEventListener('load', syncChatPad);
+  setTimeout(syncChatPad, 400);
+  setTimeout(syncChatPad, 1200);
 })();
 var micBtn = document.getElementById('micBtn');
 var micHint = document.getElementById('micHint');
