@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#2c4e3a">
+<title>kbtest — клавиатура</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  /* Страница залочена: layout-viewport не скроллится — это убирает
+     основную причину дёрганья на iOS (визуальный сдвиг под клавиатурой). */
+  html, body {
+    margin: 0; padding: 0;
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    background: #2c4e3a;
+    font-family: -apple-system, system-ui, "Segoe UI", sans-serif;
+    overscroll-behavior: none;
+  }
+
+  /* #app точно накрывает ВИДИМУЮ область (visualViewport).
+     iOS standalone PWA не сжимает layout-viewport при открытии клавиатуры —
+     меняется только visualViewport.height. Поэтому размер берём из него. */
+  #app {
+    position: fixed;
+    left: 0; right: 0; top: 0;
+    height: var(--vvh, 100dvh);
+    transform: translateY(var(--vvtop, 0px));
+    display: flex;
+    flex-direction: column;
+    will-change: height, transform;
+  }
+
+  /* Лента сообщений — единственный скроллящийся элемент. */
+  #list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;          /* не пробрасываем скролл наружу */
+    padding: 12px 12px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .msg {
+    max-width: 78%;
+    padding: 9px 13px;
+    border-radius: 16px;
+    font-size: 16px;
+    line-height: 1.35;
+    color: #fff;
+    word-wrap: break-word;
+  }
+  .msg.them { align-self: flex-start; background: #FF9500; border-bottom-left-radius: 5px; }
+  .msg.me   { align-self: flex-end;   background: #34C759; border-bottom-right-radius: 5px; }
+
+  /* Композер — фиксированной высоты, всегда в самом низу #app,
+     то есть прямо над клавиатурой. Сам по себе ничего не «ловит». */
+  #composer {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(0, 0, 0, .28);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255, 255, 255, .12);
+  }
+  #inp {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 16px;                       /* >=16px — иначе iOS зумит при фокусе */
+    padding: 10px 14px;
+    border: none;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .96);
+    color: #111;
+    outline: none;
+  }
+  #send {
+    flex: 0 0 auto;
+    width: 44px; height: 40px;
+    border: none;
+    border-radius: 20px;
+    font-size: 16px;
+    background: #34C759;
+    color: #fff;
+  }
+
+  /* Отладочная плашка — видно, что показывает visualViewport на устройстве. */
+  #dbg {
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    font: 11px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+    color: #fff;
+    background: rgba(0, 0, 0, .55);
+    padding: 3px 9px;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 10;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="list"></div>
+  <div id="composer">
+    <input id="inp" type="text" placeholder="Сообщение…" enterkeyhint="send"
+           autocomplete="off" autocorrect="off" autocapitalize="sentences">
+    <button id="send" aria-label="Отправить">▶</button>
+  </div>
+</div>
+<div id="dbg">vv —</div>
+
+<script>
+(function () {
+  var list = document.getElementById('list');
+  var inp  = document.getElementById('inp');
+  var send = document.getElementById('send');
+  var dbg  = document.getElementById('dbg');
+  var vv   = window.visualViewport;
+
+  // --- 30 тестовых сообщений, чтобы было что скроллить ---
+  for (var i = 1; i <= 30; i++) {
+    addMsg(i % 2 ? 'them' : 'me',
+           'Сообщение №' + i + ' — проверка прокрутки ленты.', false);
+  }
+
+  function addMsg(side, text, scroll) {
+    var d = document.createElement('div');
+    d.className = 'msg ' + side;
+    d.textContent = text;
+    list.appendChild(d);
+    if (scroll !== false) scrollToBottom();
+  }
+
+  function scrollToBottom() {
+    // двойной rAF — ждём, пока браузер пересчитает layout
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        list.scrollTop = list.scrollHeight;
+      });
+    });
+  }
+
+  // --- слежение за клавиатурой через visualViewport ---
+  function syncViewport() {
+    var h   = vv ? vv.height    : window.innerHeight;
+    var top = vv ? vv.offsetTop : 0;
+    var root = document.documentElement.style;
+    root.setProperty('--vvh', h + 'px');
+    root.setProperty('--vvtop', top + 'px');
+    // высота клавиатуры = насколько видимая область меньше layout-viewport
+    var kb = Math.max(0, window.innerHeight - h - top);
+    dbg.textContent = 'innerH ' + window.innerHeight +
+                      ' · vvH ' + Math.round(h) +
+                      ' · top ' + Math.round(top) +
+                      ' · kb ' + Math.round(kb);
+  }
+
+  if (vv) {
+    // resize → клавиатура открылась/закрылась; scroll → visualViewport уехал
+    vv.addEventListener('resize', function () { syncViewport(); scrollToBottom(); });
+    vv.addEventListener('scroll', syncViewport);
+  }
+  window.addEventListener('resize', syncViewport);
+  window.addEventListener('orientationchange', function () {
+    setTimeout(syncViewport, 250);
+  });
+  syncViewport();
+
+  // при фокусе на поле iOS открывает клавиатуру с задержкой — пересчитываем
+  inp.addEventListener('focus', function () {
+    setTimeout(function () { syncViewport(); scrollToBottom(); }, 300);
+  });
+
+  function doSend() {
+    var t = inp.value.trim();
+    if (!t) return;
+    addMsg('me', t);
+    inp.value = '';
+    setTimeout(function () { addMsg('them', 'Эхо: ' + t); }, 400);
+  }
+  send.addEventListener('click', doSend);
+  inp.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); doSend(); }
+  });
+
+  scrollToBottom();
+})();
+</script>
+</body>
+</html>
