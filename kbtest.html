@@ -184,6 +184,17 @@
     setTimeout(function () { syncViewport(); scrollToBottom(); }, 300);
   });
 
+  // короткий тап по ленте на месте (без скролла) → убрать клавиатуру
+  var tapT = 0, tapX = 0, tapY = 0;
+  list.addEventListener('pointerdown', function (e) {
+    tapT = Date.now(); tapX = e.clientX; tapY = e.clientY;
+  });
+  list.addEventListener('pointerup', function (e) {
+    var dt = Date.now() - tapT;
+    var moved = Math.abs(e.clientX - tapX) + Math.abs(e.clientY - tapY);
+    if (dt <= 250 && moved < 10) inp.blur();   // резкий тап на месте → blur
+  });
+
   function doSend() {
     var t = inp.value.trim();
     if (!t) return;
