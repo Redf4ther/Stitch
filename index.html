@@ -115,7 +115,15 @@ body.pwa-standalone .pwa-chrome{display:flex}
    тихо качается dangleDoll. Голова + шея + торс + шарниры плеч/бёдер. */
 /* transform-origin приподнят на 200px выше верха элемента — там, где верёвочка
    крепится к потолку (viewBox y=-200). Кукла качается как маятник. */
-#doll{position:fixed;top:calc(var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)) + var(--doll-rope-len, 0px));left:50%;width:159px;height:387px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% calc(-143px - var(--doll-rope-len, 0px))}
+/* v945: верёвочка (ropeY) двигает #doll через transform (translateY в
+   applyBodyPhysics), а НЕ через top. top — layout-свойство, и iOS во время
+   анимации клавиатуры интерполирует position:fixed элементы по layout-
+   позиции → тело визуально отставало, а конечности (рисуются по
+   getBoundingClientRect = мгновенная цель) убегали вперёд = «разъезд».
+   transform — compositor, мгновенный, iOS его не интерполирует → тело и
+   конечности едут синхронно. top теперь константа. --doll-rope-len всё ещё
+   нужен для transform-origin (маятник) и длины SVG-верёвочки. */
+#doll{position:fixed;top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));left:50%;width:159px;height:387px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% calc(-143px - var(--doll-rope-len, 0px))}
 @keyframes swayDoll {
   0%   { transform: translateX(-50%) rotate(0deg); }
   25%  { transform: translateX(-50%) rotate(0.35deg); }
@@ -126,7 +134,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 #doll.sway { animation: swayDoll 2.4s ease-out; }
 /* Руки/ноги (path) ПОВЕРХ тела куклы (z:1, #doll z:0) — конечности
    соединяются поверх тела, без visual gap. Шарниры-кружочки скрыты. */
-#dollLimbs{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1;transform:translateY(var(--vv-top, 0px))}
+#dollLimbs{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 #dollLimbs .leg{stroke:#1a1610;stroke-width:17;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 /* Тонкий тканевый блик вдоль рукавов/штанов. */
@@ -136,7 +144,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 /* Кисти/стопы СЗАДИ сообщений (z:1, тот же что #dollLimbs) — рука/нога
    садится на верх bubble и нижняя часть кисти прячется за облачком,
    создавая эффект «держит сверху». В отвязанном виде свисает за чатом. */
-#dollHands{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1;transform:translateY(var(--vv-top, 0px))}
+#dollHands{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1}
 #dollHands .hand,#dollHands .foot{filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
 @keyframes iB{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-5px) rotate(.3deg)}}
 @keyframes tN{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-3px) rotate(.8deg)}}
@@ -262,7 +270,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v939</span></div>
+<div class="title">Стич · Claude <span class="build">v955</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -322,7 +330,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 
 <div id="settingsPanel" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top, 0px) + 14px) 13px calc(env(safe-area-inset-bottom, 0px) + 14px)">
   <div id="settingsBackdrop" style="position:fixed;left:0;right:0;top:calc(0px - var(--ios-top-gap, 0px));height:var(--screen-h, 100vh);background:rgba(0,0,0,.55);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);transition:opacity .25s ease,background .25s ease;transform:translateZ(0);will-change:opacity"></div>
-  <div id="settingsCard" style="position:relative;background:rgba(60,64,72,.85);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:18px;width:100%;max-width:380px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#fff;box-shadow:0 14px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18);transition:background .25s ease,border-color .25s ease,box-shadow .25s ease">
+  <div id="settingsCard" style="position:relative;background:rgba(60,64,72,.85);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:18px;width:100%;max-width:380px;max-height:50%;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#fff;box-shadow:0 14px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18);transition:background .25s ease,border-color .25s ease,box-shadow .25s ease">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff;opacity:.85">Настройки</div>
       <button id="settingsClose" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;opacity:.7;padding:0;-webkit-tap-highlight-color:transparent">✕</button>
@@ -1645,13 +1653,6 @@ function setState(s) {
   // Поза «рука к уху» включается ТОЛЬКО когда мик реально начал писать
   // (audioRec.start успех → micActive=true). При любом не-listening — сбрасываем.
   if (s !== 'listening') window.dollListenPose = false;
-  // Телефон: показан пока listening; при выходе сбрасываем флаг + включаем
-  // phoneFadeOut — он держит телефон видимым ещё пока рука едет вниз. В tick
-  // когда рука доходит до dangle — phoneFadeOut сбрасывается.
-  if (s !== 'listening') {
-    if (window.phoneShown) window.phoneFadeOut = true;
-    window.phoneShown = false;
-  }
   dot.className = 'dot'+(s==='thinking'?' y':s==='talking'?' g':s==='listening'?(micActive?' r':' b'):' ok');
   stxt.textContent = {idle:'Готов',listening:'Слушаю...',thinking:'Думаю...',talking:'Говорит...'}[s];
   head.className = 'head'+(s==='talking'?' talk':s==='listening'?' listen':'');
@@ -2398,8 +2399,6 @@ micBtn.addEventListener('pointerdown', function(e) {
   }
   if (micBtn.setPointerCapture) { try { micBtn.setPointerCapture(e.pointerId); } catch(_){} }
   if (state === 'thinking' || state === 'talking') cancelThinking();
-  // Телефон в руке появляется ровно с нажатия — без ожидания разрешения мика.
-  window.phoneShown = true;
   getAudioCtx();
   // Прайм sharedAudio из user-gesture контекста — позже src сменим на TTS
   // и play() уже не упрётся в iOS «user agent denied». Грузим короткий
@@ -3332,24 +3331,7 @@ async function askWithImages(photos, userText) {
     '<ellipse id="hand-l" rx="10" ry="8" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.2" class="hand"/>'+
     '<ellipse id="hand-r" rx="10" ry="8" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.2" class="hand"/>'+
     '<ellipse id="foot-l" rx="14" ry="8" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.2" class="foot"/>'+
-    '<ellipse id="foot-r" rx="14" ry="8" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.2" class="foot"/>'+
-    // Телефон в правой кисти при listen-pose — появляется/прячется в tick().
-    // Зелёный (Apple System Green) — как иконка «принять звонок». Экранчик
-    // светится-пульсирует как при входящем звонке.
-    '<defs>'+
-      '<filter id="phone-screen-glow" x="-50%" y="-50%" width="200%" height="200%">'+
-        '<feGaussianBlur stdDeviation="1.6" result="b"/>'+
-        '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>'+
-      '</filter>'+
-    '</defs>'+
-    '<g id="phone-r" style="display:none">'+
-      '<rect x="-9" y="-17" width="18" height="34" rx="4" fill="#34C759" stroke="#1f7a3a" stroke-width="0.9"/>'+
-      '<rect class="phone-screen" x="-7" y="-14" width="14" height="26" rx="2" fill="#ecfff0" filter="url(#phone-screen-glow)"/>'+
-      // Иконка звонка на экране — маленькая трубка.
-      '<path d="M-3.5 -3 L-1 -1 Q0 0 1.5 -1 L3.5 -3 L4.5 -2 Q4 1 1.5 2 Q-1 1 -3 -1 Z" fill="#0e4d20" opacity="0.85"/>'+
-      '<circle cx="0" cy="14" r="1.1" fill="#0e4d20"/>'+
-      '<rect x="-3" y="-15.5" width="6" height="1.4" rx="0.7" fill="#1f7a3a"/>'+
-    '</g>';
+    '<ellipse id="foot-r" rx="14" ry="8" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.2" class="foot"/>';
   document.body.appendChild(hands);
 
   // Дополнительный слой ПОЗАДИ #doll (z:-1) — туда переезжает hand-r во время
@@ -3801,6 +3783,25 @@ async function askWithImages(photos, userText) {
   // лопнула резинкой.
   var ropeTargetY = 0, ropeY = 0;
   var ropeTargetX = 0, ropeX = 0;
+  // v952: смещение куклы от клавиатуры — ОТДЕЛЬНАЯ ось, не ropeY. ropeY —
+  // это drag-rope (тянем куклу пальцем), его drag-код жёстко зажимает в
+  // [0, ROPE_MAX_Y]. Если класть смещение клавиатуры туда же, зажим съедает
+  // и саму реакцию, и возможность потянуть куклу пока она поднята.
+  var kbRopeTargetY = 0, kbRopeY = 0;
+  // v951: кукла на верёвочке двигается СИНХРОННО с клавиатурой/панелью
+  // ввода. applyKbState зовёт dollRopeKb на КАЖДЫЙ resize с текущей высотой
+  // клавиатуры — ropeTargetY непрерывно следует за ней: верёвочка тянет
+  // куклу вверх по мере выезда клавиатуры и плавно опускает по мере
+  // сворачивания. ropeY догоняет ropeTargetY обычным lerp'ом — лёгкая
+  // инерция верёвочки. Без одноразовых «реакций» и состояний: позиция
+  // куклы = чистая функция текущей высоты клавиатуры → детерминированно,
+  // спуск всегда отрабатывает (раньше реакция ловилась один раз на случайной
+  // высоте и спуск мог не сработать).
+  // v953: кукла больше не реагирует на клавиатуру отдельной верёвочкой —
+  // iOS сам уносит её вверх вместе с яблоками. dollRopeKb оставлен no-op,
+  // чтобы старые вызовы из applyKbState не падали.
+  window.dollRopeKb = function(){};
+  var vvTopSmooth = 0;   // visualViewport.offsetTop (v950 — без сглаживания)
   var ROPE_MAX_Y = 700, ROPE_MAX_X = 300;
   // Horizontal drag → pendulum angle (а не translateX). На release физика
   // возвращает angle к 0 через restore-силу → визуальное качание.
@@ -3856,11 +3857,16 @@ async function askWithImages(photos, userText) {
     var lerpY = snappedY ? ROPE_LERP_SNAP : ROPE_LERP_STRETCH;
     ropeY += (ropeTargetY - ropeY) * lerpY;
     ropeX += (ropeTargetX - ropeX) * ROPE_LERP_STRETCH;
+    // v952: kbRopeY (смещение от клавиатуры) догоняет цель отдельным lerp'ом.
+    // Позиция куклы по Y = ropeY (drag) + kbRopeY (клавиатура) — две оси
+    // складываются, поэтому куклу можно тянуть даже когда она поднята.
+    kbRopeY += (kbRopeTargetY - kbRopeY) * 0.12;
+    var totalRopeY = ropeY + kbRopeY;
     if (doll) {
-      doll.style.setProperty('--doll-rope-len', ropeY.toFixed(1) + 'px');
+      doll.style.setProperty('--doll-rope-len', totalRopeY.toFixed(1) + 'px');
       doll.style.setProperty('--doll-rope-x', ropeX.toFixed(1) + 'px');
       var rl = doll.querySelector('.dollRope');
-      if (rl) rl.setAttribute('y1', (-200 - ropeY * 1.395).toFixed(1));
+      if (rl) rl.setAttribute('y1', (-200 - totalRopeY * 1.395).toFixed(1));
     }
   }
 
@@ -3887,14 +3893,44 @@ async function askWithImages(photos, userText) {
       if (bodyAngle > 28) { bodyAngle = 28; if (bodyAngVel > 0) bodyAngVel = 0; }
       if (bodyAngle < -28) { bodyAngle = -28; if (bodyAngVel < 0) bodyAngVel = 0; }
     }
-    // Контр-сдвиг по visualViewport.offsetTop — компенсирует iOS-скролл
-    // v877: --vv-top обновляется каждый кадр (а не только на resize),
-    // чтобы #dollLimbs/Hands (через CSS-переменную) и сам #doll (через
-    // JS-transform) видели ОДНО И ТО ЖЕ значение visualViewport.offsetTop
-    // на каждом кадре. Так лимбы не отстают от тела во время iOS scroll.
-    var vvTop = (window.visualViewport && window.visualViewport.offsetTop) || 0;
-    document.documentElement.style.setProperty('--vv-top', vvTop + 'px');
-    if (doll) doll.style.transform = 'translateX(calc(-50% + ' + ropeX.toFixed(1) + 'px)) translateY(' + vvTop.toFixed(1) + 'px) rotate(' + bodyAngle.toFixed(3) + 'deg)';
+    // Контр-сдвиг #doll по visualViewport.offsetTop — компенсирует iOS-скролл
+    // страницы при фокусе на input, кукла остаётся визуально на месте.
+    // v943: offsetTop сглаживается — iOS во время выезда/сворачивания
+    // клавиатуры отдаёт скачущие значения, lerp поглощает скачок.
+    // v944: слои #dollLimbs/#dollHands БОЛЬШЕ не сдвигаются на --vv-top.
+    // Конечности рисуются по shoulderPoint() = getBoundingClientRect() тела —
+    // это уже viewport-координаты с учётом offsetTop, верёвочки и поворота.
+    // Доп. сдвиг слоя на --vv-top был ДВОЙНЫМ учётом: он расходил тело и
+    // конечности во время перехода клавиатуры (виден как «телепорт»). Слой
+    // 1:1 к экрану → конечности всегда точно следуют за телом, что бы тело
+    // ни делало (rope-реакция, сглаженный offsetTop) — десинхрона нет.
+    // v950: компенсация iOS-сдвига экрана — СЫРОЙ visualViewport.offsetTop,
+    // без сглаживания. Сглаживание (v943) ОТСТАВАЛО от реального сдвига во
+    // время выезда клавиатуры — и тело с конечностями расходились ровно на
+    // это отставание (HUD показал GAP 70 на середине перехода: vvTop 324,
+    // а сглаженное значение ещё не догнало). offsetTop — фактический сдвиг
+    // экрана, компенсировать тело и слои конечностей надо ТОЧНО им, одним
+    // и тем же значением в кадре → GAP = 0.
+    vvTopSmooth = (window.visualViewport && window.visualViewport.offsetTop) || 0;
+    // v945: ropeY входит в translateY — верёвочка двигает тело через transform,
+    // мгновенно (см. коммент у #doll в CSS). Конечности рисуются по
+    // getBoundingClientRect тела → transform учтён → синхрон без отставания.
+    if (doll) doll.style.transform = 'translateX(calc(-50% + ' + ropeX.toFixed(1) + 'px)) translateY(' + ropeY.toFixed(1) + 'px) rotate(' + bodyAngle.toFixed(3) + 'deg)';
+    // v954: тело #doll — обычный fixed БЕЗ компенсации offsetTop: при
+    // клавиатуре iOS уносит его вверх вместе с яблоками (так и нужно).
+    // А вот слои конечностей компенсацию обязаны иметь. Лимбы рисуются
+    // по getBoundingClientRect тела — это ВИЗУАЛЬНЫЕ координаты. Слой
+    // #dollLimbs сам position:fixed → iOS тоже уносит его вверх на
+    // offsetTop. Без компенсации путь в визуальных координатах сместился
+    // бы на offsetTop ПОВТОРНО (двойной сдвиг) — лимбы улетали бы на
+    // ~offsetTop выше тела и пропадали за верхом экрана (баг v953).
+    // translateY(vvTopSmooth) гасит iOS-сдвиг слоя → слой = 1:1 холст
+    // визуальных координат → лимбы садятся ровно туда, где тело. Тело и
+    // слой двигаются синхронно, т.к. путь уже содержит позицию тела.
+    var vvComp = 'translateY(' + vvTopSmooth.toFixed(1) + 'px)';
+    if (overlay) overlay.style.transform = vvComp;
+    if (hands) hands.style.transform = vvComp;
+    if (handsBehind) handsBehind.style.transform = vvComp;
   }
 
   function tick(){
@@ -3914,16 +3950,11 @@ async function askWithImages(photos, userText) {
       });
     }
     LIMBS.forEach(function(L){
-      // v899: лимбы статичны (snap к dangle). Единственное исключение —
-      // listen-pose (правая рука к уху во время записи голоса).
+      // v955: лимбы полностью статичны — snap к dangle. listen-pose (рука
+      // к уху при записи) и телефон убраны по запросу пользователя.
       var preS = shoulderPoint(L.shoulderId);
       if (!preS.x && !preS.y) return;
-      var posed = null;
-      if (window.dollListenPose && !L.isLeg && L.sideSign > 0) {
-        var ear = shoulderPoint('ear-r');
-        if (ear.x || ear.y) posed = {x: ear.x + 22, y: ear.y - 2};
-      }
-      var goal = posed || dangleGoal(L);
+      var goal = dangleGoal(L);
       if (!L.cur) L.cur = {x: goal.x, y: goal.y};
       L.cur.x = goal.x; L.cur.y = goal.y;
       // IK render.
@@ -3941,22 +3972,6 @@ async function askWithImages(photos, userText) {
       if (L.jointEl) L.jointEl.setAttribute('transform', 'translate('+j.x+' '+j.y+')');
       L.handEl.setAttribute('cx', L.cur.x);
       L.handEl.setAttribute('cy', L.cur.y);
-      // Телефон в правой руке во время записи голоса.
-      if (!L.isLeg && L.sideSign > 0) {
-        var phone = document.getElementById('phone-r');
-        if (phone) {
-          var phoneVisible = window.phoneShown || window.phoneFadeOut;
-          if (phoneVisible) {
-            phone.style.display = '';
-            phone.setAttribute('transform',
-              'translate(' + L.cur.x.toFixed(1) + ' ' + L.cur.y.toFixed(1) + ') rotate(8)');
-            var screen = phone.querySelector('.phone-screen');
-            if (screen) screen.setAttribute('fill', window.phoneShown ? '#ecfff0' : '#0e2a14');
-          } else {
-            phone.style.display = 'none';
-          }
-        }
-      }
       // v856: стирание краски отключено по запросу пользователя.
     });
     requestAnimationFrame(tick);
@@ -3995,11 +4010,11 @@ async function askWithImages(photos, userText) {
   setTimeout(function(){ __vvReady = true; }, 1500);
 
   function syncVisualViewportTop(){
-    // НЕ guard'им __vvReady — этот --vv-top нужен для синхронизации
-    // конечностей с куклой (applyBodyPhysics использует offsetTop
-    // напрямую без guard). Десинхрон = конечности отстают от куклы.
-    var top = (window.visualViewport && window.visualViewport.offsetTop) || 0;
-    document.documentElement.style.setProperty('--vv-top', top + 'px');
+    // v943: --vv-top пишет rAF-цикл (applyBodyPhysics) сглаженным значением
+    // каждый кадр. Здесь ставим именно сглаженное значение, а не сырое —
+    // иначе на resize-событии лимбы дёргались бы на сырой offsetTop, пока
+    // следующий кадр не вернёт сглаженное. Кукла и лимбы — в синхроне.
+    document.documentElement.style.setProperty('--vv-top', vvTopSmooth.toFixed(1) + 'px');
   }
   function applyKbState(){
     // __vvReady guard убран в v760 — focus-guard на activeElement и так
@@ -4016,6 +4031,7 @@ async function askWithImages(photos, userText) {
       document.documentElement.style.setProperty('--kb-h', '0px');
       document.body.classList.remove('kb-open');
       syncVisualViewportTop();
+      if (window.dollRopeKb) window.dollRopeKb(0);   // нет фокуса → кукла вниз
       return;
     }
     // На iOS PWA standalone window.innerHeight тоже ужимается с
@@ -4027,6 +4043,8 @@ async function askWithImages(photos, userText) {
     document.documentElement.style.setProperty('--kb-h', (open ? kb : 0) + 'px');
     document.body.classList.toggle('kb-open', open);
     syncVisualViewportTop();
+    // v951: кукла синхронно следует за высотой клавиатуры (см. dollRopeKb).
+    if (window.dollRopeKb) window.dollRopeKb(open ? kb : 0);
   }
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', applyKbState);
@@ -4054,6 +4072,8 @@ async function askWithImages(photos, userText) {
       document.documentElement.style.setProperty('--kb-h', '0px');
       document.body.classList.remove('kb-open');
       syncVisualViewportTop();
+      // v951: blur = клавиатура уходит → верёвочка опускает куклу вниз.
+      if (window.dollRopeKb) window.dollRopeKb(0);
       fillFreeLimbs();
       // iOS может переключить viewport mode после закрытия клавиатуры
       // (good ↔ bad). Пересчитать --pad-bottom-extra с задержкой на settling.
