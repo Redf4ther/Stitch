@@ -126,7 +126,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 /* v965: слои куклы (#doll/#dollLimbs/#dollHands) и #applesContainer
    подняты на z-index:5 — Стич и его мел-рисунки ПОВЕРХ сообщений чата
    (.below z:4), но под шапкой статуса (.top z:8) и панелью ввода (z:6). */
-#doll{position:fixed;top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));left:50%;width:159px;height:387px;pointer-events:none;z-index:5;display:block;filter:drop-shadow(0 6px 9px rgba(0,0,0,.5));transform:translateX(-50%);transform-origin:50% calc(-143px - var(--doll-rope-len, 0px))}
+#doll{position:fixed;top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));left:50%;width:159px;height:387px;pointer-events:none;z-index:6;display:block;filter:drop-shadow(0 6px 9px rgba(0,0,0,.5));transform:translateX(-50%);transform-origin:50% calc(-143px - var(--doll-rope-len, 0px))}
 @keyframes swayDoll {
   0%   { transform: translateX(-50%) rotate(0deg); }
   25%  { transform: translateX(-50%) rotate(0.35deg); }
@@ -142,7 +142,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 #doll.faceBack .dollBack{display:inline}
 /* Руки/ноги (path) ПОВЕРХ тела куклы (z:1, #doll z:0) — конечности
    соединяются поверх тела, без visual gap. Шарниры-кружочки скрыты. */
-#dollLimbs{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:5}
+#dollLimbs{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:6}
 #dollLimbs .arm{stroke:#2a2620;stroke-width:10.5;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 6px 11px rgba(0,0,0,.72))}
 #dollLimbs .leg{stroke:#1a1610;stroke-width:12.5;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 6px 11px rgba(0,0,0,.72))}
 /* Тонкий тканевый блик вдоль рукавов/штанов. */
@@ -152,7 +152,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 /* Кисти/стопы СЗАДИ сообщений (z:1, тот же что #dollLimbs) — рука/нога
    садится на верх bubble и нижняя часть кисти прячется за облачком,
    создавая эффект «держит сверху». В отвязанном виде свисает за чатом. */
-#dollHands{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:5}
+#dollHands{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:6}
 #dollHands .hand,#dollHands .foot{filter:drop-shadow(0 6px 11px rgba(0,0,0,.72))}
 @keyframes iB{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-5px) rotate(.3deg)}}
 @keyframes tN{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-3px) rotate(.8deg)}}
@@ -164,7 +164,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
 @keyframes chalkDraw{to{stroke-dashoffset:0}}
 @keyframes appleOut{from{opacity:1}to{opacity:0}}
 #applesContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 70px);left:0;right:0;height:150px;pointer-events:none;z-index:5;display:flex;justify-content:center;gap:150px}
-#applesContainer .zone{display:flex;flex-wrap:wrap;align-items:flex-start;gap:3px;width:116px;height:100%}
+#applesContainer .zone{display:flex;flex-wrap:wrap;align-items:flex-start;align-content:flex-start;gap:3px;width:116px;height:100%}
 #applesContainer .left{justify-content:flex-end}
 #applesContainer .right{justify-content:flex-start}
 /* Мел-яблоко (шаг 1 «доска»): SVG-контур, рисуется штрихом stroke-dashoffset
@@ -222,11 +222,6 @@ body.doll-dragging .chat{overflow:hidden}
    атрибут data-st на body. Верхняя плашка статуса скрыта (место сверху
    освобождено). Уши торчат из-за скруглённых концов кнопки-пилюли. */
 .mic-wrap{flex:1;min-width:0;position:relative;display:flex}
-/* v988: лёгкая ровная подсветка всей кнопки микрофона в цвет статуса. */
-#micBtn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;opacity:0;transition:opacity .3s,background .3s;pointer-events:none}
-body[data-st="listening"] #micBtn::before{background:rgba(255,59,48,.3);opacity:1}
-body[data-st="thinking"] #micBtn::before{background:rgba(255,204,0,.28);opacity:1}
-body[data-st="talking"] #micBtn::before{background:rgba(52,199,89,.28);opacity:1}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 /* Слой «краски» поверх стеклянной подложки .bi. Canvas с z-index:-1 рисуется
@@ -257,8 +252,8 @@ body[data-st="talking"] #micBtn::before{background:rgba(52,199,89,.28);opacity:1
 .sbtn:active{background:rgba(255,255,255,.05)}
 .sbtn:disabled{background:#d8cce8;opacity:.5;box-shadow:none}
 .img-msg{max-width:200px;border-radius:12px;margin-top:4px;display:block}
-#voicePicker::-webkit-scrollbar,#tonePicker::-webkit-scrollbar,#btnTonePicker::-webkit-scrollbar,#msgTonePicker::-webkit-scrollbar,#asstTonePicker::-webkit-scrollbar,#clothTonePicker::-webkit-scrollbar{display:none}
-#voicePicker > button,#tonePicker > button,#btnTonePicker > button,#msgTonePicker > button,#asstTonePicker > button,#clothTonePicker > button{flex-shrink:0}
+#voicePicker::-webkit-scrollbar,#tonePicker::-webkit-scrollbar,#btnTonePicker::-webkit-scrollbar,#msgTonePicker::-webkit-scrollbar,#asstTonePicker::-webkit-scrollbar,#clothTonePicker::-webkit-scrollbar,#chalkPicker::-webkit-scrollbar{display:none}
+#voicePicker > button,#tonePicker > button,#btnTonePicker > button,#msgTonePicker > button,#asstTonePicker > button,#clothTonePicker > button,#chalkPicker > button{flex-shrink:0}
 </style>
 
 </head>
@@ -293,7 +288,7 @@ body[data-st="talking"] #micBtn::before{background:rgba(52,199,89,.28);opacity:1
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v988</span></div>
+<div class="title">Стич · Claude <span class="build">v992</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -367,6 +362,10 @@ body[data-st="talking"] #micBtn::before{background:rgba(52,199,89,.28);opacity:1
     <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон фона</div>
       <div id="tonePicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:3px 3px 5px;-webkit-overflow-scrolling:touch"></div>
+    </div>
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Цвет мела</div>
+      <div id="chalkPicker" style="display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:3px 3px 5px;-webkit-overflow-scrolling:touch"></div>
     </div>
     <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-radius:14px">
       <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;opacity:.65;margin-bottom:10px">Тон кнопок</div>
@@ -524,11 +523,13 @@ body[data-st="talking"] #micBtn::before{background:rgba(52,199,89,.28);opacity:1
   bU.addEventListener('click', function(){ if (typeof addMsg === 'function') addMsg('u', pick(userLines)); });
   // Тестовая демо-кнопка считалки — каждое нажатие циклит количество
   // мел-яблок от 0 до 15 (одинаково в левой и правой зоне).
-  var apN = 0;
+  var apN = 0, apShape = 0;
+  var TEST_SHAPES = ['🍎','🧊','⚽'];
   bAp.addEventListener('click', function(){
-    bAp.textContent = '🍎 ' + apN + '+' + apN;
-    if (typeof window.showApples === 'function') window.showApples(apN, apN);
-    apN = (apN + 1) % 16;
+    var e = TEST_SHAPES[apShape++ % TEST_SHAPES.length];
+    bAp.textContent = e + ' ' + apN + '+' + apN;
+    if (typeof window.showApples === 'function') window.showApples(apN, apN, e);
+    apN = (apN + 1) % 17;
   });
   // Переключатель из settings.
   var TEST_KEY = 'stitch_show_tests';
@@ -1291,6 +1292,45 @@ function showVoicePanel(name, steps, onDone) {
     });
     refreshRings(savedTone);
   }
+  // v990: выбор цвета мела для считалок (showApples читает stitch_chalk_color;
+  // 'auto' — циклит палитру, иначе фиксированный цвет).
+  var CHALK_PALETTE = [
+    {n:'Разные', c:'auto'}, {n:'Белый', c:'#eef0e4'}, {n:'Жёлтый', c:'#ffe27a'},
+    {n:'Оранжевый', c:'#ffae54'}, {n:'Коралл', c:'#ff7a6b'}, {n:'Розовый', c:'#ff9ec4'},
+    {n:'Сирень', c:'#d9b8ff'}, {n:'Фиолетовый', c:'#c89cff'}, {n:'Голубой', c:'#7ec8ff'},
+    {n:'Бирюза', c:'#5ff0e0'}, {n:'Мятный', c:'#8ef0c0'}, {n:'Лайм', c:'#c6ff5e'},
+    {n:'Неон-зел', c:'#39ff14'}, {n:'Неон-роз', c:'#ff2fb0'}, {n:'Неон-гол', c:'#33e6ff'}
+  ];
+  var savedChalk = localStorage.getItem('stitch_chalk_color') || 'auto';
+  var chalkPicker = document.getElementById('chalkPicker');
+  if (chalkPicker && !chalkPicker._wired) {
+    chalkPicker._wired = true;
+    function refreshChalkRings(active){
+      Array.prototype.forEach.call(chalkPicker.children, function(b){
+        var on = b.dataset.tone === active;
+        b.style.boxShadow = on
+          ? '0 0 0 2px rgba(255,255,255,.95), inset 0 1px 1px rgba(255,255,255,.4), inset 0 -2px 4px rgba(0,0,0,.4)'
+          : 'inset 0 1px 1px rgba(255,255,255,.35), inset 0 -2px 4px rgba(0,0,0,.45)';
+      });
+    }
+    CHALK_PALETTE.forEach(function(t){
+      var b = document.createElement('button');
+      b.dataset.tone = t.c;
+      b.title = t.n;
+      var bg = (t.c === 'auto')
+        ? 'conic-gradient(#ff9ec4,#ffe27a,#8ef0c0,#7ec8ff,#ff9ec4)'
+        : 'radial-gradient(circle at 30% 25%, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 45%), '+t.c;
+      b.style.cssText = 'width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;background:'+bg+';transition:transform .15s';
+      b.addEventListener('click', function(){
+        haptic();
+        localStorage.setItem('stitch_chalk_color', t.c);
+        refreshChalkRings(t.c);
+        killBackdrop();
+      });
+      chalkPicker.appendChild(b);
+    });
+    refreshChalkRings(savedChalk);
+  }
   // Палитра тонов кнопок (mic/cam/send). "Чистый" = без tint, дальше —
   // те же спокойные цвета что и для фона. Применяется через CSS-переменную
   // --btn-tint: inline background у кнопок имеет двухслойный фон, где tint
@@ -1767,14 +1807,26 @@ var CHALK_APPLE_D = 'M0,-6 C-5,-11 -11,-8 -12,0 C-13,8 -8,15 -2,15 C-1,15 0,13 0
   + 'C0,13 1,15 2,15 C8,15 13,8 12,0 C11,-8 5,-11 0,-6 '
   + 'M0,-6 C0,-10 1,-12 2,-14 '
   + 'M2,-12 C5,-16 10,-15 10,-11 C10,-9 5,-9 2,-12';
-function makeChalkApple(){
+// v989: считалка рисуется яблоком, кубиком или мячиком — предмет выбирает
+// ИИ (эмодзи в маркере [count ЭМОДЗИ N+M]). Все — мел-контуры.
+var CHALK_SHAPES = {
+  apple: CHALK_APPLE_D,
+  cube: 'M-9,-2 L7,-2 L7,14 L-9,14 Z M-9,-2 L-1,-10 L15,-10 L7,-2 M7,14 L15,6 L15,-10',
+  ball: 'M-12,2 A12 12 0 1 0 12,2 A12 12 0 1 0 -12,2 M0,-10 Q5,2 0,14 M-12,2 Q0,7 12,2'
+};
+function chalkKind(emoji){
+  if (emoji === '🧊' || emoji === '⬛' || emoji === '🟦') return 'cube';
+  if (emoji === '⚽' || emoji === '🏀' || emoji === '🔵' || emoji === '🥎') return 'ball';
+  return 'apple';
+}
+function makeChalkShape(kind){
   var NS = 'http://www.w3.org/2000/svg';
   var svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('class', 'apple');
   svg.setAttribute('viewBox', '-15 -19 30 38');
   var p = document.createElementNS(NS, 'path');
   p.setAttribute('class', 'chalk-stroke');
-  p.setAttribute('d', CHALK_APPLE_D);
+  p.setAttribute('d', CHALK_SHAPES[kind] || CHALK_SHAPES.apple);
   p.setAttribute('pathLength', '100');
   p.setAttribute('filter', 'url(#chalkRough)');
   svg.appendChild(p);
@@ -1792,15 +1844,17 @@ var chalkIdx = 0;
 window.showApples = function(left, right, emoji, sync){
   window.hideApples(true);
   if (!left && !right) return;
-  // Вариант A: всегда мел-яблоко, emoji-параметр игнорируется (оставлен
-  // ради совместимости вызовов).
+  // Предмет считалки (яблоко/кубик/мячик) — по эмодзи из маркера.
+  var kind = chalkKind(emoji);
   var c = document.createElement('div'); c.id = 'applesContainer';
-  c.style.setProperty('--chalk-color', CHALK_COLORS[chalkIdx++ % CHALK_COLORS.length]);
+  var chalkPick = localStorage.getItem('stitch_chalk_color') || 'auto';
+  c.style.setProperty('--chalk-color', chalkPick === 'auto'
+    ? CHALK_COLORS[chalkIdx++ % CHALK_COLORS.length] : chalkPick);
   c.insertAdjacentHTML('afterbegin', CHALK_DEFS);
   var lz = document.createElement('div'); lz.className = 'zone left';
   var rz = document.createElement('div'); rz.className = 'zone right';
-  for (var i = 0; i < left; i++) lz.appendChild(makeChalkApple());
-  for (var j = 0; j < right; j++) rz.appendChild(makeChalkApple());
+  for (var i = 0; i < left; i++) lz.appendChild(makeChalkShape(kind));
+  for (var j = 0; j < right; j++) rz.appendChild(makeChalkShape(kind));
   c.appendChild(lz); c.appendChild(rz);
   document.body.appendChild(c);
   // sync=true (живой ответ): числа в тексте теперь СЛОВАМИ (для верной
@@ -1966,7 +2020,7 @@ function maybeCelebrate(text) {
   } catch(_) {}
 }
 
-var prompt = 'Ты — персональный репетитор. НИКОГДА не спрашивай "как тебя зовут?" и не пытайся узнать имя ученика. Если ученик сам себя назовёт — запомни и используй, но сам никогда не спрашивай. Не представляйся первым — не называй своё имя, не говори кто ты, не описывай себя по своей инициативе. ИСКЛЮЧЕНИЕ: если ученик САМ спросит "как тебя зовут?", "кто ты?" или похожее — ответь коротко: тебя зовут Липо Стич, ты инопланетный помощник-репетитор. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, представляться без вопроса. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. СТИЛЬ: общайся как обычный ChatGPT-репетитор — спокойно, ясно, по-человечески. НЕ называй ученика "зверёк", "малыш" и подобными словечками. НЕ вставляй "хи-хи", "бум", "ха", "ага" в каждый ответ. Просто понятные фразы простым языком для 8-9 лет. ИСКЛЮЧЕНИЕ: КОГДА РЕБЁНОК САМ НАЗВАЛ ВЕРНЫЙ ОТВЕТ — обязательно начни ответ со слова "Бум!" и подтверди (например: "Бум! Точно так!", "Бум! Ты угадал!", "Бум! Молодец, верно!"). Если ответ неверный — не говори "Бум", мягко направь наводящим вопросом без лишних междометий. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь, верный ответ — Бум-подтверждение. ОБЪЯСНЕНИЕ ЧЕРЕЗ ПРИМЕРЫ: если ученик не понимает суть задачи или правила — объясни через несколько разных примеров из детского мира (яблоки, игрушки, машинки, котята, дни рождения, мультяшные герои, школьные ситуации) — но НЕ через конфеты или сладости. Если первый пример не зашёл — попробуй второй из другой области. Один и тот же приём показывай на 2-3 разных историях, чтобы ребёнок увидел общую идею. Если просит ответ: предложи разобрать вместе. Главное правило: ученик должен САМ прийти к ответу, а ты подтвердить через "Бум!". Если фото и не понимаешь — просто спроси что с этим делать. СЧЁТ ЯБЛОКАМИ НА ДОСКЕ: В КАЖДОМ своём сообщении, где ты разбираешь пример на сложение или вычитание в пределах 16 (2+3, 5-2, 9+7 и т.п.) — ВКЛЮЧАЯ повторное объяснение того же примера, исправление ошибки ученика и счёт шаг за шагом — считай ТОЛЬКО ЯБЛОКАМИ. В таком примере говори именно про яблоки — НЕ про машинки, котят, шарики или другие предметы: Стич рисует эти яблоки мелом на доске, поэтому история словами и рисунок обязаны совпадать. ЧИСЛА В ТЕКСТЕ ПИШИ СЛОВАМИ (одно, два, три, четыре, пять, шесть, семь, восемь, девять, десять), а НЕ цифрами — чтобы озвучка произносила правильное окончание: «одно яблоко», «два яблока», «пять яблок». В САМОМ КОНЦЕ сообщения добавляй служебный маркер в квадратных скобках — а вот В МАРКЕРЕ числа наоборот ЦИФРАМИ: [count 🍎 N+M] или [count 🍎 N-M], где N и M — числа из примера. Пример сообщения: "Смотри: у тебя два яблока, и тебе дали ещё три — сколько станет? [count 🍎 2+3]". Если объясняешь тот же пример снова — обязательно ставь маркер опять. Маркер — ровно один на сообщение, в самом конце; после него НИЧЕГО не пиши и вслух про маркер не упоминай. Маркер добавляй ТОЛЬКО когда оба числа примера не больше 16 — тогда яблоки помещаются на доске у головы куклы. Если хотя бы одно число больше 16, или в сообщении нет конкретного счётного примера — маркер НЕ добавляй и не пытайся его впихнуть, просто спокойно продолжай объяснять словами как обычно.';
+var prompt = 'Ты — персональный репетитор. НИКОГДА не спрашивай "как тебя зовут?" и не пытайся узнать имя ученика. Если ученик сам себя назовёт — запомни и используй, но сам никогда не спрашивай. Не представляйся первым — не называй своё имя, не говори кто ты, не описывай себя по своей инициативе. ИСКЛЮЧЕНИЕ: если ученик САМ спросит "как тебя зовут?", "кто ты?" или похожее — ответь коротко: тебя зовут Липо Стич, ты инопланетный помощник-репетитор. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, представляться без вопроса. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. СТИЛЬ: общайся как обычный ChatGPT-репетитор — спокойно, ясно, по-человечески. НЕ называй ученика "зверёк", "малыш" и подобными словечками. НЕ вставляй "хи-хи", "бум", "ха", "ага" в каждый ответ. Просто понятные фразы простым языком для 8-9 лет. ИСКЛЮЧЕНИЕ: КОГДА РЕБЁНОК САМ НАЗВАЛ ВЕРНЫЙ ОТВЕТ — обязательно начни ответ со слова "Бум!" и подтверди (например: "Бум! Точно так!", "Бум! Ты угадал!", "Бум! Молодец, верно!"). Если ответ неверный — не говори "Бум", мягко направь наводящим вопросом без лишних междометий. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь, верный ответ — Бум-подтверждение. ОБЪЯСНЕНИЕ ЧЕРЕЗ ПРИМЕРЫ: если ученик не понимает суть задачи или правила — объясни через несколько разных примеров из детского мира (яблоки, игрушки, машинки, котята, дни рождения, мультяшные герои, школьные ситуации) — но НЕ через конфеты или сладости. Если первый пример не зашёл — попробуй второй из другой области. Один и тот же приём показывай на 2-3 разных историях, чтобы ребёнок увидел общую идею. Если просит ответ: предложи разобрать вместе. Главное правило: ученик должен САМ прийти к ответу, а ты подтвердить через "Бум!". Если фото и не понимаешь — просто спроси что с этим делать. СЧЁТ ЯБЛОКАМИ НА ДОСКЕ: В КАЖДОМ своём сообщении, где ты разбираешь пример на сложение или вычитание в пределах 16 (2+3, 5-2, 9+7 и т.п.) — ВКЛЮЧАЯ повторное объяснение того же примера, исправление ошибки ученика и счёт шаг за шагом — считай ЯБЛОКАМИ, КУБИКАМИ или МЯЧИКАМИ — выбери ОДИН предмет под историю и в этом сообщении считай только им. В тексте говори именно про выбранный предмет: Стич рисует его мелом на доске, поэтому история словами и рисунок обязаны совпадать. ЧИСЛА В ТЕКСТЕ ПИШИ СЛОВАМИ (одно, два, три, четыре, пять, шесть, семь, восемь, девять, десять), а НЕ цифрами — чтобы озвучка произносила правильное окончание: «одно яблоко», «два яблока», «пять яблок». В САМОМ КОНЦЕ сообщения добавляй служебный маркер в квадратных скобках — а вот В МАРКЕРЕ числа наоборот ЦИФРАМИ: [count ЭМОДЗИ N+M] или [count ЭМОДЗИ N-M], где ЭМОДЗИ — выбранный предмет (🍎 яблоки, 🧊 кубики, ⚽ мячики), N и M — числа из примера. Пример сообщения: "Смотри: у тебя два яблока, и тебе дали ещё три — сколько станет? [count 🍎 2+3]". Если объясняешь тот же пример снова — обязательно ставь маркер опять. Маркер — ровно один на сообщение, в самом конце; после него НИЧЕГО не пиши и вслух про маркер не упоминай. Маркер добавляй ТОЛЬКО когда оба числа примера не больше 16 — тогда яблоки помещаются на доске у головы куклы. Если хотя бы одно число больше 16, или в сообщении нет конкретного счётного примера — маркер НЕ добавляй и не пытайся его впихнуть, просто спокойно продолжай объяснять словами как обычно.';
 
 // v963: показать пузырь-ошибку И озвучить его голосом. Ребёнок 8-9 лет
 // может ещё плохо читать — на слух он поймёт, что надо повторить вопрос.
