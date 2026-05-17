@@ -38,7 +38,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{width:100%;height:100%;height:100dvh;min-height:var(--screen-h, 100dvh);overflow:hidden;background:var(--bg-tone, #000);color:#2d2240;font-family:system-ui,sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;transition:background .45s ease;position:relative}
 #app{display:contents}
-.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:5;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
+.top{position:fixed;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;background:transparent;z-index:8;padding-top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));padding-bottom:4px;pointer-events:auto}
 .below{position:fixed;left:0;right:0;top:calc(215px + var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px)));bottom:0;display:flex;flex-direction:column;z-index:4}
 /* PWA standalone: layout НЕ сдвигаем — .top, .below, #doll сидят на тех же
    Y что и в Telegram. Топ-бар pwa-chrome floats поверх на z:10 в чистой зоне
@@ -123,7 +123,10 @@ body.pwa-standalone .pwa-chrome{display:flex}
    transform — compositor, мгновенный, iOS его не интерполирует → тело и
    конечности едут синхронно. top теперь константа. --doll-rope-len всё ещё
    нужен для transform-origin (маятник) и длины SVG-верёвочки. */
-#doll{position:fixed;top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));left:50%;width:159px;height:387px;pointer-events:none;z-index:0;display:block;transform:translateX(-50%);transform-origin:50% calc(-143px - var(--doll-rope-len, 0px))}
+/* v965: слои куклы (#doll/#dollLimbs/#dollHands) и #applesContainer
+   подняты на z-index:5 — Стич и его мел-рисунки ПОВЕРХ сообщений чата
+   (.below z:4), но под шапкой статуса (.top z:8) и панелью ввода (z:6). */
+#doll{position:fixed;top:var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));left:50%;width:159px;height:387px;pointer-events:none;z-index:5;display:block;filter:drop-shadow(0 6px 9px rgba(0,0,0,.5));transform:translateX(-50%);transform-origin:50% calc(-143px - var(--doll-rope-len, 0px))}
 @keyframes swayDoll {
   0%   { transform: translateX(-50%) rotate(0deg); }
   25%  { transform: translateX(-50%) rotate(0.35deg); }
@@ -132,20 +135,25 @@ body.pwa-standalone .pwa-chrome{display:flex}
   100% { transform: translateX(-50%) rotate(0deg); }
 }
 #doll.sway { animation: swayDoll 2.4s ease-out; }
+/* Вид сзади: при #doll.faceBack прячем черты лица (.dollFace) и
+   показываем затылок (.dollBack). Разворот мгновенный, без анимации. */
+#doll .dollBack{display:none}
+#doll.faceBack .dollFace{display:none}
+#doll.faceBack .dollBack{display:inline}
 /* Руки/ноги (path) ПОВЕРХ тела куклы (z:1, #doll z:0) — конечности
    соединяются поверх тела, без visual gap. Шарниры-кружочки скрыты. */
-#dollLimbs{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1}
-#dollLimbs .arm{stroke:#2a2620;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
-#dollLimbs .leg{stroke:#1a1610;stroke-width:17;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+#dollLimbs{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:5}
+#dollLimbs .arm{stroke:#2a2620;stroke-width:10.5;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 6px 11px rgba(0,0,0,.72))}
+#dollLimbs .leg{stroke:#1a1610;stroke-width:12.5;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 6px 11px rgba(0,0,0,.72))}
 /* Тонкий тканевый блик вдоль рукавов/штанов. */
-#dollLimbs .arm-hl{stroke:rgba(255,255,255,.10);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
-#dollLimbs .leg-hl{stroke:rgba(255,255,255,.08);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;fill:none}
+#dollLimbs .arm-hl{stroke:rgba(255,255,255,.10);stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+#dollLimbs .leg-hl{stroke:rgba(255,255,255,.08);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;fill:none}
 /* Кисти/стопы — ПЕРЕД сообщениями (z:5, выше .below). */
 /* Кисти/стопы СЗАДИ сообщений (z:1, тот же что #dollLimbs) — рука/нога
    садится на верх bubble и нижняя часть кисти прячется за облачком,
    создавая эффект «держит сверху». В отвязанном виде свисает за чатом. */
-#dollHands{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:1}
-#dollHands .hand,#dollHands .foot{filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
+#dollHands{position:fixed;top:0;left:0;width:100%;height:var(--screen-h, 100lvh);pointer-events:none;z-index:5}
+#dollHands .hand,#dollHands .foot{filter:drop-shadow(0 6px 11px rgba(0,0,0,.72))}
 @keyframes iB{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-5px) rotate(.3deg)}}
 @keyframes tN{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-3px) rotate(.8deg)}}
 @keyframes lT{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
@@ -153,14 +161,18 @@ body.pwa-standalone .pwa-chrome{display:flex}
 @keyframes gT{0%,100%{opacity:.4}50%{opacity:.85}}
 @keyframes db{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-@keyframes applePop{0%{opacity:0;transform:scale(.2)}60%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
-@keyframes appleOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.6)}}
-#applesContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 70px);left:0;right:0;height:140px;pointer-events:none;z-index:3;display:flex;justify-content:center;gap:160px}
-#applesContainer .zone{display:flex;flex-wrap:wrap-reverse;align-items:flex-end;gap:2px;width:96px;height:100%}
+@keyframes chalkDraw{to{stroke-dashoffset:0}}
+@keyframes appleOut{from{opacity:1}to{opacity:0}}
+#applesContainer{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 70px);left:0;right:0;height:150px;pointer-events:none;z-index:5;display:flex;justify-content:center;gap:150px}
+#applesContainer .zone{display:flex;flex-wrap:wrap;align-items:flex-start;gap:3px;width:116px;height:100%}
 #applesContainer .left{justify-content:flex-end}
 #applesContainer .right{justify-content:flex-start}
-#applesContainer .apple{font-size:24px;opacity:0;transition:none}
-#applesContainer .apple.placed{animation:applePop .3s cubic-bezier(.34,1.56,.64,1) forwards}
+/* Мел-яблоко (шаг 1 «доска»): SVG-контур, рисуется штрихом stroke-dashoffset
+   как мелом. Цвет — var(--chalk-color) под будущий выбор цвета мела в меню. */
+#applesContainer .apple{display:block;width:26px;height:33px;opacity:0;overflow:visible}
+#applesContainer .apple.placed{opacity:1}
+#applesContainer .apple .chalk-stroke{fill:none;stroke:var(--chalk-color,#eef0e4);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100}
+#applesContainer .apple.placed .chalk-stroke{animation:chalkDraw .55s ease forwards}
 #applesContainer.fade .apple{animation:appleOut .25s ease forwards}
 @keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes micP{0%{box-shadow:0 0 0 0 rgba(220,50,50,.6)}100%{box-shadow:0 0 0 20px rgba(220,50,50,0)}}
@@ -204,6 +216,17 @@ body.pwa-standalone .pwa-chrome{display:flex}
    растёт и пушит их к низу (== над composer'ом). Когда сообщений
    больше чем влезает, spacer сжимается до 0 и работает обычный scroll. */
 .chat::before{content:'';flex:1 1 0;min-height:0}
+/* Пока тянут куклу — чат не скроллится (палец водит над сообщениями). */
+body.doll-dragging .chat{overflow:hidden}
+/* v984: статус-«уши» по бокам кнопки микрофона. Состояние приложения —
+   атрибут data-st на body. Верхняя плашка статуса скрыта (место сверху
+   освобождено). Уши торчат из-за скруглённых концов кнопки-пилюли. */
+.mic-wrap{flex:1;min-width:0;position:relative;display:flex}
+/* v988: лёгкая ровная подсветка всей кнопки микрофона в цвет статуса. */
+#micBtn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;opacity:0;transition:opacity .3s,background .3s;pointer-events:none}
+body[data-st="listening"] #micBtn::before{background:rgba(255,59,48,.3);opacity:1}
+body[data-st="thinking"] #micBtn::before{background:rgba(255,204,0,.28);opacity:1}
+body[data-st="talking"] #micBtn::before{background:rgba(52,199,89,.28);opacity:1}
 .bbl{display:flex;animation:mIn .2s ease}
 .bbl.u{justify-content:flex-end}
 /* Слой «краски» поверх стеклянной подложки .bi. Canvas с z-index:-1 рисуется
@@ -270,7 +293,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v960</span></div>
+<div class="title">Стич · Claude <span class="build">v988</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -283,21 +306,23 @@ body.pwa-standalone .pwa-chrome{display:flex}
   <div class="err" id="err"></div>
   </div>
   <div class="bottom">
-    <div class="mic-hint" id="micHint">ДЕРЖИ И ГОВОРИ</div>
-    <div class="status"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
+    <div class="mic-hint" id="micHint" style="display:none">ДЕРЖИ И ГОВОРИ</div>
+    <div class="status" style="display:none"><div class="dot" id="dot"></div><span id="stxt">Готов</span></div>
     <div id="composer" style="width:100%;background:transparent;border:none;border-radius:0;padding:0;display:flex;flex-direction:column;gap:8px;box-shadow:none">
       <div id="photoPreview" style="display:none;width:100%;align-items:flex-start;gap:12px">
         <div id="photoThumbs" style="display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0"></div>
         <button onclick="cancelAllPhotos()" style="background:#fff;border:1px solid #c0c0c0;color:#222;width:24px;height:24px;border-radius:50%;font-size:14px;line-height:1;cursor:pointer;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.2)">✕</button>
       </div>
       <div style="display:flex;align-items:center;width:100%;gap:8px">
-        <button class="mic-btn" id="micBtn" style="flex:1;min-width:0;height:54px;border-radius:27px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),var(--btn-tint, transparent);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1)">
+        <div class="mic-wrap">
+        <button class="mic-btn" id="micBtn" style="position:relative;z-index:1;flex:1;min-width:0;height:54px;border-radius:27px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),var(--btn-tint, transparent);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1)">
           <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="8.5" y="2.5" width="7" height="13" rx="3.5"/>
             <path d="M19 11a7 7 0 0 1-14 0"/>
             <line x1="12" y1="18" x2="12" y2="22"/>
           </svg>
         </button>
+        </div>
         <div style="position:relative;width:54px;height:54px;flex-shrink:0">
           <label id="camBtn" for="fileInputCamera" style="position:absolute;inset:0;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.02) 55%,rgba(0,0,0,.08) 100%),var(--btn-tint, transparent);backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 12px rgba(0,0,0,.28),inset .5px .5px 0 rgba(255,255,255,.32),inset -.5px -.5px 0 rgba(0,0,0,.1);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;z-index:2">
             <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -497,16 +522,13 @@ body.pwa-standalone .pwa-chrome{display:flex}
   var bAp = document.getElementById('testApples');
   bA.addEventListener('click', function(){ if (typeof addMsg === 'function') addMsg('a', pick(asstLines)); });
   bU.addEventListener('click', function(){ if (typeof addMsg === 'function') addMsg('u', pick(userLines)); });
-  // Тестовая демо-кнопка эмодзи-счёта — каждое нажатие циклит эмодзи+числа.
-  var APPLE_DEMOS = [
-    ['🍎',2,3], ['🐱',1,1], ['⭐',4,2], ['🐶',3,5],
-    ['🚗',5,5], ['🎈',7,3], ['🐟',10,10], ['🍎',0,0]
-  ];
-  var apIdx = 0;
+  // Тестовая демо-кнопка считалки — каждое нажатие циклит количество
+  // мел-яблок от 0 до 15 (одинаково в левой и правой зоне).
+  var apN = 0;
   bAp.addEventListener('click', function(){
-    var d = APPLE_DEMOS[apIdx % APPLE_DEMOS.length]; apIdx++;
-    bAp.textContent = d[0] + ' ' + d[1] + '+' + d[2];
-    if (typeof window.showApples === 'function') window.showApples(d[1], d[2], d[0]);
+    bAp.textContent = '🍎 ' + apN + '+' + apN;
+    if (typeof window.showApples === 'function') window.showApples(apN, apN);
+    apN = (apN + 1) % 16;
   });
   // Переключатель из settings.
   var TEST_KEY = 'stitch_show_tests';
@@ -1599,6 +1621,7 @@ var sb = document.getElementById('sb');
     var gap = chatPadEl.getBoundingClientRect().bottom - padBottomEl.getBoundingClientRect().top;
     document.documentElement.style.setProperty('--composer-h', Math.max(0, Math.round(gap)) + 'px');
   }
+  window.syncChatPad = syncChatPad;
   syncChatPad();
   if ('ResizeObserver' in window){
     try { new ResizeObserver(syncChatPad).observe(padBottomEl); } catch(_){}
@@ -1662,6 +1685,8 @@ function stopMouth() { if (raf) { cancelAnimationFrame(raf); raf=null; } mC=0; d
 
 function setState(s) {
   state = s;
+  // v984: состояние → data-st на body (статус-уши и подсветка кнопки — в CSS).
+  document.body.setAttribute('data-st', s);
   if (s !== 'listening') micActive = false;
   // Поза «рука к уху» включается ТОЛЬКО когда мик реально начал писать
   // (audioRec.start успех → micActive=true). При любом не-listening — сбрасываем.
@@ -1693,6 +1718,22 @@ function isChatAtBottom() {
 function autoScrollChat() {
   chat.scrollTop = chat.scrollHeight;
 }
+// v966: гарантированный скролл к последнему сообщению. Пере-замеряет
+// --composer-h (резерв чата под панель ввода) и скроллит вниз — сразу,
+// после layout (rAF) и после оседания клавиатуры/анимации (timeout).
+// Иначе свежий пузырь мог оказаться под блоком микрофона.
+function scrollChatBottom() {
+  if (window.syncChatPad) window.syncChatPad();
+  chat.scrollTop = chat.scrollHeight;
+  requestAnimationFrame(function(){
+    if (window.syncChatPad) window.syncChatPad();
+    chat.scrollTop = chat.scrollHeight;
+  });
+  setTimeout(function(){
+    if (window.syncChatPad) window.syncChatPad();
+    chat.scrollTop = chat.scrollHeight;
+  }, 220);
+}
 // Парсер счётного маркера из ассистент-текста.
 // Основной: [count ЭМОДЗИ N+M] / [count ЭМОДЗИ N-M] — Стич сам выбирает эмодзи.
 // Legacy: [apples N+M] — старый формат, эмодзи по умолчанию 🍎.
@@ -1702,8 +1743,8 @@ window.parseApplesMarker = function(text){
   if (m) {
     return {
       emoji: m[1],
-      left: Math.min(10, parseInt(m[2], 10)),
-      right: Math.min(10, parseInt(m[4], 10)),
+      left: Math.min(16, parseInt(m[2], 10)),
+      right: Math.min(16, parseInt(m[4], 10)),
       op: m[3],
       clean: text.replace(m[0], '').trim()
     };
@@ -1712,36 +1753,66 @@ window.parseApplesMarker = function(text){
   if (!m) return null;
   return {
     emoji: '🍎',
-    left: Math.min(10, parseInt(m[1], 10)),
-    right: Math.min(10, parseInt(m[3], 10)),
+    left: Math.min(16, parseInt(m[1], 10)),
+    right: Math.min(16, parseInt(m[3], 10)),
     op: m[2],
     clean: text.replace(m[0], '').trim()
   };
 };
+// Мел-яблоко (шаг 1 «доска»): один SVG-path из трёх подпутей
+// (тело → черенок → листик), pathLength=100 — stroke-dashoffset гонится
+// 100→0, яблоко «рисуется мелом». Фильтр chalkRough (feTurbulence +
+// displacement) даёт неровный меловой край.
+var CHALK_APPLE_D = 'M0,-6 C-5,-11 -11,-8 -12,0 C-13,8 -8,15 -2,15 C-1,15 0,13 0,13 '
+  + 'C0,13 1,15 2,15 C8,15 13,8 12,0 C11,-8 5,-11 0,-6 '
+  + 'M0,-6 C0,-10 1,-12 2,-14 '
+  + 'M2,-12 C5,-16 10,-15 10,-11 C10,-9 5,-9 2,-12';
+function makeChalkApple(){
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'apple');
+  svg.setAttribute('viewBox', '-15 -19 30 38');
+  var p = document.createElementNS(NS, 'path');
+  p.setAttribute('class', 'chalk-stroke');
+  p.setAttribute('d', CHALK_APPLE_D);
+  p.setAttribute('pathLength', '100');
+  p.setAttribute('filter', 'url(#chalkRough)');
+  svg.appendChild(p);
+  return svg;
+}
+var CHALK_DEFS = '<svg width="0" height="0" style="position:absolute" aria-hidden="true">'
+  + '<defs><filter id="chalkRough" x="-30%" y="-30%" width="160%" height="160%">'
+  + '<feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="7" result="n"/>'
+  + '<feDisplacementMap in="SourceGraphic" in2="n" scale="1.8" xChannelSelector="R" yChannelSelector="G"/>'
+  + '</filter></defs></svg>';
+// v985: палитра мела — каждый показ считалки рисуется новым цветом
+// (циклично): белый, жёлтый, розовый, голубой, мятный.
+var CHALK_COLORS = ['#eef0e4', '#ffe27a', '#ff9ec4', '#7ec8ff', '#8ef0c0'];
+var chalkIdx = 0;
 window.showApples = function(left, right, emoji, sync){
   window.hideApples(true);
   if (!left && !right) return;
-  emoji = emoji || '🍎';
+  // Вариант A: всегда мел-яблоко, emoji-параметр игнорируется (оставлен
+  // ради совместимости вызовов).
   var c = document.createElement('div'); c.id = 'applesContainer';
+  c.style.setProperty('--chalk-color', CHALK_COLORS[chalkIdx++ % CHALK_COLORS.length]);
+  c.insertAdjacentHTML('afterbegin', CHALK_DEFS);
   var lz = document.createElement('div'); lz.className = 'zone left';
   var rz = document.createElement('div'); rz.className = 'zone right';
-  for (var i = 0; i < left; i++) {
-    var a = document.createElement('span'); a.className = 'apple';
-    a.textContent = emoji;
-    lz.appendChild(a);
-  }
-  for (var j = 0; j < right; j++) {
-    var a2 = document.createElement('span'); a2.className = 'apple';
-    a2.textContent = emoji;
-    rz.appendChild(a2);
-  }
+  for (var i = 0; i < left; i++) lz.appendChild(makeChalkApple());
+  for (var j = 0; j < right; j++) rz.appendChild(makeChalkApple());
   c.appendChild(lz); c.appendChild(rz);
   document.body.appendChild(c);
-  // sync=true → зоны раскрывает typewriter (placeAppleGroup) по ходу печати
-  // чисел. Иначе (тест-кнопка, история) — показываем все сразу по очереди.
-  if (sync) return;
+  // sync=true (живой ответ): числа в тексте теперь СЛОВАМИ (для верной
+  // озвучки), синхронизировать раскрытие по цифрам больше нельзя —
+  // раскрываем зоны по таймеру, пока Стич рассказывает.
+  if (sync) {
+    setTimeout(function(){ window.placeAppleGroup('left'); }, 500);
+    setTimeout(function(){ window.placeAppleGroup('right'); }, 1700);
+    return;
+  }
   var STEP = 300;
-  var leftApples = Array.prototype.slice.call(lz.children).reverse();
+  var leftApples = Array.prototype.slice.call(lz.children);
   var rightApples = Array.prototype.slice.call(rz.children);
   var seq = leftApples.concat(rightApples);
   setTimeout(function(){
@@ -1759,7 +1830,7 @@ window.placeAppleGroup = function(side){
   var zone = c.querySelector('.zone.' + side);
   if (!zone) return;
   var items = Array.prototype.slice.call(zone.children);
-  if (side === 'left') items.reverse();   // left заполняется от центра наружу
+  // Раскрываем в DOM-порядке — яблоки рисуются сверху вниз по рядам.
   var STEP = 240;
   items.forEach(function(el, idx){
     if (el.classList.contains('placed')) return;
@@ -1775,7 +1846,10 @@ window.hideApples = function(immediate){
 };
 
 function addMsg(role, text) {
-  var follow = isChatAtBottom();
+  // Своё (пользовательское) сообщение всегда подматываем вниз; ответ
+  // ассистента — только если ребёнок и так был внизу (не дёргаем, если
+  // он отскроллил вверх читать).
+  var follow = isChatAtBottom() || role === 'u';
   // Сообщение от пользователя → убираем старые яблоки.
   if (role === 'u') window.hideApples();
   // Ассистент со счётным маркером → рендерим эмодзи-зоны, чистим текст.
@@ -1791,7 +1865,7 @@ function addMsg(role, text) {
   var w = document.createElement('div'); w.className = 'bbl'+(role==='u'?' u':'');
   var b = document.createElement('div'); b.className = 'bi'; b.textContent = text;
   w.appendChild(b); chat.appendChild(w);
-  if (follow) chat.scrollTop = chat.scrollHeight;
+  if (follow) scrollChatBottom();
   // Накатываем краску если в настройках стоит сплошной цвет (асинхронно —
   // .bi ещё может не быть разлэйаучено, ensure сам подождёт через rAF).
   if (window.stPaint) window.stPaint.ensure(w);
@@ -1892,7 +1966,30 @@ function maybeCelebrate(text) {
   } catch(_) {}
 }
 
-var prompt = 'Ты — персональный репетитор. НИКОГДА не спрашивай "как тебя зовут?" и не пытайся узнать имя ученика. Если ученик сам себя назовёт — запомни и используй, но сам никогда не спрашивай. Не представляйся первым — не называй своё имя, не говори кто ты, не описывай себя по своей инициативе. ИСКЛЮЧЕНИЕ: если ученик САМ спросит "как тебя зовут?", "кто ты?" или похожее — ответь коротко: тебя зовут Липо Стич, ты инопланетный помощник-репетитор. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, представляться без вопроса. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. СТИЛЬ: общайся как обычный ChatGPT-репетитор — спокойно, ясно, по-человечески. НЕ называй ученика "зверёк", "малыш" и подобными словечками. НЕ вставляй "хи-хи", "бум", "ха", "ага" в каждый ответ. Просто понятные фразы простым языком для 8-9 лет. ИСКЛЮЧЕНИЕ: КОГДА РЕБЁНОК САМ НАЗВАЛ ВЕРНЫЙ ОТВЕТ — обязательно начни ответ со слова "Бум!" и подтверди (например: "Бум! Точно так!", "Бум! Ты угадал!", "Бум! Молодец, верно!"). Если ответ неверный — не говори "Бум", мягко направь наводящим вопросом без лишних междометий. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь, верный ответ — Бум-подтверждение. ОБЪЯСНЕНИЕ ЧЕРЕЗ ПРИМЕРЫ: если ученик не понимает суть задачи или правила — объясни через несколько разных примеров из детского мира (яблоки, игрушки, машинки, котята, дни рождения, мультяшные герои, школьные ситуации) — но НЕ через конфеты или сладости. Если первый пример не зашёл — попробуй второй из другой области. Один и тот же приём показывай на 2-3 разных историях, чтобы ребёнок увидел общую идею. Если просит ответ: предложи разобрать вместе. Главное правило: ученик должен САМ прийти к ответу, а ты подтвердить через "Бум!". Если фото и не понимаешь — просто спроси что с этим делать. ЭМОДЗИ-СЧЁТ: В КАЖДОМ своём сообщении, где ты разбираешь пример на сложение или вычитание в пределах 10 (2+3, 5-2 и т.п.) — ВКЛЮЧАЯ повторное объяснение того же примера, исправление ошибки ученика и счёт шаг за шагом — В САМОМ КОНЦЕ сообщения добавляй служебный маркер в квадратных скобках: [count ЭМОДЗИ N+M] или [count ЭМОДЗИ N-M]. ЭМОДЗИ — один стандартный эмодзи под твою историю (🍎 яблоки, 🐱 котята, ⭐ звёздочки, 🚗 машинки, 🎈 шарики, 🐟 рыбки), N и M — числа из примера. НЕ используй конфеты и сладости в примерах. Пример сообщения: "Смотри: у тебя 2 яблока, и тебе дали ещё 3 — сколько станет? [count 🍎 2+3]". Если объясняешь тот же пример снова — обязательно ставь маркер опять, с тем же эмодзи. Маркер — ровно один на сообщение, в самом конце; после него НИЧЕГО не пиши и вслух про маркер не упоминай. Маркер добавляй ТОЛЬКО когда оба числа примера не больше 10 — тогда эмодзи помещаются у головы куклы. Если хотя бы одно число больше 10, или в сообщении нет конкретного счётного примера — маркер НЕ добавляй и не пытайся его впихнуть, просто спокойно продолжай объяснять словами как обычно, без эмодзи-счёта.';
+var prompt = 'Ты — персональный репетитор. НИКОГДА не спрашивай "как тебя зовут?" и не пытайся узнать имя ученика. Если ученик сам себя назовёт — запомни и используй, но сам никогда не спрашивай. Не представляйся первым — не называй своё имя, не говори кто ты, не описывай себя по своей инициативе. ИСКЛЮЧЕНИЕ: если ученик САМ спросит "как тебя зовут?", "кто ты?" или похожее — ответь коротко: тебя зовут Липо Стич, ты инопланетный помощник-репетитор. Главная цель — не давать ответы, а развивать мышление и помогать самому прийти к решению. ВАЖНО: говори КОРОТКО, не лей воду. 1-2 коротких предложения за раз. Жди задание или вопрос — не наговаривай лишнего. Если нет конкретного вопроса или задания — НЕ отвечай длинно и НЕ выдумывай темы, просто коротко спроси чем помочь. ЗАПРЕЩЕНО: давать готовые ответы, решать задачу за ученика, представляться без вопроса. ОБЯЗАТЕЛЬНО: объяснять через вопросы, разбивать на шаги, хвалить за ход мыслей. СТИЛЬ: общайся как обычный ChatGPT-репетитор — спокойно, ясно, по-человечески. НЕ называй ученика "зверёк", "малыш" и подобными словечками. НЕ вставляй "хи-хи", "бум", "ха", "ага" в каждый ответ. Просто понятные фразы простым языком для 8-9 лет. ИСКЛЮЧЕНИЕ: КОГДА РЕБЁНОК САМ НАЗВАЛ ВЕРНЫЙ ОТВЕТ — обязательно начни ответ со слова "Бум!" и подтверди (например: "Бум! Точно так!", "Бум! Ты угадал!", "Бум! Молодец, верно!"). Если ответ неверный — не говори "Бум", мягко направь наводящим вопросом без лишних междометий. Алгоритм: 1) попроси прочитать задачу и сказать что поняла, 2) спроси что известно, 3) спроси что найти, 4) помоги через наводящие вопросы, 5) шаг за шагом, 6) ошибка — мягко направь, верный ответ — Бум-подтверждение. ОБЪЯСНЕНИЕ ЧЕРЕЗ ПРИМЕРЫ: если ученик не понимает суть задачи или правила — объясни через несколько разных примеров из детского мира (яблоки, игрушки, машинки, котята, дни рождения, мультяшные герои, школьные ситуации) — но НЕ через конфеты или сладости. Если первый пример не зашёл — попробуй второй из другой области. Один и тот же приём показывай на 2-3 разных историях, чтобы ребёнок увидел общую идею. Если просит ответ: предложи разобрать вместе. Главное правило: ученик должен САМ прийти к ответу, а ты подтвердить через "Бум!". Если фото и не понимаешь — просто спроси что с этим делать. СЧЁТ ЯБЛОКАМИ НА ДОСКЕ: В КАЖДОМ своём сообщении, где ты разбираешь пример на сложение или вычитание в пределах 16 (2+3, 5-2, 9+7 и т.п.) — ВКЛЮЧАЯ повторное объяснение того же примера, исправление ошибки ученика и счёт шаг за шагом — считай ТОЛЬКО ЯБЛОКАМИ. В таком примере говори именно про яблоки — НЕ про машинки, котят, шарики или другие предметы: Стич рисует эти яблоки мелом на доске, поэтому история словами и рисунок обязаны совпадать. ЧИСЛА В ТЕКСТЕ ПИШИ СЛОВАМИ (одно, два, три, четыре, пять, шесть, семь, восемь, девять, десять), а НЕ цифрами — чтобы озвучка произносила правильное окончание: «одно яблоко», «два яблока», «пять яблок». В САМОМ КОНЦЕ сообщения добавляй служебный маркер в квадратных скобках — а вот В МАРКЕРЕ числа наоборот ЦИФРАМИ: [count 🍎 N+M] или [count 🍎 N-M], где N и M — числа из примера. Пример сообщения: "Смотри: у тебя два яблока, и тебе дали ещё три — сколько станет? [count 🍎 2+3]". Если объясняешь тот же пример снова — обязательно ставь маркер опять. Маркер — ровно один на сообщение, в самом конце; после него НИЧЕГО не пиши и вслух про маркер не упоминай. Маркер добавляй ТОЛЬКО когда оба числа примера не больше 16 — тогда яблоки помещаются на доске у головы куклы. Если хотя бы одно число больше 16, или в сообщении нет конкретного счётного примера — маркер НЕ добавляй и не пытайся его впихнуть, просто спокойно продолжай объяснять словами как обычно.';
+
+// v963: показать пузырь-ошибку И озвучить его голосом. Ребёнок 8-9 лет
+// может ещё плохо читать — на слух он поймёт, что надо повторить вопрос.
+// Если TTS недоступен (часто та же сетевая причина, что и сбой чата) —
+// остаётся хотя бы текст.
+async function speakErrorBubble(text){
+  addMsg('a', text);
+  try {
+    var blob = await window.stApi.tts(text, currentVoice, 1.2).promise;
+    if (!blob) return;
+    var url = URL.createObjectURL(new Blob([blob], {type:'audio/mpeg'}));
+    var audio = getSharedAudio();
+    if (audio._lastUrl) { try { URL.revokeObjectURL(audio._lastUrl); } catch(_){} }
+    audio._lastUrl = url;
+    audio.src = url;
+    pumpKeepalive();
+    nudgeOutputToSpeaker();
+    startMouth();
+    audio.onended = function(){ stopMouth(); };
+    audio.onerror = function(){ stopMouth(); };
+    audio.play().catch(function(){ stopMouth(); });
+  } catch(_){ stopMouth(); }
+}
 
 async function askClaude(msg) {
   errEl.textContent = '';
@@ -1998,15 +2095,13 @@ async function askClaude(msg) {
   } catch(e) {
     stopMouth();
     if (e && e.name !== 'AbortError') {
-      // v960: видимый детский фидбек пузырём в чат. Раньше при сбое
-      // «жёлтый» статус просто гас (или висел вечно) — ребёнок не понимал,
-      // что делать. AbortError = пользователь сам отменил, его не трогаем.
-      if (e.message === 'TIMEOUT') {
-        addMsg('a', 'Ой, я что-то долго думаю! Спроси меня ещё разок 🙂');
-      } else {
-        addMsg('a', 'Ой, не получилось ответить. Попробуй ещё раз!');
-        reportErr('askClaude', (e.stack || e.message));
-      }
+      // v963: видимый И озвученный детский фидбек. AbortError = пользователь
+      // сам отменил, его не трогаем.
+      var emsg = (e.message === 'TIMEOUT')
+        ? 'Ой, я что-то долго думаю! Спроси меня ещё разок.'
+        : 'Ой, не получилось ответить. Попробуй ещё раз!';
+      if (e.message !== 'TIMEOUT') reportErr('askClaude', (e.stack || e.message));
+      speakErrorBubble(emsg);
     }
     setState('idle');
   }
@@ -2947,12 +3042,11 @@ async function askWithImages(photos, userText) {
   } catch(e) {
     stopMouth();
     if (e && e.name !== 'AbortError') {
-      if (e.message === 'TIMEOUT') {
-        addMsg('a', 'Ой, я что-то долго думаю! Спроси меня ещё разок 🙂');
-      } else {
-        addMsg('a', 'Ой, не получилось ответить. Попробуй ещё раз!');
-        reportErr('askWithImages', (e.stack || e.message));
-      }
+      var emsg = (e.message === 'TIMEOUT')
+        ? 'Ой, я что-то долго думаю! Спроси меня ещё разок.'
+        : 'Ой, не получилось ответить. Попробуй ещё раз!';
+      if (e.message !== 'TIMEOUT') reportErr('askWithImages', (e.stack || e.message));
+      speakErrorBubble(emsg);
     }
     setState('idle');
   }
@@ -3026,6 +3120,8 @@ async function askWithImages(photos, userText) {
     // Глаза — карие с белыми белками
     // Большие мультяшные глаза с толстой обводкой, тёмно-синяя радужка
     // и крупный белый блик — стиль референса.
+    // Черты лица в группе .dollFace — скрываются при виде сзади (dollFaceBack).
+    '<g class="dollFace">'+
     // Персиковый румянец под глазами — продолговатые овалы.
     '<ellipse cx="84"  cy="134" rx="11" ry="4.5" fill="#f08868" opacity=".85" filter="url(#d-soft)"/>'+
     '<ellipse cx="136" cy="134" rx="11" ry="4.5" fill="#f08868" opacity=".85" filter="url(#d-soft)"/>'+
@@ -3063,6 +3159,7 @@ async function askWithImages(photos, userText) {
     // форму улыбки — именно по этой линии и открывается рот при talk.
     // Боковые прорези соединяются с улыбкой-прорезью на верхушке челюсти.
     '<path id="MS" d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="#1a0a04"/>'+
+    '</g>'+   // /dollFace (черты лица над челюстью)
     '<g id="dollJaw">'+
       '<path id="jawShape" d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="url(#d-skin)"/>'+
       '<path d="M88 160 Q98 166 110 166 Q122 166 132 160 L 132 175 Q110 185 88 175 Z" fill="url(#d-sheen)"/>'+
@@ -3070,32 +3167,43 @@ async function askWithImages(photos, userText) {
     '<path d="M88 175 Q110 185 132 175" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
     '</g>'+
     // Прорези по углам рта — от уголков до точки стыка с дугой головы.
+    '<g class="dollFace">'+
     '<line x1="88" y1="160" x2="88" y2="175" stroke="#2a1808" stroke-width="0.3" stroke-linecap="round"/>'+
     '<line x1="132" y1="160" x2="132" y2="175" stroke="#2a1808" stroke-width="0.3" stroke-linecap="round"/>'+
     // Горизонтальная улыбка-прорезь.
     '<path d="M88 160 Q98 166 110 166 Q122 166 132 160" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+    '</g>'+
+    // Затылок — виден, когда кукла повёрнута спиной (#doll.faceBack):
+    // мягкая тень у основания затылка + блик на куполе.
+    '<g class="dollBack">'+
+      '<ellipse cx="110" cy="140" rx="42" ry="33" fill="#5a3418" opacity=".30" filter="url(#d-soft)"/>'+
+      '<ellipse cx="102" cy="94" rx="30" ry="20" fill="#fff0d0" opacity=".28" filter="url(#d-soft)"/>'+
+    '</g>'+
     '</g>'+   // /dollHead
     // Stub-элементы MC/MO/MT/TG/TOP/BOT для совместимости со старым drawMouth.
     '<g id="MC" style="display:none"></g>'+
     '<g id="MO" style="display:none"><path id="MT"/><ellipse id="TG"/><path id="TOP"/><path id="BOT"/></g>'+
     // Костюм — облегает основание шеи, плечи спускаются от шеи.
-    '<path id="dollTorso" d="M72 222 Q 88 210 103 200 L 117 200 Q 132 210 148 222 Q 154 275 148 355 L 72 355 Q 66 275 72 222 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.20)" stroke-width="1.2"/>'+
+    // v967: торс укорочен (~60% прежней высоты) — низ 355→300.
+    '<path id="dollTorso" d="M72 222 Q 88 210 103 200 L 117 200 Q 132 210 148 222 Q 152 261 148 300 L 72 300 Q 68 261 72 222 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.20)" stroke-width="1.2"/>'+
     // Плечевые «комочки» — сплющенные накладки на стыке руки и тела, того
     // же цвета что костюм. Чуть выходят за контур торса.
-    // Воротничок-вырез — узкая V прямо у шеи.
-    '<path d="M104 202 L 110 214 L 116 202" stroke="rgba(200,190,170,.35)" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
+    // Воротничок-вырез — узкая V прямо у шеи (лицевая сторона костюма).
+    '<path class="dollFace" d="M104 202 L 110 214 L 116 202" stroke="rgba(200,190,170,.35)" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
     // Центральная застёжка-шов
-    '<line x1="110" y1="214" x2="110" y2="355" stroke="rgba(160,150,130,.25)" stroke-width="0.8"/>'+
-    // Пуговицы
-    '<circle cx="110" cy="238" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="110" cy="268" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="110" cy="298" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="110" cy="328" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<line x1="110" y1="214" x2="110" y2="300" stroke="rgba(160,150,130,.25)" stroke-width="0.8"/>'+
+    // Пуговицы — лицевая сторона костюма.
+    '<g class="dollFace">'+
+    '<circle cx="110" cy="234" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="252" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="270" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="288" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '</g>'+
     // Шарниры — невидимые маркеры для JS shoulderPoint().
-    '<circle id="shoulder-l" cx="74" cy="222" r="5" fill="none" stroke="none"/>'+
-    '<circle id="shoulder-r" cx="146" cy="222" r="5" fill="none" stroke="none"/>'+
-    '<circle id="hip-l" cx="92" cy="362" r="5" fill="none" stroke="none"/>'+
-    '<circle id="hip-r" cx="128" cy="362" r="5" fill="none" stroke="none"/>'+
+    '<circle id="shoulder-l" cx="78" cy="225" r="5" fill="none" stroke="none"/>'+
+    '<circle id="shoulder-r" cx="142" cy="225" r="5" fill="none" stroke="none"/>'+
+    '<circle id="hip-l" cx="92" cy="290" r="5" fill="none" stroke="none"/>'+
+    '<circle id="hip-r" cx="128" cy="290" r="5" fill="none" stroke="none"/>'+
     // Шарики-шарниры на плечах и бёдрах (декоративные, статичные).
     /* шарики на плечах/бёдрах теперь рендерятся в #dollLimbs (поверх рук/ног) */ '';
   }
@@ -3119,6 +3227,9 @@ async function askWithImages(photos, userText) {
     '<line class="dollRope" x1="110" y1="-200" x2="110" y2="50" stroke="#8a7a60" stroke-width="1.5"/>'+
     '<circle cx="110" cy="50" r="3" fill="#5a4a30"/>'+
     '<rect x="102" y="170" width="16" height="40" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1"/>'+
+    // v983: голова классики (овал + черты + челюсть) — scale 1.32 с якорем
+    // у шеи (y176), чтобы росла ВВЕРХ, а не свисала вниз. Размер под «милую».
+    '<g transform="translate(110 176) scale(1.32) translate(-110 -176)">'+
     '<ellipse cx="110" cy="120" rx="55" ry="60" fill="url(#d-skin)" stroke="#2a1808" stroke-width="1.5"/>'+
     // Зрачки в группах — для общей animateIris (как в cute-стиле).
     '<g id="pupil-l">'+
@@ -3142,21 +3253,23 @@ async function askWithImages(photos, userText) {
     '<line x1="88" y1="160" x2="88" y2="175" stroke="#2a1808" stroke-width="0.5" stroke-linecap="round"/>'+
     '<line x1="132" y1="160" x2="132" y2="175" stroke="#2a1808" stroke-width="0.5" stroke-linecap="round"/>'+
     '<path d="M88 160 Q98 168 110 168 Q122 168 132 160" stroke="#2a1808" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+    '</g>'+   // /голова классики (scale 1.2)
     '<g id="MC" style="display:none"></g>'+
     '<g id="MO" style="display:none"><path id="MT"/><ellipse id="TG"/><path id="TOP"/><path id="BOT"/></g>'+
     // Костюм/руки/ноги — те же размеры что в «милом» стиле, чтобы кукла
     // была одинаковой пропорции независимо от стиля головы.
-    '<path id="dollTorso" d="M72 222 Q 88 210 103 200 L 117 200 Q 132 210 148 222 Q 154 275 148 355 L 72 355 Q 66 275 72 222 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.20)" stroke-width="1.2"/>'+
+    // v967: торс укорочен (~60% прежней высоты) — низ 355→300.
+    '<path id="dollTorso" d="M72 222 Q 88 210 103 200 L 117 200 Q 132 210 148 222 Q 152 261 148 300 L 72 300 Q 68 261 72 222 Z" fill="url(#d-cloth)" stroke="rgba(180,170,150,.20)" stroke-width="1.2"/>'+
     '<path d="M104 202 L 110 214 L 116 202" stroke="rgba(200,190,170,.35)" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
-    '<line x1="110" y1="214" x2="110" y2="355" stroke="rgba(160,150,130,.25)" stroke-width="0.8"/>'+
-    '<circle cx="110" cy="238" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="110" cy="268" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="110" cy="298" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle cx="110" cy="328" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
-    '<circle id="shoulder-l" cx="74" cy="222" r="5" fill="none" stroke="none"/>'+
-    '<circle id="shoulder-r" cx="146" cy="222" r="5" fill="none" stroke="none"/>'+
-    '<circle id="hip-l" cx="92" cy="362" r="5" fill="none" stroke="none"/>'+
-    '<circle id="hip-r" cx="128" cy="362" r="5" fill="none" stroke="none"/>'+
+    '<line x1="110" y1="214" x2="110" y2="300" stroke="rgba(160,150,130,.25)" stroke-width="0.8"/>'+
+    '<circle cx="110" cy="234" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="252" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="270" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle cx="110" cy="288" r="2.2" fill="#a89878" stroke="#1a1408" stroke-width=".7"/>'+
+    '<circle id="shoulder-l" cx="78" cy="225" r="5" fill="none" stroke="none"/>'+
+    '<circle id="shoulder-r" cx="142" cy="225" r="5" fill="none" stroke="none"/>'+
+    '<circle id="hip-l" cx="92" cy="290" r="5" fill="none" stroke="none"/>'+
+    '<circle id="hip-r" cx="128" cy="290" r="5" fill="none" stroke="none"/>'+
     /* шарики на плечах/бёдрах теперь рендерятся в #dollLimbs (поверх рук/ног) */ '';
   }
 
@@ -3354,21 +3467,23 @@ async function askWithImages(photos, userText) {
   // 2) Руки/ноги (path) — позади сообщений (z:1).
   var overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   overlay.id = 'dollLimbs';
-  // Шарик + горизонтальная еле заметная прорезь (две половинки).
+  // v983: шарниры-пуговки — бежевый кружок с ободком и двумя дырочками,
+  // как пришитая пуговица марионетки.
   function jg(id, r){
+    var h = (r * 0.36).toFixed(2);
     return '<g id="'+id+'">'+
-      '<circle r="'+r+'" fill="url(#d-joint-overlay)" stroke="#1a1006" stroke-width=".6"/>'+
-      '<line x1="'+(-r+1)+'" y1="0" x2="'+(r-1)+'" y2="0" '+
-            'stroke="#000" stroke-width=".5" stroke-linecap="round" opacity=".55"/>'+
+      '<circle r="'+r+'" fill="#b3a07c" stroke="#1a1408" stroke-width="0.8"/>'+
+      '<circle cx="-'+h+'" cy="0" r="'+(r*0.15).toFixed(2)+'" fill="#1a1408"/>'+
+      '<circle cx="'+h+'" cy="0" r="'+(r*0.15).toFixed(2)+'" fill="#1a1408"/>'+
     '</g>';
   }
   overlay.innerHTML =
     '<defs>'+
       '<radialGradient id="d-joint-overlay" cx="32%" cy="28%" r="75%">'+
-        '<stop offset="0%"  stop-color="#807870"/>'+
-        '<stop offset="35%" stop-color="#4a4438"/>'+
-        '<stop offset="75%" stop-color="#2a2620"/>'+
-        '<stop offset="100%" stop-color="#100c08"/>'+
+        '<stop offset="0%"  stop-color="#9a6f44"/>'+
+        '<stop offset="40%" stop-color="#6a4626"/>'+
+        '<stop offset="78%" stop-color="#412a15"/>'+
+        '<stop offset="100%" stop-color="#1e1208"/>'+
       '</radialGradient>'+
     '</defs>'+
     '<path id="arm-l" class="arm"/>'+
@@ -3382,10 +3497,8 @@ async function askWithImages(photos, userText) {
     '<path id="leg-r-hl" class="leg-hl"/>'+
     // Шарики-шарниры с еле заметной прорезью посередине (как сборные).
     // Группа transform-translated в tick. jg() выше определён локально.
-    jg('joint-arm-l', 6) + jg('joint-arm-r', 6) +
-    jg('joint-leg-l', 9) + jg('joint-leg-r', 9) +
-    jg('joint-shoulder-l', 6) + jg('joint-shoulder-r', 6) +
-    jg('joint-hip-l', 9) + jg('joint-hip-r', 9);
+    jg('joint-shoulder-l', 5.25) + jg('joint-shoulder-r', 5.25) +
+    jg('joint-hip-l', 6.25) + jg('joint-hip-r', 6.25);
   document.body.appendChild(overlay);
 
   // 3) Кисти/стопы (ellipse) — поверх сообщений (z:5).
@@ -3402,8 +3515,8 @@ async function askWithImages(photos, userText) {
     // Кисти-варежки в стиле Вуди и кожаные сапожки.
     '<ellipse id="hand-l" rx="10" ry="8" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.2" class="hand"/>'+
     '<ellipse id="hand-r" rx="10" ry="8" fill="url(#dl-skin)" stroke="#2a1808" stroke-width="1.2" class="hand"/>'+
-    '<ellipse id="foot-l" rx="14" ry="8" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.2" class="foot"/>'+
-    '<ellipse id="foot-r" rx="14" ry="8" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.2" class="foot"/>';
+    '<ellipse id="foot-l" rx="11" ry="6.5" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.2" class="foot"/>'+
+    '<ellipse id="foot-r" rx="11" ry="6.5" fill="#5a3a1c" stroke="#2a1808" stroke-width="1.2" class="foot"/>';
   document.body.appendChild(hands);
 
   // Дополнительный слой ПОЗАДИ #doll (z:-1) — туда переезжает hand-r во время
@@ -3425,10 +3538,10 @@ async function askWithImages(photos, userText) {
   // L1/L2 — длины верхнего/нижнего сегмента в screen-px.
   var LIMBS = [
     // Руки укоротили (досягают до пояса), ноги — короче и слегка сжаты в коленях.
-    {pathId:'arm-l', handId:'hand-l', shoulderId:'shoulder-l', isLeg:false, sideSign:-1, L1:54, L2:50},
-    {pathId:'arm-r', handId:'hand-r', shoulderId:'shoulder-r', isLeg:false, sideSign: 1, L1:54, L2:50},
-    {pathId:'leg-l', handId:'foot-l', shoulderId:'hip-l',     isLeg:true,  sideSign:-1, L1:60, L2:56},
-    {pathId:'leg-r', handId:'foot-r', shoulderId:'hip-r',     isLeg:true,  sideSign: 1, L1:60, L2:56}
+    {pathId:'arm-l', handId:'hand-l', shoulderId:'shoulder-l', isLeg:false, sideSign:-1, L1:27, L2:25},
+    {pathId:'arm-r', handId:'hand-r', shoulderId:'shoulder-r', isLeg:false, sideSign: 1, L1:27, L2:25},
+    {pathId:'leg-l', handId:'foot-l', shoulderId:'hip-l',     isLeg:true,  sideSign:-1, L1:30, L2:28},
+    {pathId:'leg-r', handId:'foot-r', shoulderId:'hip-r',     isLeg:true,  sideSign: 1, L1:30, L2:28}
   ];
   window._dbgLimbs = LIMBS;  // для debug overlay
   LIMBS.forEach(function(L){
@@ -3527,9 +3640,8 @@ async function askWithImages(photos, userText) {
     if (L.isLeg) {
       return {x: s.x, y: s.y + totalLen};
     }
-    // Руки — почти полностью прямые, лёгкий боковой отвод чтобы IK не
-    // получал degenerate-случай (1px вместо 2px).
-    return {x: s.x + L.sideSign * 1, y: s.y + totalLen * 0.995};
+    // Руки — почти прямые (0.99 reach) → лишь намёк на сгиб в локте.
+    return {x: s.x + L.sideSign * 1, y: s.y + totalLen * 0.99};
   }
   // 2-bone IK: считает позицию локтя/колена так, чтобы upper-сегмент длиной
   // L1 от шарнира S и lower-сегмент длиной L2 до цели T соединялись в точке
@@ -3766,7 +3878,13 @@ async function askWithImages(photos, userText) {
     var dollEl = document.getElementById('doll');
     if (!dollEl) return false;
     var r = dollEl.getBoundingClientRect();
-    return (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return true;
+    // v975: верёвочка тоже хватабельна — тонкая вертикальная зона по центру
+    // куклы от верха экрана до её бокса. Полезно подтянуть куклу за нитку,
+    // если она уехала слишком вниз.
+    var cx = r.left + r.width / 2;
+    if (Math.abs(x - cx) <= 20 && y >= 0 && y < r.top) return true;
+    return false;
   }
   // bodyDragPointers — drag за тело/голову куклы (не за конечности).
   // Двигает rope (всю куклу), конечности остаются на местах.
@@ -3791,9 +3909,13 @@ async function askWithImages(photos, userText) {
     if (isDollBodyHit(e.clientX, e.clientY) || findLimbAt(e.clientX, e.clientY)) {
       bodyDragPointers[e.pointerId] = {
         startX: e.clientX, startY: e.clientY,
-        startRopeX: ropeTargetX, startRopeY: ropeTargetY
+        startRopeX: ropeTargetX, startRopeY: ropeTargetY,
+        lastX: e.clientX, lastT: performance.now(), vx: 0
       };
       window.dollDragging = true;
+      // Тянут куклу → замораживаем скролл чата: кукла теперь z поверх
+      // сообщений, и палец, двигаясь над ними, листал бы и чат тоже.
+      document.body.classList.add('doll-dragging');
       return;
     }
     // Тапы по #chat = только scroll сообщений, не body drag.
@@ -3813,6 +3935,13 @@ async function askWithImages(photos, userText) {
       bodyDragAngleTarget = Math.max(-BODY_DRAG_ANGLE_MAX,
         Math.min(BODY_DRAG_ANGLE_MAX, -dxBd * 0.07));
       bodyDragXActive = true;
+      // v982: сглаженная скорость пальца по X — для броска по инерции.
+      var _now = performance.now();
+      if (bd.lastT) {
+        var _dt = _now - bd.lastT;
+        if (_dt > 0) bd.vx = 0.6 * ((e.clientX - bd.lastX) / _dt) + 0.4 * (bd.vx || 0);
+      }
+      bd.lastX = e.clientX; bd.lastT = _now;
       return;
     }
     var L = draggingPointers[e.pointerId];
@@ -3820,7 +3949,8 @@ async function askWithImages(photos, userText) {
     L.dragGoal = {x: e.clientX, y: e.clientY};
   }, true);
   function releasePointer(e){
-    if (bodyDragPointers[e.pointerId]) {
+    var _bd = bodyDragPointers[e.pointerId];
+    if (_bd) {
       delete bodyDragPointers[e.pointerId];
       var anyBodyLeft = false;
       for (var k2 in bodyDragPointers) { anyBodyLeft = true; break; }
@@ -3829,6 +3959,10 @@ async function askWithImages(photos, userText) {
         // (restore + damp в applyBodyPhysics) дальше отыграет качание к 0.
         bodyDragXActive = false;
         bodyDragAngleTarget = 0;
+        document.body.classList.remove('doll-dragging');
+        // v982: бросок в сторону — скорость пальца переходит в угловую
+        // скорость маятника, кукла улетает дальше по инерции и качается.
+        bodyAngVel = Math.max(-6, Math.min(6, -(_bd.vx || 0) * 0.7));
       }
     }
     var L = draggingPointers[e.pointerId];
@@ -3885,6 +4019,12 @@ async function askWithImages(photos, userText) {
   window.dollKick = function(impulse){
     bodyDragXActive = false;
     bodyAngVel += impulse;
+  };
+  // v962: мгновенный разворот куклы. on=true → виден затылок (черты лица
+  // скрыты через CSS #doll.faceBack). Зовётся при показе считалок —
+  // кукла «поворачивается к доске рисовать».
+  window.dollFaceBack = function(on){
+    if (doll) doll.classList.toggle('faceBack', !!on);
   };
   // Free-limbs mode: пока кукла активно качается или её тянут, конечности
   // отвязываются от bubble'ов и медленно low-pass'ом следуют к dangle, а
@@ -3965,44 +4105,16 @@ async function askWithImages(photos, userText) {
       if (bodyAngle > 28) { bodyAngle = 28; if (bodyAngVel > 0) bodyAngVel = 0; }
       if (bodyAngle < -28) { bodyAngle = -28; if (bodyAngVel < 0) bodyAngVel = 0; }
     }
-    // Контр-сдвиг #doll по visualViewport.offsetTop — компенсирует iOS-скролл
-    // страницы при фокусе на input, кукла остаётся визуально на месте.
-    // v943: offsetTop сглаживается — iOS во время выезда/сворачивания
-    // клавиатуры отдаёт скачущие значения, lerp поглощает скачок.
-    // v944: слои #dollLimbs/#dollHands БОЛЬШЕ не сдвигаются на --vv-top.
-    // Конечности рисуются по shoulderPoint() = getBoundingClientRect() тела —
-    // это уже viewport-координаты с учётом offsetTop, верёвочки и поворота.
-    // Доп. сдвиг слоя на --vv-top был ДВОЙНЫМ учётом: он расходил тело и
-    // конечности во время перехода клавиатуры (виден как «телепорт»). Слой
-    // 1:1 к экрану → конечности всегда точно следуют за телом, что бы тело
-    // ни делало (rope-реакция, сглаженный offsetTop) — десинхрона нет.
-    // v950: компенсация iOS-сдвига экрана — СЫРОЙ visualViewport.offsetTop,
-    // без сглаживания. Сглаживание (v943) ОТСТАВАЛО от реального сдвига во
-    // время выезда клавиатуры — и тело с конечностями расходились ровно на
-    // это отставание (HUD показал GAP 70 на середине перехода: vvTop 324,
-    // а сглаженное значение ещё не догнало). offsetTop — фактический сдвиг
-    // экрана, компенсировать тело и слои конечностей надо ТОЧНО им, одним
-    // и тем же значением в кадре → GAP = 0.
+    // v975: тело #doll — обычный fixed без компенсации offsetTop: iOS
+    // уносит его вверх вместе с яблоками. Слои конечностей — тоже БЕЗ
+    // компенсирующего transform, iOS уносит их так же. Конечности рисуются
+    // layer-relative: в tick() из viewport-координат вычитается текущий
+    // getBoundingClientRect слоя. Слой и маркеры тела сняты в ОДНОМ кадре →
+    // лимбы садятся точно на тело даже в момент анимации клавиатуры (старая
+    // vvTopSmooth-компенсация рассинхронивалась с viewport-координатами во
+    // время анимации → лимбы отлетали — баг v953/v974).
     vvTopSmooth = (window.visualViewport && window.visualViewport.offsetTop) || 0;
-    // v945: ropeY входит в translateY — верёвочка двигает тело через transform,
-    // мгновенно (см. коммент у #doll в CSS). Конечности рисуются по
-    // getBoundingClientRect тела → transform учтён → синхрон без отставания.
     if (doll) doll.style.transform = 'translateX(calc(-50% + ' + ropeX.toFixed(1) + 'px)) translateY(' + ropeY.toFixed(1) + 'px) rotate(' + bodyAngle.toFixed(3) + 'deg)';
-    // v954: тело #doll — обычный fixed БЕЗ компенсации offsetTop: при
-    // клавиатуре iOS уносит его вверх вместе с яблоками (так и нужно).
-    // А вот слои конечностей компенсацию обязаны иметь. Лимбы рисуются
-    // по getBoundingClientRect тела — это ВИЗУАЛЬНЫЕ координаты. Слой
-    // #dollLimbs сам position:fixed → iOS тоже уносит его вверх на
-    // offsetTop. Без компенсации путь в визуальных координатах сместился
-    // бы на offsetTop ПОВТОРНО (двойной сдвиг) — лимбы улетали бы на
-    // ~offsetTop выше тела и пропадали за верхом экрана (баг v953).
-    // translateY(vvTopSmooth) гасит iOS-сдвиг слоя → слой = 1:1 холст
-    // визуальных координат → лимбы садятся ровно туда, где тело. Тело и
-    // слой двигаются синхронно, т.к. путь уже содержит позицию тела.
-    var vvComp = 'translateY(' + vvTopSmooth.toFixed(1) + 'px)';
-    if (overlay) overlay.style.transform = vvComp;
-    if (hands) hands.style.transform = vvComp;
-    if (handsBehind) handsBehind.style.transform = vvComp;
   }
 
   function tick(){
@@ -4014,11 +4126,18 @@ async function askWithImages(photos, userText) {
     // вместе с body когда iOS поднимает doll при появлении клавиатуры,
     // а связанная с ним рука остаётся внизу).
     var anyFrozen = LIMBS.some(function(L){ return L.frozen; });
+    // v975: layer-relative рендеринг. Слой конечностей — position:fixed без
+    // transform; его текущий getBoundingClientRect (сдвинут iOS вместе с
+    // телом) вычитаем из viewport-координат → путь рисуется в системе самого
+    // слоя. Слой и маркеры тела сняты в одном кадре → лимбы точно на теле
+    // даже в момент выезда/сворачивания клавиатуры.
+    var _lr = overlay.getBoundingClientRect();
+    var LOX = _lr.left, LOY = _lr.top;
     if (!anyFrozen) {
       ['shoulder-l','shoulder-r','hip-l','hip-r'].forEach(function(id){
         var p = shoulderPoint(id);
         var el = overlay.querySelector('#joint-'+id);
-        if (el && p.x) el.setAttribute('transform', 'translate('+p.x+' '+p.y+')');
+        if (el && p.x) el.setAttribute('transform', 'translate('+(p.x-LOX)+' '+(p.y-LOY)+')');
       });
     }
     LIMBS.forEach(function(L){
@@ -4034,16 +4153,16 @@ async function askWithImages(photos, userText) {
       var bend = -L.sideSign;
       if (!L.isLeg && L.cur.y < s.y) bend = L.sideSign;
       var j = twoBoneJoint(s, L.cur, L.L1, L.L2, bend);
-      var d = 'M '+s.x+' '+s.y+' L '+j.x+' '+j.y+' L '+L.cur.x+' '+L.cur.y;
+      var d = 'M '+(s.x-LOX)+' '+(s.y-LOY)+' L '+(j.x-LOX)+' '+(j.y-LOY)+' L '+(L.cur.x-LOX)+' '+(L.cur.y-LOY);
       L.pathEl.setAttribute('d', d);
       if (L.hlEl) {
         var hx = L.sideSign * -2;
         L.hlEl.setAttribute('d',
-          'M '+(s.x+hx)+' '+(s.y+2)+' L '+(j.x+hx)+' '+(j.y+2)+' L '+(L.cur.x+hx)+' '+(L.cur.y+2));
+          'M '+(s.x+hx-LOX)+' '+(s.y+2-LOY)+' L '+(j.x+hx-LOX)+' '+(j.y+2-LOY)+' L '+(L.cur.x+hx-LOX)+' '+(L.cur.y+2-LOY));
       }
-      if (L.jointEl) L.jointEl.setAttribute('transform', 'translate('+j.x+' '+j.y+')');
-      L.handEl.setAttribute('cx', L.cur.x);
-      L.handEl.setAttribute('cy', L.cur.y);
+      if (L.jointEl) L.jointEl.setAttribute('transform', 'translate('+(j.x-LOX)+' '+(j.y-LOY)+')');
+      L.handEl.setAttribute('cx', L.cur.x-LOX);
+      L.handEl.setAttribute('cy', L.cur.y-LOY);
       // v856: стирание краски отключено по запросу пользователя.
     });
     requestAnimationFrame(tick);
