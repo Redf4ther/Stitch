@@ -270,7 +270,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v959</span></div>
+<div class="title">Стич · Claude <span class="build">v960</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -688,34 +688,47 @@ window.hasApiAuth = function(){
 window.stApi = (function(){
   function url(path){ return window.API_BASE + path; }
   async function chat(messages, signal){
-    // v881: добавил 30s timeout — если fetch висит, fail с понятной ошибкой.
+    // v960: 30s таймаут покрывает И fetch, И чтение тела (r.json).
+    // Раньше clearTimeout стоял сразу после fetch — если сервер прислал
+    // заголовки, но тело висло, r.json() ждал ВЕЧНО, и «жёлтый» статус
+    // не сбрасывался, ответа не было (баг, на который жаловались).
+    // Таймаут-abort отличаем от пользовательской отмены маркером 'TIMEOUT'.
     var ctrl = new AbortController();
-    var timeoutId = setTimeout(function(){ try { ctrl.abort(); } catch(_){} }, 30000);
+    var timedOut = false;
+    var timeoutId = setTimeout(function(){ timedOut = true; try { ctrl.abort(); } catch(_){} }, 30000);
     if (signal) {
       try { signal.addEventListener('abort', function(){ try { ctrl.abort(); } catch(_){} }); } catch(_){}
     }
-    var r;
     try {
-      r = await fetch(url('/api/chat'), {
-        method: 'POST',
-        headers: window.apiHeaders({'Content-Type':'application/json'}),
-        body: JSON.stringify({messages: messages}),
-        signal: ctrl.signal,
-      });
-    } catch (netErr) {
+      var r;
+      try {
+        r = await fetch(url('/api/chat'), {
+          method: 'POST',
+          headers: window.apiHeaders({'Content-Type':'application/json'}),
+          body: JSON.stringify({messages: messages}),
+          signal: ctrl.signal,
+        });
+      } catch (netErr) {
+        if (timedOut) throw new Error('TIMEOUT');
+        if (signal && signal.aborted) throw netErr;
+        throw new Error('Сеть: ' + (netErr.message || 'fetch failed'));
+      }
+      var data;
+      try { data = await r.json(); }
+      catch (jsonErr) {
+        if (timedOut) throw new Error('TIMEOUT');
+        if (signal && signal.aborted) throw jsonErr;
+        throw new Error('Не json от бэка, HTTP ' + r.status);
+      }
+      if (r.status === 403 && data && data.code === 'limit') {
+        if (typeof window.showTopupBanner === 'function') window.showTopupBanner(data.error);
+        throw new Error(data.error || 'Лимит исчерпан');
+      }
+      if (!r.ok || data.error) throw new Error(data.error || ('HTTP '+r.status));
+      return String(data.text || '');
+    } finally {
       clearTimeout(timeoutId);
-      if (signal && signal.aborted) throw netErr;
-      throw new Error('Сеть: ' + (netErr.message || 'fetch failed') + ' (URL: ' + url('/api/chat') + ')');
     }
-    clearTimeout(timeoutId);
-    var data;
-    try { data = await r.json(); } catch (_) { throw new Error('Не json от бэка, HTTP ' + r.status); }
-    if (r.status === 403 && data && data.code === 'limit') {
-      if (typeof window.showTopupBanner === 'function') window.showTopupBanner(data.error);
-      throw new Error(data.error || 'Лимит исчерпан');
-    }
-    if (!r.ok || data.error) throw new Error(data.error || ('HTTP '+r.status));
-    return String(data.text || '');
   }
   // Возвращает {promise, abort, xhr}. promise → ArrayBuffer | null.
   function tts(text, voice, speed){
@@ -1985,8 +1998,15 @@ async function askClaude(msg) {
   } catch(e) {
     stopMouth();
     if (e && e.name !== 'AbortError') {
-      errEl.textContent = 'Ошибка: '+e.message;
-      reportErr('askClaude', (e.stack || e.message));
+      // v960: видимый детский фидбек пузырём в чат. Раньше при сбое
+      // «жёлтый» статус просто гас (или висел вечно) — ребёнок не понимал,
+      // что делать. AbortError = пользователь сам отменил, его не трогаем.
+      if (e.message === 'TIMEOUT') {
+        addMsg('a', 'Ой, я что-то долго думаю! Спроси меня ещё разок 🙂');
+      } else {
+        addMsg('a', 'Ой, не получилось ответить. Попробуй ещё раз!');
+        reportErr('askClaude', (e.stack || e.message));
+      }
     }
     setState('idle');
   }
@@ -2927,8 +2947,12 @@ async function askWithImages(photos, userText) {
   } catch(e) {
     stopMouth();
     if (e && e.name !== 'AbortError') {
-      errEl.textContent='Ошибка: '+e.message;
-      reportErr('askWithImages', (e.stack || e.message));
+      if (e.message === 'TIMEOUT') {
+        addMsg('a', 'Ой, я что-то долго думаю! Спроси меня ещё разок 🙂');
+      } else {
+        addMsg('a', 'Ой, не получилось ответить. Попробуй ещё раз!');
+        reportErr('askWithImages', (e.stack || e.message));
+      }
     }
     setState('idle');
   }
