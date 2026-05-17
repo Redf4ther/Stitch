@@ -270,7 +270,7 @@ body.pwa-standalone .pwa-chrome{display:flex}
         <line x1="5" y1="17" x2="19" y2="17"/>
       </svg>
     </button>
-<div class="title">Стич · Claude <span class="build">v955</span></div>
+<div class="title">Стич · Claude <span class="build">v959</span></div>
     <div class="stage">
       <div class="glow" id="glow"></div>
       <!-- .head пустой — кукла целиком живёт в #doll (fixed). Контейнер
@@ -2101,7 +2101,7 @@ var micPermissionPending = false;
     if (navigator.permissions && navigator.permissions.query) {
       var st = await navigator.permissions.query({name:'microphone'});
       micPermission = st.state;
-      try { st.onchange = function(){ micPermission = st.state; }; } catch(_){}
+      try { st.onchange = function(){ micPermission = st.state; if (micPermission === 'granted') warmMicStream(); }; } catch(_){}
     }
   } catch(_){}
   // Fire the system mic prompt as early as possible. Telegram WebView and
@@ -2111,6 +2111,8 @@ var micPermissionPending = false;
   // the chat-tap fallback in pointerdown still asks on first interaction.
   if (micPermission !== 'granted' && micPermission !== 'denied') {
     requestMicPermission();
+  } else if (micPermission === 'granted') {
+    warmMicStream();   // разрешение уже есть — греем поток сразу при старте
   }
 })();
 // First-touch fallback: if the boot-time prompt was suppressed (no user
@@ -2149,18 +2151,20 @@ async function requestMicPermission(){
     micPermission = (e && (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError')) ? 'denied' : 'unknown';
   }
   micPermissionPending = false;
+  if (micPermission === 'granted') warmMicStream();   // греем поток сразу после grant
 }
 var vadAnalyser = null;
+var vadSource = null;
 var vadInterval = null;
 var vadMaxLevel = 0;
 var VAD_THRESHOLD = 24; // average byte-frequency above which we treat audio as actual speech
 function startVAD(stream) {
   try {
     var ctx = getAudioCtx();
-    var source = ctx.createMediaStreamSource(stream);
+    vadSource = ctx.createMediaStreamSource(stream);
     vadAnalyser = ctx.createAnalyser();
     vadAnalyser.fftSize = 256;
-    source.connect(vadAnalyser);
+    vadSource.connect(vadAnalyser);
     vadMaxLevel = 0;
     var data = new Uint8Array(vadAnalyser.frequencyBinCount);
     vadInterval = setInterval(function() {
@@ -2176,6 +2180,7 @@ function startVAD(stream) {
 function stopVAD() {
   if (vadInterval) { clearInterval(vadInterval); vadInterval = null; }
   if (vadAnalyser) { try { vadAnalyser.disconnect(); } catch(_){} vadAnalyser = null; }
+  if (vadSource) { try { vadSource.disconnect(); } catch(_){} vadSource = null; }
 }
 // Whisper tends to hallucinate stock YouTube phrases on silence — filter
 // the most common Russian ones plus short punctuation-only transcripts.
@@ -2221,6 +2226,34 @@ function releaseMicStream() {
   try { audioStream.getTracks().forEach(function(t){ try { t.stop(); } catch(_){} }); } catch(_){}
   audioStream = null;
 }
+// «Моментальный микрофон» (вариант 1): поток getUserMedia захватывается
+// ОДИН раз — warmMicStream() зовётся сразу после выдачи разрешения, при
+// старте приложения. Поток живёт, пока приложение на переднем плане; на
+// фоне отпускается, при возврате захватывается заново (см. visibilitychange).
+// startListening на каждое нажатие лишь создаёт новый MediaRecorder —
+// без холодного re-acquire и переключения аудио-сессии iOS, которое и
+// давало задержку ~3с. Цена: индикатор «микрофон используется» горит,
+// пока приложение открыто.
+function micStreamLive(){
+  if (!audioStream) return false;
+  var tr = audioStream.getAudioTracks()[0];
+  return !!(tr && tr.readyState === 'live');
+}
+var warmMicPending = false;
+async function warmMicStream(){
+  if (micPermission !== 'granted' || warmMicPending) return;
+  if (micStreamLive()) return;
+  if (audioStream) releaseMicStream();   // труп потока (фон/перехват) — заменяем
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  warmMicPending = true;
+  try {
+    audioStream = await navigator.mediaDevices.getUserMedia({audio:true});
+  } catch(e) {
+    audioStream = null;
+    if (e && (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError')) micPermission = 'denied';
+  }
+  warmMicPending = false;
+}
 async function startListening() {
   if (state !== 'idle') return;
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
@@ -2245,17 +2278,20 @@ async function startListening() {
   listenAborted = false;
   pendingStop = false;
   audioChunks = [];
-  try {
-    audioStream = await navigator.mediaDevices.getUserMedia({audio:true});
-  } catch(e) {
-    if (e && (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError')) micPermission = 'denied';
-    errEl.textContent = 'Нет доступа к микрофону';
-    setState('idle');
-    return;
+  // Тёплый поток (warmMicStream при старте приложения) — используем как
+  // есть, старт мгновенный. Если поток мёртв (фон / перехват другим
+  // приложением) — пере-захват здесь же, редкий медленный путь.
+  if (!micStreamLive()) {
+    await warmMicStream();
+    if (!micStreamLive()) {
+      errEl.textContent = 'Нет доступа к микрофону';
+      setState('idle');
+      return;
+    }
   }
-  // User released before getUserMedia resolved — abort.
+  // Палец отпустили, пока шёл холодный пере-захват — отменяем (поток
+  // оставляем тёплым для следующего нажатия).
   if (pendingStop) {
-    releaseMicStream();
     setState('idle');
     return;
   }
@@ -2278,7 +2314,8 @@ async function startListening() {
     audioRec = null;
     audioChunks = null;
     stopVAD();
-    releaseMicStream();
+    // Поток НЕ глушим — держим тёплым, чтобы следующее нажатие стартовало
+    // мгновенно (releaseMicStream остаётся только для ошибок/denied).
     pumpKeepalive();
     nudgeOutputToSpeaker();
     var duration = Date.now() - listenStart;
@@ -2461,6 +2498,17 @@ window.addEventListener('touchend', function(){ if (state==='listening') stopLis
 window.addEventListener('touchcancel', function(){ if (state==='listening') stopListening(); });
 window.addEventListener('blur', function(){ if (state==='listening') stopListening(); });
 document.addEventListener('visibilitychange', function(){ if (document.hidden && state==='listening') stopListening(); });
+// v959: микрофон тёплый, пока Стич открыт. На сворачивании отпускаем
+// (releaseMicStream беззвучен), при возврате греем заново (getUserMedia
+// беззвучен — как при первом запуске). Системный звук iOS остаётся только
+// в момент сворачивания — принятый компромисс ради мгновенного микрофона.
+document.addEventListener('visibilitychange', function(){
+  if (document.hidden) {
+    releaseMicStream();
+  } else if (micPermission === 'granted' && !micStreamLive()) {
+    warmMicStream();
+  }
+});
 
 // Render the photos-with-text bubble in the chat and forward to GPT-4o
 // vision. Used by both the typed-send path and the voice-input path so a
